@@ -15,8 +15,8 @@
 
 
 /* rapidly evolving version number to aid with visual change confirmation     */
-#define YREGEX_VER_NUM   "0.1d"
-#define YREGEX_VER_TXT   "handles character ranges and unit tested"
+#define YREGEX_VER_NUM   "0.1e"
+#define YREGEX_VER_TXT   "added set handling debugging and improvements"
 
 
 

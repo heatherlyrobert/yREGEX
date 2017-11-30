@@ -115,15 +115,19 @@ static void      o___UNITTEST________________o (void) {;}
 char       /*----: set up program urgents/debugging --------------------------*/
 yREGEX__unitquiet     (void)
 {
-   its.logger = yLOG_begin ("yREGEX" , yLOG_SYSTEM, yLOG_QUIET);
+   char       *x_args [1]  = { "yREGEX_unit" };
+   yURG_logger (1, x_args);
+   yURG_urgs   (1, x_args);
    return 0;
 }
 
 char       /*----: set up program urgents/debugging --------------------------*/
 yREGEX__unitloud      (void)
 {
-   its.logger = yLOG_begin ("yREGEX" , yLOG_SYSTEM, yLOG_NOISE);
-   yLOG_info     ("yREGEX"  , yREGEX_version   ());
+   char       *x_args [3]  = { "yREGEX_unit", "@@kitchen", "@@YREGEX"    };
+   yURG_logger (3, x_args);
+   yLOG_info   ("yREGEX"  , yREGEX_version   ());
+   yURG_urgs   (3, x_args);
    return 0;
 }
 
