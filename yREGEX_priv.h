@@ -15,8 +15,8 @@
 
 
 /* rapidly evolving version number to aid with visual change confirmation     */
-#define YREGEX_VER_NUM   "0.1f"
-#define YREGEX_VER_TXT   "switched to broken out (several arrays) compiliation data"
+#define YREGEX_VER_NUM   "0.1g"
+#define YREGEX_VER_TXT   "basic modifiers adding well, simple testing in place"
 
 
 

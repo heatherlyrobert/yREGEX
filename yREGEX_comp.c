@@ -41,7 +41,7 @@ tSETS       g_sets [MAX_SETS] = {
 };
 int         g_nset      = 0;
 #define     BSLASHSET   "entswdlug"
-#define     MODSET      "*+?@%!"
+#define     MODSET      "*+?@~!"
 #define     MAX_QUAN    255
 
 char        g_regex     [LEN_RECD]  = "";
@@ -125,14 +125,22 @@ yREGEX__comp_add     (cchar a_comp, cchar a_indx)
    DEBUG_YREGEX  yLOG_sint    (g_clen);
    g_comp [g_clen] = a_comp;
    g_indx [g_clen] = a_indx;
+   g_mods [g_clen] = ' ';
+   g_mins [g_clen] = 0;
+   g_maxs [g_clen] = 0;
    ++g_clen;
    DEBUG_YREGEX  yLOG_sint    (g_clen);
+   g_comp [g_clen] = 0;
+   g_indx [g_clen] = 0;
+   g_mods [g_clen] = 0;
+   g_mins [g_clen] = 0;
+   g_maxs [g_clen] = 0;
    DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
    return 0;
 }
 
 char
-yREGEX__comp_mod     (cchar a_mod, cchar a_min, cchar a_max)
+yREGEX__comp_mod     (cchar a_mod, uchar a_min, uchar a_max)
 {
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
@@ -715,7 +723,6 @@ yREGEX_comp          (cchar *a_regex)
          rc = yREGEX__comp_set (&i);
          if (rc >= 0)  continue;
       }
-      DEBUG_YREGEX  yLOG_note    ("past escapes and sets");
       /*---(quick modifiers)-------------*/
       if (strchr (MODSET, x_ch) != NULL) {
          DEBUG_YREGEX  yLOG_note    ("handle modifier");
@@ -723,7 +730,7 @@ yREGEX_comp          (cchar *a_regex)
          case '*' : case '@' :
             yREGEX__comp_mod (x_ch, 0, MAX_QUAN);
             break;
-         case '+' : case '%' :
+         case '+' : case '~' :
             yREGEX__comp_mod (x_ch, 1, MAX_QUAN);
             break;
          case '?' : case '!' :
@@ -732,6 +739,9 @@ yREGEX_comp          (cchar *a_regex)
          }
          continue;
       }
+      /*---(literals)--------------------*/
+      DEBUG_YREGEX  yLOG_note    ("finally, make it a literal");
+      rc = yREGEX__comp_literal (&i);
    }
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
