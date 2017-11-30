@@ -15,8 +15,8 @@
 
 
 /* rapidly evolving version number to aid with visual change confirmation     */
-#define YREGEX_VER_NUM   "0.1e"
-#define YREGEX_VER_TXT   "added set handling debugging and improvements"
+#define YREGEX_VER_NUM   "0.1f"
+#define YREGEX_VER_TXT   "switched to broken out (several arrays) compiliation data"
 
 
 
@@ -43,6 +43,10 @@ extern char      g_regex     [LEN_RECD];
 extern int       g_rlen;
 
 extern char      g_comp      [LEN_RECD];
+extern char      g_mods      [LEN_RECD];
+extern uchar     g_indx      [LEN_RECD];
+extern uchar     g_mins      [LEN_RECD];
+extern uchar     g_maxs      [LEN_RECD];
 extern int       g_clen;
 
 
@@ -62,6 +66,8 @@ extern char        yREGEX_ver   [500];
 
 /*---(program)--------------*/
 char        yREGEX__comp_init    (cchar *a_regex);
+/*---(literals)-------------*/
+char        yREGEX__comp_literal (int *a_rpos);
 /*---(sets)-----------------*/
 char        yREGEX__comp_setinit (void);
 char        yREGEX__comp_setabbr (cchar  a_abbr);

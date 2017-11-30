@@ -22,18 +22,21 @@
  *   heavily influenced by the ideas and code of nasciiboy
  *
  *   standard ERE characters     .[]   *+?  {}   ^$   ()|   \
- *   added characters            <
+ *   added characters                  @%!       <>     &
  *
  *
  *   quantifiers (suffixes)
  *   .         match any one char except newline or null
  *   [...]     match any one char in the set
  *   [^...]    match any one char not in the set
- *   ?  (??)   zero or one of the previous atom (greedy vs lazy)
- *   *  (*?)   zero or more of the previous atom (greedy vs lazy)
- *   +  (+?)   one or more of the previous atom (greedy vs lazy)
+ *   ?  (!)    zero or one of the previous atom (greedy vs lazy)
+ *   *  (@)    zero or more of the previous atom (greedy vs lazy)
+ *   +  (%)    one or more of the previous atom (greedy vs lazy)
  *   ^         beginning of string anchor
  *   $         end of string anchor
+ *   {n,m}
+ *   (...)
+ *   |
  *
  *
  *   compiled...

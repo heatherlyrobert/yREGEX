@@ -7,6 +7,7 @@
 char        g_source    [LEN_RECD]  = "";
 int         g_slen      = -1;
 
+
 char
 yREGEX__literal      (int a_depth, int a_tpos, int a_rpos)
 {
@@ -23,4 +24,3 @@ yREGEX__literal      (int a_depth, int a_tpos, int a_rpos)
    /*---(complete)-----------------------*/
    return 0;
 }
-

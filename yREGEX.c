@@ -72,9 +72,9 @@ yREGEX__set          (int a_depth, int a_tpos, int a_rpos)
    --rce;  if (a_tpos  >= g_slen)           return rce;
    --rce;  if (a_rpos  <  1     )           return rce;
    --rce;  if (a_rpos  >= g_clen)           return rce;
-   --rce;  if (g_comp [a_rpos - 1] != '[')  return rce;
+   --rce;  if (g_regex [a_rpos - 1] != '[')  return rce;
    /*---(get the set)--------------------*/
-   x_set = g_comp   [a_rpos];
+   x_set = g_regex  [a_rpos];
    --rce;  if (x_set <  0     )             return rce;
    --rce;  if (x_set >= g_nset)             return rce;
    /*---(check)--------------------------*/
