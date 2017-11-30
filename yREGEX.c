@@ -16,6 +16,30 @@
 
 
 
+/*====================------------------------------------====================*/
+/*===----                           utility                            ----===*/
+/*====================------------------------------------====================*/
+static void      o___UTILITY_________________o (void) {;}
+
+char        yREGEX_ver   [500];
+
+char*      /* ---- : return library versioning information -------------------*/
+yREGEX_version       (void)
+{
+   char    t [20] = "";
+#if    __TINYC__ > 0
+   strlcpy (t, "[tcc built  ]", 15);
+#elif  __GNUC__  > 0
+   strlcpy (t, "[gnu gcc    ]", 15);
+#elif  __HEPH__  > 0
+   strncpy (t, "[hephaestus ]", 15);
+#else
+   strlcpy (t, "[unknown    ]", 15);
+#endif
+   snprintf (yREGEX_ver, 100, "%s   %s : %s", t, YREGEX_VER_NUM, YREGEX_VER_TXT);
+   return yREGEX_ver;
+}
+
 char
 yREGEX__exec_init    (cchar *a_src)
 {
@@ -88,34 +112,18 @@ yREGEX_exec          (cchar *a_source)
 /*====================------------------------------------====================*/
 static void      o___UNITTEST________________o (void) {;}
 
-#define       LEN_TEXT  2000
-char          unit_answer [ LEN_TEXT ];
-
-char*            /* [------] unit test accessor ------------------------------*/
-yREGEX__unit       (char *a_question, int a_num)
-{
-   /*---(initialize)---------------------*/
-   strlcpy (unit_answer, "yREGEX_unit, unknown request", 100);
-   /*---(string testing)-----------------*/
-   /*> if      (strncmp(a_question, "string"    , 20)  == 0) {                        <* 
-    *>    snprintf (unit_answer, LEN_TEXT, "ySTR string      : [%s]", its.strtest);   <* 
-    *> }                                                                              <*/
-   /*---(complete)-----------------------*/
-   return unit_answer;
-}
-
 char       /*----: set up program urgents/debugging --------------------------*/
 yREGEX__unitquiet     (void)
 {
-   its.logger = yLOG_begin ("ySTR" , yLOG_SYSTEM, yLOG_QUIET);
+   its.logger = yLOG_begin ("yREGEX" , yLOG_SYSTEM, yLOG_QUIET);
    return 0;
 }
 
 char       /*----: set up program urgents/debugging --------------------------*/
 yREGEX__unitloud      (void)
 {
-   its.logger = yLOG_begin ("ySTR" , yLOG_SYSTEM, yLOG_NOISE);
-   /*> yLOG_info     ("ySTR"    , ySTR_version   ());                                 <*/
+   its.logger = yLOG_begin ("yREGEX" , yLOG_SYSTEM, yLOG_NOISE);
+   yLOG_info     ("yREGEX"  , yREGEX_version   ());
    return 0;
 }
 

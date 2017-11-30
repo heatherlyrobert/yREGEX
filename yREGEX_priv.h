@@ -15,8 +15,8 @@
 
 
 /* rapidly evolving version number to aid with visual change confirmation     */
-#define YREGEX_VER_NUM   "0.1c"
-#define YREGEX_VER_TXT   "added basics for backslashed characters and basic sets"
+#define YREGEX_VER_NUM   "0.1d"
+#define YREGEX_VER_TXT   "handles character ranges and unit tested"
 
 
 
@@ -29,8 +29,9 @@
 typedef struct cSETS  tSETS;
 struct cSETS {
    char        type;
+   char        abbr;
    char        name        [LEN_NAME];
-   char        map         [256];
+   char        map         [270];
 };
 extern tSETS     g_sets [MAX_SETS];
 extern int       g_nset;
@@ -54,8 +55,22 @@ struct cLOCAL {
 };
 extern  tLOCAL its;
 
+
+
+extern char        yREGEX_ver   [500];
+
+
+/*---(program)--------------*/
 char        yREGEX__comp_init    (cchar *a_regex);
-char        yREGEX__comp_bslash  (cint   a_rpos);
+/*---(sets)-----------------*/
+char        yREGEX__comp_setinit (void);
+char        yREGEX__comp_setabbr (cchar  a_abbr);
+char        yREGEX__comp_bslash  (int   *a_rpos);
+char        yREGEX__comp_setname (cchar *a_name);
+char        yREGEX__comp_setstd  (int   *a_rpos);
+char        yREGEX__comp_setmap  (int   *a_rpos);
+
+
 
 char        yREGEX__exec_init    (cchar *a_source);
 
