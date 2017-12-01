@@ -45,7 +45,8 @@ tSETS       g_sets [MAX_SETS] = {
 };
 int         g_nset      = 0;
 #define     BSLASHSET   "entswdlug"
-#define     MODSET      "*+?@~!"
+#define     MOD_SET      "*+?@~!"
+#define     GRP_SET      "()|"
 #define     MAX_QUAN    255
 
 char        g_regex     [LEN_RECD]  = "";
@@ -60,6 +61,11 @@ int         g_clen      = -1;
 
 char        s_map       [270] = "";
 int         s_mapcount  =  0;
+
+char        s_gstack    [15]  = "0000000000";
+char        s_glevel          =  0;
+char        s_ggroup          =  0;
+char        s_ghidden         =  9;
 
 
 /*====================------------------------------------====================*/
@@ -98,7 +104,7 @@ yREGEX__comp_init    (cchar *a_regex)
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   /*---(initialize)---------------------*/
+   /*---(initialize compiled)------------*/
    for (i = 0; i < LEN_RECD; ++i) {
       g_comp [i] = ' ';
       g_indx [i] =   0;
@@ -106,12 +112,16 @@ yREGEX__comp_init    (cchar *a_regex)
       g_mins [i] =   0;
       g_maxs [i] =   0;
    }
-   g_comp [0] = 0;
-   g_indx [0] = 0;
-   g_mods [0] = 0;
-   g_mins [0] = 0;
-   g_maxs [0] = 0;
+   g_comp [0] =  0;
+   g_indx [0] =  0;
+   g_mods [0] =  0;
+   g_mins [0] =  0;
+   g_maxs [0] =  0;
    g_clen = 0;
+   /*---(initialize grouping)------------*/
+   s_glevel   =  0;
+   s_ggroup   =  0;
+   s_ghidden  =  9;
    /*---(initialize sets)----------------*/
    yREGEX__comp_setinit ();
    /*---(complete)-----------------------*/
@@ -845,6 +855,66 @@ yREGEX__comp_cmods   (int *a_rpos)
 
 
 /*====================------------------------------------====================*/
+/*===----                         group handling                       ----===*/
+/*====================------------------------------------====================*/
+static void      o___GROUPS__________________o (void) {;}
+
+char
+yREGEX__comp_group   (int *a_rpos)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   char        rc          =   -1;
+   char        x_ch        =  ' ';
+   int         x_next      =    0;
+   uchar       x_grp       =    0;
+   /*---(header)-------------------------*/
+   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
+   DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
+   x_ch   = g_regex [*a_rpos];
+   DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
+   switch (x_ch) {
+   case '(' :
+      DEBUG_YREGEX  yLOG_note    ("open the group");
+      ++s_glevel;
+      if (g_regex [*a_rpos + 1] == '#') {
+         DEBUG_YREGEX  yLOG_note    ("identified a hidden group");
+         ++*a_rpos;
+         ++s_ghidden;
+         x_grp = s_ghidden;
+      } else {
+         ++s_ggroup;
+         x_grp = s_ggroup;
+      }
+      rc = yREGEX__comp_add  (x_ch, x_grp);
+      s_gstack [s_glevel] = x_grp;
+      DEBUG_YREGEX  yLOG_value   ("x_grp"     , x_grp);
+      DEBUG_YREGEX  yLOG_value   ("s_glevel"  , s_glevel);
+      break;
+   case ')' :
+      DEBUG_YREGEX  yLOG_note    ("close the group");
+      x_grp = s_gstack [s_glevel];
+      rc = yREGEX__comp_add  (x_ch, x_grp);
+      DEBUG_YREGEX  yLOG_value   ("x_grp"     , x_grp);
+      DEBUG_YREGEX  yLOG_value   ("s_glevel"  , s_glevel);
+      --s_glevel;
+      break;
+   case '|' :
+      DEBUG_YREGEX  yLOG_note    ("divide branches");
+      x_grp = s_gstack [s_glevel];
+      rc = yREGEX__comp_add  (x_ch, x_grp);
+      DEBUG_YREGEX  yLOG_value   ("x_grp"     , x_grp);
+      DEBUG_YREGEX  yLOG_value   ("s_glevel"  , s_glevel);
+      break;
+   }
+   /*---(complete)-----------------------*/
+   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+   return 1;
+}
+
+
+
+/*====================------------------------------------====================*/
 /*===----                         main driver                          ----===*/
 /*====================------------------------------------====================*/
 static void      o___DRIVER__________________o (void) {;}
@@ -886,6 +956,12 @@ yREGEX_comp          (cchar *a_regex)
          rc = yREGEX__comp_dot (&i);
          continue;
       }
+      /*---(group handling)--------------*/
+      if (strchr (GRP_SET, x_ch) != NULL) {
+         DEBUG_YREGEX  yLOG_note    ("handle grouping");
+         rc = yREGEX__comp_group (&i);
+         if (rc >= 0)  continue;
+      }
       /*---(set handling)----------------*/
       if (x_ch == '[') {
          DEBUG_YREGEX  yLOG_note    ("handle character set");
@@ -893,7 +969,7 @@ yREGEX_comp          (cchar *a_regex)
          if (rc >= 0)  continue;
       }
       /*---(quick modifiers)-------------*/
-      if (strchr (MODSET, x_ch) != NULL) {
+      if (strchr (MOD_SET, x_ch) != NULL) {
          DEBUG_YREGEX  yLOG_note    ("handle simple modifier");
          rc = yREGEX__comp_smods (&i);
          continue;

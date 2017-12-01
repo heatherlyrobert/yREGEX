@@ -15,17 +15,19 @@
 
 
 /* rapidly evolving version number to aid with visual change confirmation     */
-#define YREGEX_VER_NUM   "0.2c"
-#define YREGEX_VER_TXT   "runs quantifieir matches very well in unit test"
+#define YREGEX_VER_NUM   "0.2e"
+#define YREGEX_VER_TXT   "compiling on groups includes hidden ones now"
 
 
 
 #define     MAX_SETS       250
+#define     MAX_CAPS        10
 #define     LEN_RECD      2000
 #define     LEN_NAME        20
 
 
 
+/*---(sets)-----------------*/
 typedef struct cSETS  tSETS;
 struct cSETS {
    char        type;
@@ -36,15 +38,30 @@ struct cSETS {
 extern tSETS     g_sets [MAX_SETS];
 extern int       g_nset;
 
+
+/*---(captures)-------------*/
+typedef struct cCAPS  tCAPS;
+struct cCAPS {
+   int         beg;
+   int         end;
+   int         len;
+};
+extern tCAPS     g_caps [MAX_CAPS];
+extern int       g_ncap;
+
+
+/*---(source)---------------*/
 extern char      g_source    [LEN_RECD];
 extern int       g_slen;
 
+/*---(regex)----------------*/
 extern char      g_regex     [LEN_RECD];
 extern int       g_rlen;
 
+/*---(compiled)-------------*/
 extern char      g_comp      [LEN_RECD];
-extern char      g_mods      [LEN_RECD];
 extern uchar     g_indx      [LEN_RECD];
+extern char      g_mods      [LEN_RECD];
 extern uchar     g_mins      [LEN_RECD];
 extern uchar     g_maxs      [LEN_RECD];
 extern int       g_clen;
