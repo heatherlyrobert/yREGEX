@@ -865,6 +865,7 @@ yREGEX_comp          (cchar *a_regex)
       return rc;
    }
    /*---(parse)--------------------------*/
+   DEBUG_YREGEX  yLOG_info    ("a_regex"   , a_regex);
    DEBUG_YREGEX  yLOG_point   ("g_rlen"    , g_rlen);
    for (i = 0; i < g_rlen; ++i) {
       DEBUG_YREGEX  yLOG_value   ("LOOP"      , i);
@@ -916,8 +917,7 @@ yREGEX_comp          (cchar *a_regex)
 /*====================------------------------------------====================*/
 static void      o___UNITTEST________________o (void) {;}
 
-#define       LEN_TEXT  2000
-char          unit_answer [ LEN_TEXT ];
+char        unit_answer  [LEN_RECD];
 
 char*            /* [------] unit test accessor ------------------------------*/
 yREGEX__unitcomp   (char *a_question, int a_num)
@@ -933,17 +933,17 @@ yREGEX__unitcomp   (char *a_question, int a_num)
    if      (strncmp (a_question, "map"       , 20)  == 0) {
       strlcpy (t, "0123456789abcdef0123456789abcdef", 100);
       if (a_num < 0 || a_num > 15)
-         snprintf (unit_answer, LEN_TEXT, "yREGEX_comp map  : %x %3d %2d [%-32.32s]", 0    , s_mapcount, 0, "unknown area");
+         snprintf (unit_answer, LEN_RECD, "yREGEX_comp map  : %x %3d %2d [%-32.32s]", 0    , s_mapcount, 0, "unknown area");
       else
          for (i = 0; i < 32; ++i)  if (s_map [a_num * 32 + i] == '.') {
             t [i] = '_';
             ++c;
          }
-      snprintf (unit_answer, LEN_TEXT, "yREGEX_comp map  : %x %3d %2d [%-32.32s]", a_num * 2, s_mapcount, c, t);
+      snprintf (unit_answer, LEN_RECD, "yREGEX_comp map  : %x %3d %2d [%-32.32s]", a_num * 2, s_mapcount, c, t);
    }
    /*---(compiled)-----------------------*/
    else if   (strncmp (a_question, "base"      , 20)  == 0) {
-      snprintf (unit_answer, LEN_TEXT, "yREGEX_comp base : %2d [%-45.45s]", g_clen, g_comp);
+      snprintf (unit_answer, LEN_RECD, "yREGEX_comp base : %2d [%-45.45s]", g_clen, g_comp);
    } else if (strncmp (a_question, "indx"      , 20)  == 0) {
       for (i = 0; i < 45; ++i) {
          if      (g_indx [i] ==  0)  t [i] = ' ';
@@ -951,9 +951,9 @@ yREGEX__unitcomp   (char *a_question, int a_num)
          else                        t [i] = x_range [g_indx [i]];
       }
       t [45] = 0;
-      snprintf (unit_answer, LEN_TEXT, "yREGEX_comp indx : %2d [%-45.45s]", g_clen, t);
+      snprintf (unit_answer, LEN_RECD, "yREGEX_comp indx : %2d [%-45.45s]", g_clen, t);
    } else if (strncmp (a_question, "mods"      , 20)  == 0) {
-      snprintf (unit_answer, LEN_TEXT, "yREGEX_comp mods : %2d [%-45.45s]", g_clen, g_mods);
+      snprintf (unit_answer, LEN_RECD, "yREGEX_comp mods : %2d [%-45.45s]", g_clen, g_mods);
    } else if (strncmp (a_question, "mins"      , 20)  == 0) {
       for (i = 0; i < 45; ++i) {
          if      (g_mins [i] ==  0)  t [i] = ' ';
@@ -961,7 +961,7 @@ yREGEX__unitcomp   (char *a_question, int a_num)
          else                        t [i] = x_range [g_mins [i]];
       }
       t [45] = 0;
-      snprintf (unit_answer, LEN_TEXT, "yREGEX_comp mins : %2d [%-45.45s]", g_clen, t);
+      snprintf (unit_answer, LEN_RECD, "yREGEX_comp mins : %2d [%-45.45s]", g_clen, t);
    } else if (strncmp (a_question, "maxs"      , 20)  == 0) {
       for (i = 0; i < 45; ++i) {
          if      (g_maxs [i] ==  0)  t [i] = ' ';
@@ -969,7 +969,7 @@ yREGEX__unitcomp   (char *a_question, int a_num)
          else                        t [i] = x_range [g_maxs [i]];
       }
       t [45] = 0;
-      snprintf (unit_answer, LEN_TEXT, "yREGEX_comp maxs : %2d [%-45.45s]", g_clen, t);
+      snprintf (unit_answer, LEN_RECD, "yREGEX_comp maxs : %2d [%-45.45s]", g_clen, t);
    }
    /*---(complete)-----------------------*/
    return unit_answer;
