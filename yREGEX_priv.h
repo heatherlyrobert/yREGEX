@@ -15,8 +15,8 @@
 
 
 /* rapidly evolving version number to aid with visual change confirmation     */
-#define YREGEX_VER_NUM   "0.2e"
-#define YREGEX_VER_TXT   "compiling on groups includes hidden ones now"
+#define YREGEX_VER_NUM   "0.2f"
+#define YREGEX_VER_TXT   "compiling on groups includes lengths and multi-branch marker"
 
 
 
@@ -64,6 +64,7 @@ extern uchar     g_indx      [LEN_RECD];
 extern char      g_mods      [LEN_RECD];
 extern uchar     g_mins      [LEN_RECD];
 extern uchar     g_maxs      [LEN_RECD];
+extern uchar     g_jump      [LEN_RECD];
 extern int       g_clen;
 
 

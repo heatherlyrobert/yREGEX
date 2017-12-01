@@ -57,6 +57,7 @@ uchar       g_indx      [LEN_RECD]  = "";
 char        g_mods      [LEN_RECD]  = "";
 uchar       g_mins      [LEN_RECD]  = "";
 uchar       g_maxs      [LEN_RECD]  = "";
+uchar       g_jump      [LEN_RECD]  = "";
 int         g_clen      = -1;
 
 char        s_map       [270] = "";
@@ -111,12 +112,14 @@ yREGEX__comp_init    (cchar *a_regex)
       g_mods [i] = ' ';
       g_mins [i] =   0;
       g_maxs [i] =   0;
+      g_jump [i] =   0;
    }
    g_comp [0] =  0;
    g_indx [0] =  0;
    g_mods [0] =  0;
    g_mins [0] =  0;
    g_maxs [0] =  0;
+   g_jump [0] =  0;
    g_clen = 0;
    /*---(initialize grouping)------------*/
    s_glevel   =  0;
@@ -142,6 +145,7 @@ yREGEX__comp_add     (cchar a_comp, cchar a_indx)
    g_mods [g_clen] = ' ';
    g_mins [g_clen] = 0;
    g_maxs [g_clen] = 0;
+   g_jump [g_clen] = 0;
    ++g_clen;
    DEBUG_YREGEX  yLOG_sint    (g_clen);
    g_comp [g_clen] = 0;
@@ -149,6 +153,7 @@ yREGEX__comp_add     (cchar a_comp, cchar a_indx)
    g_mods [g_clen] = 0;
    g_mins [g_clen] = 0;
    g_maxs [g_clen] = 0;
+   g_jump [g_clen] = 0;
    DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
    return 0;
 }
@@ -860,13 +865,44 @@ yREGEX__comp_cmods   (int *a_rpos)
 static void      o___GROUPS__________________o (void) {;}
 
 char
+yREGEX__comp_gfix    (cint a_grp)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   int         i           =    0;
+   uchar       x_ch        =  ' ';
+   int         x_jump      =   -1;
+   int         x_or        =    0;
+   /*---(header)-------------------------*/
+   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
+   DEBUG_YREGEX  yLOG_value   ("a_grp"     , a_grp);
+   /*---(track backwards)----------------*/
+   for (i = g_clen; i >= 0; --i) {
+      x_ch   = g_comp [i];
+      if (g_indx [i] == a_grp) {
+         if (x_ch == '|') {
+            g_jump [i] = x_jump;
+            x_jump =  0;
+            ++x_or;
+         } else if (x_ch == '(') {
+            g_jump [i] = x_jump;
+            if (x_or > 0)  g_mods [i] = 'm';
+            break;
+         }
+      }
+      ++x_jump;
+   }
+   /*---(complete)-----------------------*/
+   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+   return 1;
+}
+
+char
 yREGEX__comp_group   (int *a_rpos)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
    char        rc          =   -1;
-   char        x_ch        =  ' ';
-   int         x_next      =    0;
+   uchar       x_ch        =  ' ';
    uchar       x_grp       =    0;
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
@@ -895,6 +931,7 @@ yREGEX__comp_group   (int *a_rpos)
       DEBUG_YREGEX  yLOG_note    ("close the group");
       x_grp = s_gstack [s_glevel];
       rc = yREGEX__comp_add  (x_ch, x_grp);
+      rc = yREGEX__comp_gfix (x_grp);
       DEBUG_YREGEX  yLOG_value   ("x_grp"     , x_grp);
       DEBUG_YREGEX  yLOG_value   ("s_glevel"  , s_glevel);
       --s_glevel;
@@ -1049,6 +1086,14 @@ yREGEX__unitcomp   (char *a_question, int a_num)
       }
       t [45] = 0;
       snprintf (unit_answer, LEN_RECD, "yREGEX_comp maxs : %2d [%-45.45s]", g_clen, t);
+   } else if (strncmp (a_question, "jump"      , 20)  == 0) {
+      for (i = 0; i < 45; ++i) {
+         if      (g_jump [i] ==  0)  t [i] = ' ';
+         else if (g_jump [i] >= 62)  t [i] = '*';
+         else                        t [i] = x_range [g_jump [i]];
+      }
+      t [45] = 0;
+      snprintf (unit_answer, LEN_RECD, "yREGEX_comp jump : %2d [%-45.45s]", g_clen, t);
    }
    /*---(complete)-----------------------*/
    return unit_answer;
