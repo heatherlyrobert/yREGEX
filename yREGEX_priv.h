@@ -15,8 +15,8 @@
 
 
 /* rapidly evolving version number to aid with visual change confirmation     */
-#define YREGEX_VER_NUM   "0.1g"
-#define YREGEX_VER_TXT   "basic modifiers adding well, simple testing in place"
+#define YREGEX_VER_NUM   "0.1h"
+#define YREGEX_VER_TXT   "complex modifiers adding well, simple testing in place"
 
 
 

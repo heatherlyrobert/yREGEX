@@ -683,6 +683,133 @@ yREGEX__comp_set     (int *a_rpos)
 
 
 /*====================------------------------------------====================*/
+/*===----                       modifier handling                      ----===*/
+/*====================------------------------------------====================*/
+static void      o___MODS____________________o (void) {;}
+
+char
+yREGEX__comp_smods   (int *a_rpos)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   char        rc          =   -1;
+   uchar       x_set       =    0;
+   char        t           [LEN_NAME] = "";
+   char        x_ch        =  ' ';
+   /*---(header)-------------------------*/
+   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
+   DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
+   x_ch   = g_regex [*a_rpos];
+   DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
+   switch (x_ch) {
+   case '*' : case '@' :
+      DEBUG_YREGEX  yLOG_note    ("any modifier * (greedy) and @ (lazy)");
+      yREGEX__comp_mod (x_ch, 0, MAX_QUAN);
+      break;
+   case '+' : case '~' :
+      DEBUG_YREGEX  yLOG_note    ("many modifier + (greedy) and ~ (lazy)");
+      yREGEX__comp_mod (x_ch, 1, MAX_QUAN);
+      break;
+   case '?' : case '!' :
+      DEBUG_YREGEX  yLOG_note    ("one modifier ? (greedy) and ! (lazy)");
+      yREGEX__comp_mod (x_ch, 0, 1       );
+      break;
+   }
+   /*---(complete)-----------------------*/
+   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+   return 1;
+}
+
+char
+yREGEX__comp_cmods   (int *a_rpos)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   char        rc          =   -1;
+   uchar       x_set       =    0;
+   char        t           [LEN_NAME] = "";
+   uchar       x_ch        =  ' ';
+   uchar       x_sch       =  ' ';
+   int         i           =    0;
+   char        x_lazy      =  '-';
+   int         x_min       =   -1;
+   int         x_max       =   -1;
+   int         x_len       =    0;
+   /*---(header)-------------------------*/
+   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
+   DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
+   x_ch   = g_regex [*a_rpos];
+   DEBUG_YREGEX  yLOG_char    ("x_ch"      , x_ch);
+   --rce;  if (x_ch != '{') {
+      DEBUG_YREGEX  yLOG_note    ("does not start with a {");
+      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(check for lazy modifier)--------*/
+   x_ch   = g_regex [++(*a_rpos)];
+   DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
+   DEBUG_YREGEX  yLOG_char    ("x_ch"      , x_ch);
+   if (x_ch == '-') {
+      DEBUG_YREGEX  yLOG_note    ("found lazy modifer");
+      x_lazy = 'y';
+      x_ch   = g_regex [++(*a_rpos)];
+      DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
+      DEBUG_YREGEX  yLOG_char    ("x_ch"      , x_ch);
+   }
+   /*---(walk modifier)------------------*/
+   while (1) {
+      DEBUG_YREGEX  yLOG_value   ("x_len"     , x_len);
+      if (*a_rpos >= g_rlen) {
+         DEBUG_YREGEX  yLOG_note    ("hit end of string");
+         break;
+      }
+      if (x_ch == '}') {
+         DEBUG_YREGEX  yLOG_note    ("found end of modifier");
+         if (x_len > 0) {
+            sprintf (t, "%*.*s", x_len, x_len, g_regex + *a_rpos - x_len);
+            DEBUG_YREGEX  yLOG_info    ("t"         , t);
+            x_max = atoi (t);
+         }
+         DEBUG_YREGEX  yLOG_value   ("x_max"     , x_max);
+         break;
+      }
+      if (x_ch == ',') {
+         DEBUG_YREGEX  yLOG_note    ("found comma separator");
+         if (x_len == 0) {
+            DEBUG_YREGEX  yLOG_note    ("min specifier is empty, use zero");
+            x_min = 0;
+         } else {
+            DEBUG_YREGEX  yLOG_note    ("found real min specifier");
+            sprintf (t, "%*.*s", x_len, x_len, g_regex + *a_rpos - x_len);
+            DEBUG_YREGEX  yLOG_info    ("t"         , t);
+            x_min = atoi (t);
+         }
+         x_len = -1; /* don't count comma */
+         DEBUG_YREGEX  yLOG_value   ("x_min"     , x_min);
+      }
+      x_ch   = g_regex [++(*a_rpos)];
+      ++x_len;
+      DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
+      DEBUG_YREGEX  yLOG_char    ("x_ch"      , x_ch);
+   }
+   /*---(check)--------------------------*/
+   --rce;  if (x_max <= 0) {
+      DEBUG_YREGEX  yLOG_note    ("max can not be empty or zero");
+      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(update)-------------------------*/
+   DEBUG_YREGEX  yLOG_note    ("update modifier");
+   if (x_lazy == 'y')  yREGEX__comp_mod ('}', x_min, x_max);
+   else                yREGEX__comp_mod ('{', x_min, x_max);
+   /*---(complete)-----------------------*/
+   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+   return 1;
+}
+
+
+
+/*====================------------------------------------====================*/
 /*===----                         main driver                          ----===*/
 /*====================------------------------------------====================*/
 static void      o___DRIVER__________________o (void) {;}
@@ -719,28 +846,24 @@ yREGEX_comp          (cchar *a_regex)
       }
       /*---(set handling)----------------*/
       if (x_ch == '[') {
-         DEBUG_YREGEX  yLOG_note    ("handle set start");
+         DEBUG_YREGEX  yLOG_note    ("handle character set");
          rc = yREGEX__comp_set (&i);
          if (rc >= 0)  continue;
       }
       /*---(quick modifiers)-------------*/
       if (strchr (MODSET, x_ch) != NULL) {
-         DEBUG_YREGEX  yLOG_note    ("handle modifier");
-         switch (x_ch) {
-         case '*' : case '@' :
-            yREGEX__comp_mod (x_ch, 0, MAX_QUAN);
-            break;
-         case '+' : case '~' :
-            yREGEX__comp_mod (x_ch, 1, MAX_QUAN);
-            break;
-         case '?' : case '!' :
-            yREGEX__comp_mod (x_ch, 0, 1       );
-            break;
-         }
+         DEBUG_YREGEX  yLOG_note    ("handle simple modifier");
+         rc = yREGEX__comp_smods (&i);
+         continue;
+      }
+      /*---(specific modifiers)----------*/
+      if (x_ch == '{') {
+         DEBUG_YREGEX  yLOG_note    ("handle complex modifier");
+         rc = yREGEX__comp_cmods (&i);
          continue;
       }
       /*---(literals)--------------------*/
-      DEBUG_YREGEX  yLOG_note    ("finally, make it a literal");
+      DEBUG_YREGEX  yLOG_note    ("handle character literal");
       rc = yREGEX__comp_literal (&i);
    }
    /*---(complete)-----------------------*/
