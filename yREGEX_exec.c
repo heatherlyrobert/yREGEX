@@ -6,7 +6,9 @@
 
 char        g_source    [LEN_RECD]  = "";
 int         g_slen      = -1;
-int         s_begin     =  0;
+static int  s_begin     =  0;
+static int  s_end       =  0;
+static int  s_len       =  0;
 
 
 
@@ -95,7 +97,7 @@ yREGEX__exec_set     (cint a_begin, int a_rpos, int a_tpos)
 }
 
 char
-yREGEX__exec_doer    (cint a_begin, char a_mode, int a_rpos, int a_tpos, int *a_len)
+yREGEX__exec_doer    (cint a_begin, char a_mode, int a_rpos, int a_tpos, int *a_tend)
 {
    /*---(design notes)-------------------*/
    /*
@@ -106,14 +108,14 @@ yREGEX__exec_doer    (cint a_begin, char a_mode, int a_rpos, int a_tpos, int *a_
    char        rce         =  -10;
    char        rc          =    0;
    uchar       x_indx      =    0;
-   int         x_len       =    0;
+   int         x_tend      = *a_tend;
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    DEBUG_YREGEX  yLOG_value   ("a_begin"   , a_begin);
    DEBUG_YREGEX  yLOG_char    ("a_mode"    , a_mode);
    DEBUG_YREGEX  yLOG_value   ("a_tpos"    , a_tpos);
    DEBUG_YREGEX  yLOG_value   ("a_rpos"    , a_rpos);
-   DEBUG_YREGEX  yLOG_value   ("a_len"     , *a_len);
+   DEBUG_YREGEX  yLOG_value   ("a_tend"    , *a_tend);
    /*---(defenses)-----------------------*/
    --rce;  if (a_tpos <  0     ) {
       DEBUG_YREGEX  yLOG_note    ("before beginning of source text");
@@ -146,11 +148,21 @@ yREGEX__exec_doer    (cint a_begin, char a_mode, int a_rpos, int a_tpos, int *a_
    DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
    /*---(resurse)------------------------*/
    if (a_mode == 'r' && rc == 1) {
-      DEBUG_YREGEX  yLOG_note    ("resursing to next level");
       ++a_rpos;
       ++a_tpos;
-      if (a_rpos >= g_rlen)    rc = 1;
-      else   rc = yREGEX__exec_next (a_begin, '-', a_rpos, a_tpos, &x_len);
+      if (a_rpos >= g_clen) {
+         DEBUG_YREGEX  yLOG_note    ("end of compiled regex");
+         rc = 1;
+         *a_tend = a_tpos - 1;
+         DEBUG_YREGEX  yLOG_value   ("a_tend"    , *a_tend);
+      } else  {
+         DEBUG_YREGEX  yLOG_note    ("resursing to next level");
+         rc = yREGEX__exec_next (a_begin, '-', a_rpos, a_tpos, &x_tend);
+         if (rc == 1) {
+            *a_tend = x_tend;
+            DEBUG_YREGEX  yLOG_value   ("a_tend"    , *a_tend);
+         }
+      }
       DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
    }
    /*---(complete)-----------------------*/
@@ -166,7 +178,7 @@ yREGEX__exec_doer    (cint a_begin, char a_mode, int a_rpos, int a_tpos, int *a_
 static void      o___MULTIPLE________________o (void) {;}
 
 char
-yREGEX__exec_multi   (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_len) 
+yREGEX__exec_multi   (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_tend) 
 {
    /*---(design notes)-------------------*/
    /*
@@ -176,7 +188,7 @@ yREGEX__exec_multi   (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_l
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
    char        rc          =    0;
-   int         x_len       = *a_len;
+   int         x_tend      = *a_tend;
    int         x_rem       =    0;
    uchar       x_min       =    0;
    uchar       x_max       =    0;
@@ -189,7 +201,7 @@ yREGEX__exec_multi   (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_l
    DEBUG_YREGEX  yLOG_char    ("a_mode"    , a_mode);
    DEBUG_YREGEX  yLOG_value   ("a_rpos"    , a_rpos);
    DEBUG_YREGEX  yLOG_value   ("a_tpos"    , a_tpos);
-   DEBUG_YREGEX  yLOG_value   ("a_len"     , *a_len);
+   DEBUG_YREGEX  yLOG_value   ("a_tend"    , *a_tend);
    /*---(prepare)------------------------*/
    x_rem  = g_slen - a_tpos;
    DEBUG_YREGEX  yLOG_value   ("x_rem"     , x_rem);
@@ -206,36 +218,63 @@ yREGEX__exec_multi   (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_l
       DEBUG_YREGEX  yLOG_value   ("x_max (a)" , x_max);
    }
    /*---(check for required)-------------*/
-   DEBUG_YREGEX  yLOG_note    ("checking up to the minimum");
+   DEBUG_YREGEX  yLOG_note    ("CHECKING up to the minimum");
    for (i = 0; i < x_min; ++i) {
-      rc = yREGEX__exec_doer   (a_begin, 'c', a_rpos, a_tpos++, &x_len);
+      DEBUG_YREGEX  yLOG_value   ("looping"   , i);
+      rc = yREGEX__exec_doer   (a_begin, 'c', a_rpos, a_tpos++, &x_tend);
+      DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
       if (rc <= 0) {
          DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rc);
          return rc;
       }
       ++x_match;
+      DEBUG_YREGEX  yLOG_value   ("x_match"   , x_match);
    }
    /*---(check for additional)-----------*/
-   for (i = x_min; i <= x_max; ++i) {
+   DEBUG_YREGEX  yLOG_note    ("CHECKING the main range");
+   for (i = x_min; i <  x_max; ++i) {
+      DEBUG_YREGEX  yLOG_value   ("looping"   , i);
+      if (a_mode == 'G') {
+         rc = yREGEX__exec_doer   (a_begin, 'c', a_rpos, a_tpos++, &x_tend);
+         DEBUG_YREGEX  yLOG_value   ("greed rc"  , rc);
+         if (rc == 0) break;
+      }
       if (a_mode == 'L') {
-         rc = yREGEX__exec_doer   (a_begin, 'r', a_rpos, a_tpos++, &x_len);
+         rc = yREGEX__exec_doer   (a_begin, 'r', a_rpos, a_tpos++, &x_tend);
+         DEBUG_YREGEX  yLOG_value   ("lazy rc"   , rc);
          if (rc == 1) {
+            *a_tend = x_tend;
+            DEBUG_YREGEX  yLOG_value   ("a_tend"    , *a_tend);
             DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
             return 1;
          }
       }
-      /*> if (a_mode == 'G') {                                                        <* 
-       *>    rc = yREGEX__exec_doer   (a_begin, 'c', a_rpos, a_tpos++, &x_len);       <* 
-       *> }                                                                           <*/
       ++x_match;
    }
-   /*---(complete)-----------------------*/
+   /*---(now do greedy for real)---------*/
+   if (a_mode == 'G') {
+      --a_tpos;
+      DEBUG_YREGEX  yLOG_note    ("CHECKING backward run for greedy");
+      for (i = x_match; i >= x_min - 1; --i) {
+         DEBUG_YREGEX  yLOG_value   ("looping"   , i);
+         rc = yREGEX__exec_doer   (a_begin, 'r', a_rpos, a_tpos--, &x_tend);
+         DEBUG_YREGEX  yLOG_value   ("greedy rc" , rc);
+         if (rc == 1) {
+            *a_tend = x_tend;
+            DEBUG_YREGEX  yLOG_value   ("a_tend"    , *a_tend);
+            DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+            return 1;
+         }
+      }
+   }
+   DEBUG_YREGEX  yLOG_note    ("FELL out of the bottom");
+   /*---(failed)-------------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
-   return 1;
+   return 0;
 }
 
 char
-yREGEX__exec_next    (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_len) 
+yREGEX__exec_next    (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_tend) 
 {
    /*---(design notes)-------------------*/
    /*
@@ -243,34 +282,37 @@ yREGEX__exec_next    (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_l
     */
    /*---(locals)-----------+-----+-----+-*/
    char        rc          =    0;
-   int         x_len       = *a_len;
+   int         x_tend      = *a_tend;
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    DEBUG_YREGEX  yLOG_value   ("a_begin"   , a_begin);
    DEBUG_YREGEX  yLOG_char    ("a_mode"    , a_mode);
    DEBUG_YREGEX  yLOG_value   ("a_rpos"    , a_rpos);
    DEBUG_YREGEX  yLOG_value   ("a_tpos"    , a_tpos);
-   DEBUG_YREGEX  yLOG_value   ("a_len"     , *a_len);
+   DEBUG_YREGEX  yLOG_value   ("a_tend"    , *a_tend);
    /*---(launch checkers)----------------*/
    DEBUG_YREGEX  yLOG_char    ("x_mod"     , g_mods [a_rpos]);
    switch (g_mods [a_rpos]) {
    case '*' : case '+' : case '?' : case '{' :
       DEBUG_YREGEX  yLOG_note    ("run a greedy check");
-      rc = yREGEX__exec_multi  (a_begin, 'G', a_rpos, a_tpos, &x_len);
+      rc = yREGEX__exec_multi  (a_begin, 'G', a_rpos, a_tpos, &x_tend);
       break;
    case '@' : case '~' : case '!' : case '}' :
       DEBUG_YREGEX  yLOG_note    ("run a lazy check");
-      rc = yREGEX__exec_multi  (a_begin, 'L', a_rpos, a_tpos, &x_len);
+      rc = yREGEX__exec_multi  (a_begin, 'L', a_rpos, a_tpos, &x_tend);
       break;
    default  :
       DEBUG_YREGEX  yLOG_note    ("run a single char check");
-      rc = yREGEX__exec_doer   (a_begin, 'r', a_rpos, a_tpos, &x_len);
+      rc = yREGEX__exec_doer   (a_begin, 'r', a_rpos, a_tpos, &x_tend);
       break;
    }
    /*---(check)--------------------------*/
    DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
-   DEBUG_YREGEX  yLOG_value   ("x_len"     , x_len);
-   if (rc == 1)   *a_len = x_len;
+   DEBUG_YREGEX  yLOG_value   ("x_tend"    , x_tend);
+   if (rc == 1) {
+      *a_tend = x_tend;
+      DEBUG_YREGEX  yLOG_value   ("a_tend"    , *a_tend);
+   }
    else           rc    = 0;
    DEBUG_YREGEX  yLOG_value   ("return"    , rc);
    /*---(complete)-----------------------*/
@@ -291,7 +333,7 @@ yREGEX_exec          (cchar *a_source)
    /*---(locals)-----------+-----+-----+-*/
    char        rc          =    0;
    int         x_begin     =    0;
-   int         x_len       =    0;
+   int         x_tend      =    0;
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    DEBUG_YREGEX  yLOG_point   ("a_source"  , a_source);
@@ -305,16 +347,21 @@ yREGEX_exec          (cchar *a_source)
    /*---(parse)--------------------------*/
    DEBUG_YREGEX  yLOG_info    ("a_source"  , a_source);
    DEBUG_YREGEX  yLOG_value   ("g_slen"    , g_slen);
-   s_begin = -1;
+   s_begin = s_end = s_len = -1;
    for (x_begin = 0; x_begin < g_slen; ++x_begin) {
       DEBUG_YREGEX  yLOG_value   ("BEGIN AT"  , x_begin);
-      rc = yREGEX__exec_next (x_begin, '-', 0, x_begin, &x_len);
+      rc = yREGEX__exec_next (x_begin, '-', 0, x_begin, &x_tend);
       DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
       if (rc == 1) {
          s_begin = x_begin;
+         s_end   = x_tend;
+         s_len   = x_tend - x_begin + 1;
          break;
       }
    }
+   DEBUG_YREGEX  yLOG_value   ("s_begin"   , s_begin);
+   DEBUG_YREGEX  yLOG_value   ("s_end"     , s_end);
+   DEBUG_YREGEX  yLOG_value   ("s_len"     , s_len);
    /*---(check)--------------------------*/
    if (rc != 1) rc = 0;
    DEBUG_YREGEX  yLOG_value   ("return"    , rc);
@@ -338,6 +385,9 @@ yREGEX__unitexec   (char *a_question, int a_num)
    /*---(mapping)------------------------*/
    if      (strncmp (a_question, "begin"     , 20)  == 0) {
       snprintf (unit_answer, LEN_RECD, "yREGEX_exec begin: %3d", s_begin);
+   }
+   else if (strncmp (a_question, "stat"      , 20)  == 0) {
+      snprintf (unit_answer, LEN_RECD, "yREGEX_exec stat : beg=%3d, end=%3d, len=%3d", s_begin, s_end, s_len);
    }
    /*---(complete)-----------------------*/
    return unit_answer;

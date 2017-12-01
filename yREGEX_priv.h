@@ -15,8 +15,8 @@
 
 
 /* rapidly evolving version number to aid with visual change confirmation     */
-#define YREGEX_VER_NUM   "0.2b"
-#define YREGEX_VER_TXT   "added exact (min = max) to range {} comp"
+#define YREGEX_VER_NUM   "0.2c"
+#define YREGEX_VER_TXT   "runs quantifieir matches very well in unit test"
 
 
 
