@@ -37,6 +37,8 @@
  *   {n,m}
  *   (...)
  *   |
+ *   <         gap, break, or separator before word or code element \W
+ *   >         gap, break, or separator after word or code element \W
  *
  *
  *   compiled...

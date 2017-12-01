@@ -15,8 +15,8 @@
 
 
 /* rapidly evolving version number to aid with visual change confirmation     */
-#define YREGEX_VER_NUM   "0.1h"
-#define YREGEX_VER_TXT   "complex modifiers adding well, simple testing in place"
+#define YREGEX_VER_NUM   "0.1i"
+#define YREGEX_VER_TXT   "basics of simple match execution are there and tested"
 
 
 
@@ -75,10 +75,17 @@ char        yREGEX__comp_bslash  (int   *a_rpos);
 char        yREGEX__comp_setname (cchar *a_name);
 char        yREGEX__comp_setstd  (int   *a_rpos);
 char        yREGEX__comp_setmap  (int   *a_rpos);
+char        yREGEX__comp_dot     (int   *a_rpos);
 
 
-
+/*---(program)--------------*/
 char        yREGEX__exec_init    (cchar *a_source);
+/*---(single)---------------*/
+char        yREGEX__exec_char    (int a_depth, int a_tpos, int a_rpos);
+char        yREGEX__exec_set     (int a_depth, int a_tpos, int a_rpos);
+char        yREGEX__exec_doer    (int a_depth, int a_tpos, int a_rpos);
+/*---(multiple)-------------*/
+
 
 char        yREGEX__literal      (int    a_depth, int a_tpos, int a_rpos);
 

@@ -40,70 +40,8 @@ yREGEX_version       (void)
    return yREGEX_ver;
 }
 
-char
-yREGEX__exec_init    (cchar *a_src)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   char        rc          =    0;
-   char        i           =    0;
-   char        j           =    0;
-   /*---(check source)-------------------*/
-   --rce;  if (a_src == NULL)  return rce;
-   g_slen = strllen (a_src, LEN_RECD);
-   --rce;  if (g_slen <= 0   )  return rce;
-   rc = strlcpy (g_source, a_src, LEN_RECD);
-   --rce;  if (rc     <  0   )  return rce;
-   /*---(complete)-----------------------*/
-   return 0;
-}
 
-char
-yREGEX__set          (int a_depth, int a_tpos, int a_rpos)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   char        i           =    0;
-   uchar       x_set       =   -1;
-   uchar       x_ch        =    0;
-   /*---(defense)------------------------*/
-   --rce;  if (a_depth >= 100   )           return rce;
-   --rce;  if (a_tpos  <  0     )           return rce;
-   --rce;  if (a_tpos  >= g_slen)           return rce;
-   --rce;  if (a_rpos  <  1     )           return rce;
-   --rce;  if (a_rpos  >= g_clen)           return rce;
-   --rce;  if (g_regex [a_rpos - 1] != '[')  return rce;
-   /*---(get the set)--------------------*/
-   x_set = g_regex  [a_rpos];
-   --rce;  if (x_set <  0     )             return rce;
-   --rce;  if (x_set >= g_nset)             return rce;
-   /*---(check)--------------------------*/
-   x_ch  = g_source [a_tpos];
-   if (g_sets [x_set].map [x_ch] == '.')  return 1;
-   /*---(complete)-----------------------*/
-   return 0;
-}
 
-char
-yREGEX_driver        (int a_depth, int a_tpos, int a_rpos)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   char        rc          =    0;
-   rc = yREGEX__literal (a_depth, a_tpos, a_rpos);
-   return rc;
-}
-
-char
-yREGEX_exec          (cchar *a_source)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   char        rc          =    0;
-   /*---(prepare)------------------------*/
-   rc = yREGEX__exec_init   (a_source);
-   if (rc < 0)  return rc;
-   /*---(complete)-----------------------*/
-   return 0;
-}
 
 
 
