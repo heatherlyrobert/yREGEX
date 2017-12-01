@@ -767,6 +767,7 @@ yREGEX__comp_cmods   (int *a_rpos)
    int         x_min       =   -1;
    int         x_max       =   -1;
    int         x_len       =    0;
+   char        x_comma     =  '-';
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
@@ -807,6 +808,7 @@ yREGEX__comp_cmods   (int *a_rpos)
       }
       if (x_ch == ',') {
          DEBUG_YREGEX  yLOG_note    ("found comma separator");
+         x_comma = 'y';
          if (x_len == 0) {
             DEBUG_YREGEX  yLOG_note    ("min specifier is empty, use zero");
             x_min = 0;
@@ -830,6 +832,7 @@ yREGEX__comp_cmods   (int *a_rpos)
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
+   if (x_comma == '-')   x_min = x_max;
    /*---(update)-------------------------*/
    DEBUG_YREGEX  yLOG_note    ("update modifier");
    if (x_lazy == 'y')  yREGEX__comp_mod ('}', x_min, x_max);
