@@ -1,5 +1,12 @@
-/*===============================[[ beg code ]]===============================*/ #include    "yREGEX.h"
+/*===============================[[ beg code ]]===============================*/
+#include    "yREGEX.h"
 #include    "yREGEX_priv.h"
+
+
+
+/*---(struct.re)--------+-----------+-*/
+extern      tREGEX      g_RE        [MAX_REGEX];
+
 
 tSETS       g_sets [MAX_SETS] = {
    /*           0         1            0               1               2               3               4               5               6               7               8               9               A               B               C               D               E               F                 */
@@ -49,7 +56,6 @@ int         g_nset      = 0;
 #define     GRP_SET      "()|"
 #define     MAX_QUAN    255
 
-char        g_regex     [LEN_RECD]  = "";
 int         g_rlen      = -1;
 
 char        g_comp      [LEN_RECD]  = "";
@@ -74,7 +80,7 @@ char        s_ghidden         =  9;
 /*====================------------------------------------====================*/
 static void      o___PROGRAM_________________o (void) {;}
 
-char
+char         /*-> tbd --------------------------------[ shoot  [fe.C73.144.31]*/ /*-[01.0000.01#.Z]-*/ /*-[--.---.---.--]-*/
 yREGEX__comp_init    (cchar *a_regex)
 {
    /*---(locals)-----------+-----+-----+-*/
@@ -98,7 +104,7 @@ yREGEX__comp_init    (cchar *a_regex)
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   rc = strlcpy (g_regex, a_regex , LEN_RECD);
+   rc = strlcpy (g_source, a_regex , LEN_RECD);
    DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
    --rce;  if (rc     <  0   ) {
       DEBUG_YREGEX  yLOG_note    ("truncated copy");
@@ -132,7 +138,7 @@ yREGEX__comp_init    (cchar *a_regex)
    return 0;
 }
 
-char
+char         /*-> tbd --------------------------------[ leaf   [fz.632.201.00]*/ /*-[00.0000.06#.!]-*/ /*-[--.---.---.--]-*/
 yREGEX__comp_add     (cchar a_comp, cchar a_indx)
 {
    /*---(header)-------------------------*/
@@ -158,7 +164,7 @@ yREGEX__comp_add     (cchar a_comp, cchar a_indx)
    return 0;
 }
 
-char
+char         /*-> tbd --------------------------------[ leaf   [fz.412.301.00]*/ /*-[00.0000.02#.!]-*/ /*-[--.---.---.--]-*/
 yREGEX__comp_mod     (cchar a_mod, uchar a_min, uchar a_max)
 {
    /*---(header)-------------------------*/
@@ -181,7 +187,7 @@ yREGEX__comp_mod     (cchar a_mod, uchar a_min, uchar a_max)
 /*====================------------------------------------====================*/
 static void      o___LITERAL_________________o (void) {;}
 
-char
+char         /*-> tbd --------------------------------[ ------ [fe.833.134.31]*/ /*-[01.0000.01#.6]-*/ /*-[--.---.---.--]-*/
 yREGEX__comp_literal (int *a_rpos)
 {
    /*---(locals)-----------+-----+-----+-*/
@@ -204,7 +210,7 @@ yREGEX__comp_literal (int *a_rpos)
       return rce;
    }
    /*---(check)--------------------------*/
-   x_ch  = g_regex [*a_rpos];
+   x_ch  = g_source [*a_rpos];
    DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
    rc = yREGEX__comp_add  (x_ch, 0);
    DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
@@ -224,7 +230,7 @@ yREGEX__comp_literal (int *a_rpos)
 /*====================------------------------------------====================*/
 static void      o___SETS____________________o (void) {;}
 
-char
+char         /*-> tbd --------------------------------[ leaf   [fz.531.021.10]*/ /*-[02.0000.01#.!]-*/ /*-[--.---.---.--]-*/
 yREGEX__comp_setinit (void)
 {
    /*---(locals)-----------+-----+-----+-*/
@@ -249,7 +255,7 @@ yREGEX__comp_setinit (void)
    return 0;
 }
 
-char
+char         /*-> tbd --------------------------------[ leaf   [fc.632.122.40]*/ /*-[01.0000.01#.8]-*/ /*-[--.---.---.--]-*/
 yREGEX__comp_setabbr (cchar a_abbr)
 {
    /*---(locals)-----------+-----+-----+-*/
@@ -276,7 +282,7 @@ yREGEX__comp_setabbr (cchar a_abbr)
    return 0;
 }
 
-char
+char         /*-> tbd --------------------------------[ ------ [fe.B44.145.52]*/ /*-[01.0000.01#.B]-*/ /*-[--.---.---.--]-*/
 yREGEX__comp_bslash  (int *a_rpos)
 {
    /*---(locals)-----------+-----+-----+-*/
@@ -299,7 +305,7 @@ yREGEX__comp_bslash  (int *a_rpos)
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   x_ch  = g_regex [*a_rpos];
+   x_ch  = g_source [*a_rpos];
    DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
    --rce;  if (x_ch != '\\') {
       DEBUG_YREGEX  yLOG_note    ("does not start with a backslash");
@@ -309,7 +315,7 @@ yREGEX__comp_bslash  (int *a_rpos)
    /*---(advance)------------------------*/
    ++(*a_rpos);
    DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
-   x_ch   = g_regex [*a_rpos];
+   x_ch   = g_source [*a_rpos];
    DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
    /*---(check for set)------------------*/
    DEBUG_YREGEX  yLOG_info    ("allowed"   , BSLASHSET);
@@ -330,7 +336,7 @@ yREGEX__comp_bslash  (int *a_rpos)
    return 0;
 }
 
-char
+char         /*-> tbd --------------------------------[ leaf   [fe.A53.145.A0]*/ /*-[01.0000.02#.E]-*/ /*-[--.---.---.--]-*/
 yREGEX__comp_setname (cchar *a_name)
 {
    /*---(locals)-----------+-----+-----+-*/
@@ -378,7 +384,7 @@ yREGEX__comp_setname (cchar *a_name)
    return 0;
 }
 
-char
+char         /*-> tbd --------------------------------[ leaf   [fe.833.044.30]*/ /*-[01.0000.01#.!]-*/ /*-[--.---.---.--]-*/
 yREGEX__comp_setloc  (void)
 {
    /*---(locals)-----------+-----+-----+-*/
@@ -415,7 +421,7 @@ yREGEX__comp_setloc  (void)
    return 0;
 }
 
-char
+char         /*-> tbd --------------------------------[ leaf   [fe.943.034.30]*/ /*-[01.0000.01#.!]-*/ /*-[--.---.---.--]-*/
 yREGEX__comp_setnew  (void)
 {
    /*---(locals)-----------+-----+-----+-*/
@@ -456,7 +462,7 @@ yREGEX__comp_setnew  (void)
    return g_nset - 1;
 }
 
-char
+char         /*-> tbd --------------------------------[ leaf   [fz.321.111.00]*/ /*-[00.0000.01#.!]-*/ /*-[--.---.---.--]-*/
 yREGEX__comp_setclr  (char a_unmark)
 {
    int         i           =    0;
@@ -470,7 +476,7 @@ yREGEX__comp_setclr  (char a_unmark)
    return 0;
 }
 
-char
+char         /*-> tbd --------------------------------[ ------ [fe.LA5.196.D1]*/ /*-[03.0000.01#.D]-*/ /*-[--.---.---.--]-*/
 yREGEX__comp_setmap  (int *a_rpos)
 {
    /*---(locals)-----------+-----+-----+-*/
@@ -500,7 +506,7 @@ yREGEX__comp_setmap  (int *a_rpos)
       return rce;
    }
    /*---(defaults)-----------------------*/
-   if (g_regex [*a_rpos] == '^') {
+   if (g_source [*a_rpos] == '^') {
       DEBUG_YREGEX  yLOG_note    ("found leading inverse sign");
       x_unmark = '.';
       x_mark   = ' ';
@@ -514,7 +520,7 @@ yREGEX__comp_setmap  (int *a_rpos)
    DEBUG_YREGEX  yLOG_note    ("walk through regex");
    --rce;  for (i = *a_rpos; i < g_rlen; ++i) {
       /*---(prepare)---------------------*/
-      x_ch  = g_regex [i];
+      x_ch  = g_source [i];
       DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
       /*---(backslash)-------------------*/
       if (x_ch == '\\') {
@@ -574,7 +580,7 @@ yREGEX__comp_setmap  (int *a_rpos)
    return 1;
 }
 
-char
+char         /*-> tbd --------------------------------[ ------ [fe.D55.138.72]*/ /*-[01.0000.01#.A]-*/ /*-[--.---.---.--]-*/
 yREGEX__comp_setstd  (int *a_rpos)
 {
    /*---(locals)-----------+-----+-----+-*/
@@ -596,28 +602,28 @@ yREGEX__comp_setstd  (int *a_rpos)
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   --rce;  if (g_regex [*a_rpos - 1] != '[') {
+   --rce;  if (g_source [*a_rpos - 1] != '[') {
       DEBUG_YREGEX  yLOG_note    ("does not have [ to left");
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   --rce;  if (g_regex [*a_rpos    ] != ':') {
+   --rce;  if (g_source [*a_rpos    ] != ':') {
       DEBUG_YREGEX  yLOG_note    ("does not have : at current position");
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   --rce;  if (g_regex [*a_rpos + 6] != ':') {
+   --rce;  if (g_source [*a_rpos + 6] != ':') {
       DEBUG_YREGEX  yLOG_note    ("does not have : near end");
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   --rce;  if (g_regex [*a_rpos + 7] != ']') {
+   --rce;  if (g_source [*a_rpos + 7] != ']') {
       DEBUG_YREGEX  yLOG_note    ("does not have ] at end");
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    /*---(check for set)------------------*/
-   sprintf (t, "%-5.5s", g_regex + *a_rpos + 1);
+   sprintf (t, "%-5.5s", g_source + *a_rpos + 1);
    DEBUG_YREGEX  yLOG_info    ("name"      , t);
    x_set = yREGEX__comp_setname (t);
    DEBUG_YREGEX  yLOG_value   ("x_set"     , x_set);
@@ -635,7 +641,7 @@ yREGEX__comp_setstd  (int *a_rpos)
    return rce;
 }
 
-char
+char         /*-> tbd --------------------------------[ ------ [fe.D54.156.65]*/ /*-[02.0000.01#.!]-*/ /*-[--.---.---.--]-*/
 yREGEX__comp_set     (int *a_rpos)
 {
    /*---(locals)-----------+-----+-----+-*/
@@ -647,7 +653,7 @@ yREGEX__comp_set     (int *a_rpos)
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
-   x_ch   = g_regex [*a_rpos];
+   x_ch   = g_source [*a_rpos];
    DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
    --rce;  if (x_ch != '[') {
       DEBUG_YREGEX  yLOG_note    ("does not start with a [");
@@ -657,7 +663,7 @@ yREGEX__comp_set     (int *a_rpos)
    /*---(advance)------------------------*/
    ++(*a_rpos);
    DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
-   x_ch   = g_regex [*a_rpos];
+   x_ch   = g_source [*a_rpos];
    DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
    /*---(check standard sets)------------*/
    if (x_ch == ':') {
@@ -699,7 +705,7 @@ yREGEX__comp_set     (int *a_rpos)
    return rce;
 }
 
-char
+char         /*-> tbd --------------------------------[ ------ [fe.632.152.12]*/ /*-[01.0000.01#.!]-*/ /*-[--.---.---.--]-*/
 yREGEX__comp_dot     (int *a_rpos)
 {
    /*---(locals)-----------+-----+-----+-*/
@@ -712,7 +718,7 @@ yREGEX__comp_dot     (int *a_rpos)
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
    /*---(defense)------------------------*/
-   x_ch   = g_regex [*a_rpos];
+   x_ch   = g_source [*a_rpos];
    DEBUG_YREGEX  yLOG_char    ("x_ch"      , x_ch);
    --rce;  if (x_ch != '.') {
       DEBUG_YREGEX  yLOG_note    ("not positioned on a dot");
@@ -734,7 +740,7 @@ yREGEX__comp_dot     (int *a_rpos)
 /*====================------------------------------------====================*/
 static void      o___MODS____________________o (void) {;}
 
-char
+char         /*-> tbd --------------------------------[ ------ [fe.732.151.11]*/ /*-[01.0000.01#.!]-*/ /*-[--.---.---.--]-*/
 yREGEX__comp_smods   (int *a_rpos)
 {
    /*---(locals)-----------+-----+-----+-*/
@@ -746,7 +752,7 @@ yREGEX__comp_smods   (int *a_rpos)
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
-   x_ch   = g_regex [*a_rpos];
+   x_ch   = g_source [*a_rpos];
    DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
    switch (x_ch) {
    case '*' : case '@' :
@@ -767,7 +773,7 @@ yREGEX__comp_smods   (int *a_rpos)
    return 1;
 }
 
-char
+char         /*-> tbd --------------------------------[ ------ [fe.I86.1C3.D1]*/ /*-[03.0000.01#.!]-*/ /*-[--.---.---.--]-*/
 yREGEX__comp_cmods   (int *a_rpos)
 {
    /*---(locals)-----------+-----+-----+-*/
@@ -786,7 +792,7 @@ yREGEX__comp_cmods   (int *a_rpos)
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
-   x_ch   = g_regex [*a_rpos];
+   x_ch   = g_source [*a_rpos];
    DEBUG_YREGEX  yLOG_char    ("x_ch"      , x_ch);
    --rce;  if (x_ch != '{') {
       DEBUG_YREGEX  yLOG_note    ("does not start with a {");
@@ -794,13 +800,13 @@ yREGEX__comp_cmods   (int *a_rpos)
       return rce;
    }
    /*---(check for lazy modifier)--------*/
-   x_ch   = g_regex [++(*a_rpos)];
+   x_ch   = g_source [++(*a_rpos)];
    DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
    DEBUG_YREGEX  yLOG_char    ("x_ch"      , x_ch);
    if (x_ch == '-') {
       DEBUG_YREGEX  yLOG_note    ("found lazy modifer");
       x_lazy = 'y';
-      x_ch   = g_regex [++(*a_rpos)];
+      x_ch   = g_source [++(*a_rpos)];
       DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
       DEBUG_YREGEX  yLOG_char    ("x_ch"      , x_ch);
    }
@@ -814,7 +820,7 @@ yREGEX__comp_cmods   (int *a_rpos)
       if (x_ch == '}') {
          DEBUG_YREGEX  yLOG_note    ("found end of modifier");
          if (x_len > 0) {
-            sprintf (t, "%*.*s", x_len, x_len, g_regex + *a_rpos - x_len);
+            sprintf (t, "%*.*s", x_len, x_len, g_source + *a_rpos - x_len);
             DEBUG_YREGEX  yLOG_info    ("t"         , t);
             x_max = atoi (t);
          }
@@ -829,14 +835,14 @@ yREGEX__comp_cmods   (int *a_rpos)
             x_min = 0;
          } else {
             DEBUG_YREGEX  yLOG_note    ("found real min specifier");
-            sprintf (t, "%*.*s", x_len, x_len, g_regex + *a_rpos - x_len);
+            sprintf (t, "%*.*s", x_len, x_len, g_source + *a_rpos - x_len);
             DEBUG_YREGEX  yLOG_info    ("t"         , t);
             x_min = atoi (t);
          }
          x_len = -1; /* don't count comma */
          DEBUG_YREGEX  yLOG_value   ("x_min"     , x_min);
       }
-      x_ch   = g_regex [++(*a_rpos)];
+      x_ch   = g_source [++(*a_rpos)];
       ++x_len;
       DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
       DEBUG_YREGEX  yLOG_char    ("x_ch"      , x_ch);
@@ -864,7 +870,7 @@ yREGEX__comp_cmods   (int *a_rpos)
 /*====================------------------------------------====================*/
 static void      o___GROUPS__________________o (void) {;}
 
-char
+char         /*-> tbd --------------------------------[ leaf   [fc.741.141.50]*/ /*-[03.0000.01#.!]-*/ /*-[--.---.---.--]-*/
 yREGEX__comp_gfix    (cint a_grp)
 {
    /*---(locals)-----------+-----+-----+-*/
@@ -885,7 +891,9 @@ yREGEX__comp_gfix    (cint a_grp)
             ++x_or;
          } else if (x_ch == '(') {
             g_jump [i] = x_jump;
-            if (x_or > 0)  g_mods [i] = 'm';
+            if (x_or > 0) g_mods [i] = 'm';
+            else          g_mods [i] = '-';
+            g_mins [i] = x_or + 1;
             break;
          }
       }
@@ -896,7 +904,7 @@ yREGEX__comp_gfix    (cint a_grp)
    return 1;
 }
 
-char
+char         /*-> tbd --------------------------------[ ------ [fe.B53.141.32]*/ /*-[02.0000.01#.!]-*/ /*-[--.---.---.--]-*/
 yREGEX__comp_group   (int *a_rpos)
 {
    /*---(locals)-----------+-----+-----+-*/
@@ -907,13 +915,13 @@ yREGEX__comp_group   (int *a_rpos)
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
-   x_ch   = g_regex [*a_rpos];
+   x_ch   = g_source [*a_rpos];
    DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
    switch (x_ch) {
    case '(' :
       DEBUG_YREGEX  yLOG_note    ("open the group");
       ++s_glevel;
-      if (g_regex [*a_rpos + 1] == '#') {
+      if (g_source [*a_rpos + 1] == '#') {
          DEBUG_YREGEX  yLOG_note    ("identified a hidden group");
          ++*a_rpos;
          ++s_ghidden;
@@ -956,7 +964,7 @@ yREGEX__comp_group   (int *a_rpos)
 /*====================------------------------------------====================*/
 static void      o___DRIVER__________________o (void) {;}
 
-char
+char         /*-> tbd --------------------------------[ ------ [ge.E54.142.98]*/ /*-[02.0000.00#.#]-*/ /*-[--.---.---.--]-*/
 yREGEX_comp          (cchar *a_regex)
 {
    /*---(locals)-----------+-----+-----+-*/
@@ -980,7 +988,7 @@ yREGEX_comp          (cchar *a_regex)
    for (i = 0; i < g_rlen; ++i) {
       DEBUG_YREGEX  yLOG_value   ("LOOP"      , i);
       /*---(prepare)---------------------*/
-      x_ch   = g_regex [i];
+      x_ch   = g_source [i];
       /*---(backslashed metas)-----------*/
       if (x_ch == G_KEY_BSLASH) {
          DEBUG_YREGEX  yLOG_note    ("handle escaped character");
@@ -1035,7 +1043,7 @@ static void      o___UNITTEST________________o (void) {;}
 
 char        unit_answer  [LEN_RECD];
 
-char*            /* [------] unit test accessor ------------------------------*/
+char*        /*-> unit test accessor -----------------[ light  [us.D90.241.L0]*/ /*-[03.0000.00#.#]-*/ /*-[--.---.---.--]-*/
 yREGEX__unitcomp   (char *a_question, int a_num)
 {
    /*---(locals)-----------+-----+-----+-*/

@@ -23,7 +23,7 @@ static void      o___UTILITY_________________o (void) {;}
 
 char        yREGEX_ver   [500];
 
-char*      /* ---- : return library versioning information -------------------*/
+char*        /*-> return library versioning ----------[ leaf   [gs.420.012.00]*/ /*-[00.0000.01#.!]-*/ /*-[--.---.---.--]-*/
 yREGEX_version       (void)
 {
    char    t [20] = "";
@@ -50,7 +50,7 @@ yREGEX_version       (void)
 /*====================------------------------------------====================*/
 static void      o___UNITTEST________________o (void) {;}
 
-char       /*----: set up program urgents/debugging --------------------------*/
+char         /*-> set up quiet testing ---------------[ light  [uz.210.011.02]*/ /*-[00.0000.00#.A]-*/ /*-[--.---.---.--]-*/
 yREGEX__unitquiet     (void)
 {
    char       *x_args [1]  = { "yREGEX_unit" };
@@ -59,7 +59,7 @@ yREGEX__unitquiet     (void)
    return 0;
 }
 
-char       /*----: set up program urgents/debugging --------------------------*/
+char         /*-> set up debugged testing ------------[ light  [uz.211.011.03]*/ /*-[00.0000.00#.2]-*/ /*-[--.---.---.--]-*/
 yREGEX__unitloud      (void)
 {
    char       *x_args [3]  = { "yREGEX_unit", "@@kitchen", "@@YREGEX"    };
@@ -69,7 +69,7 @@ yREGEX__unitloud      (void)
    return 0;
 }
 
-char       /*----: stop logging ----------------------------------------------*/
+char         /*-> stop testing -----------------------[ light  [uz.211.001.00]*/ /*-[00.0000.00#.!]-*/ /*-[--.---.---.--]-*/
 yREGEX__unitend       (void)
 {
    yLOG_end     ();

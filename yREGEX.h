@@ -3,6 +3,8 @@
 /*===[[ PURPOSE ]]==========================================================*/
 
 /*   goals
+ *   -- 80% solution
+ *   -- not optimizing (that's major stuff)
  *   -- short and clean
  *   -- easy to maintain
  *   -- speed is secondary
@@ -10,6 +12,7 @@
  *   -- add my own enhancements that mirror other places (vim, perl, ...)
  *   -- lots of error checking everywhere
  *   -- lots of phreaking debugging
+ *   -- convert different BRE, ERE, etc into MyRE (and maybe back)
  *
  *   intent
  *   -- 8bit ascii only, no other incodings (fucking do not care)
@@ -17,6 +20,10 @@
  *   -- start simple and build up (evolutionary)
  *   -- nothing can be nested
  *   -- use recursion to avoid dynamic memory and crazy tracking shit
+ *
+ *   rational limits...
+ *      2000 character limit on original regex
+ *      2000 character limit on text to be evaluated (line-by-line)
  *
  *
  *   heavily influenced by the ideas and code of nasciiboy
@@ -34,9 +41,13 @@
  *   +  (%)    one or more of the previous atom (greedy vs lazy)
  *   ^         beginning of string anchor
  *   $         end of string anchor
- *   {n,m}
- *   (...)
- *   |
+ *   {n}       range from n-n, max digit is 255
+ *   {,m}      range from 0-m, max digit is 255
+ *   {n,m}     range from n-m, max digit is 255
+ *   {-n,m}    lazy version
+ *   (...)     groups, numbered [1-9]
+ *   (#...)    hidden group, lettered [a-zA-Z]
+ *   |         or operator on branches
  *   <         gap, break, or separator before word or code element \W
  *   >         gap, break, or separator after word or code element \W
  *
