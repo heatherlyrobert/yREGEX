@@ -273,12 +273,12 @@ SCRP          v21  (regex ) verify grouping of matches                        
 
    COND       v21  verify a single match                                        - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.003))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
      exec     v21  call regex patter compilation        yREGEX_comp           "a(b|c)d"                                                               i_equal     0                                                                                                    
-     get      v21  get current base                     yREGEX__unitcomp      "base"         , 0                                                      s_equal     yREGEX_comp base :  7 [a(b|c)d                                      ]                               
-     get      v21  get current indx                     yREGEX__unitcomp      "indx"         , 0                                                      s_equal     yREGEX_comp indx :  7 [ 1 1 1                                       ]                               
-     get      v21  get current indx                     yREGEX__unitcomp      "mods"         , 0                                                      s_equal     yREGEX_comp mods :  7 [ m                                           ]                               
-     get      v21  get current mins                     yREGEX__unitcomp      "mins"         , 0                                                      s_equal     yREGEX_comp mins :  7 [ 2                                           ]                               
-     get      v21  get current maxs                     yREGEX__unitcomp      "maxs"         , 0                                                      s_equal     yREGEX_comp maxs :  7 [                                             ]                               
-     get      v21  get current jump                     yREGEX__unitcomp      "jump"         , 0                                                      s_equal     yREGEX_comp jump :  7 [ 2 2                                         ]                               
+     get      v21  get current base                     yREGEX__unitcomp      "base"         , 0                                                      s_equal     yREGEX_comp base :  9 [(a(b|c)d)                                    ]                               
+     get      v21  get current indx                     yREGEX__unitcomp      "indx"         , 0                                                      s_equal     yREGEX_comp indx :  9 [. 1 1 1 .                                    ]                               
+     get      v21  get current indx                     yREGEX__unitcomp      "mods"         , 0                                                      s_equal     yREGEX_comp mods :  9 [- m                                          ]                               
+     get      v21  get current mins                     yREGEX__unitcomp      "mins"         , 0                                                      s_equal     yREGEX_comp mins :  9 [1 2                                          ]                               
+     get      v21  get current maxs                     yREGEX__unitcomp      "maxs"         , 0                                                      s_equal     yREGEX_comp maxs :  9 [                                             ]                               
+     get      v21  get current jump                     yREGEX__unitcomp      "jump"         , 0                                                      s_equal     yREGEX_comp jump :  9 [8 2 2                                        ]                               
      exec     v21  perform the matching                 yREGEX_exec           "acd"                                                                   i_greater   0                                                                                                    
      get      v21  get match beginning position         yREGEX__unitexec      "stat"         , 0                                                      s_equal     yREGEX_exec stat : beg=  0, end=  2, len=  3                                                         
 
@@ -323,6 +323,38 @@ SCRP          v21  (exec  ) verify anchoring of matches                       
 
    COND       v21  complete testing                                             - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.011))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
      exec     v21  stop testing                         yREGEX__unitend                                                                                i_equal     0                                                                                                    
+
+
+
+
+#23456789-12  123  123456789-123456789-123456789-12345  123456789-123456789-  123456789-123456789-123456789-123456789-123456789-123456789-123456789-  123456789-  123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-  -  123456789-123456789- 
+#==(verb)===  ver  ===========(description)===========  =====(function)=====  ========================(arguments)===================================  ==(test)==  ==========================(results)=================================================================  t  ========(var)======= 
+SCRP          v21  (exec  ) matches from yVAR library regex                     yREGEX_comp, yREGEX_exec                                                ((01.---))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+
+   COND       v21  initialize the testing environment                           - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.001))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+     exec     v21  start testing                        yREGEX__unitquiet                                                                             i_equal     0                                                                                                    
+
+   COND       v21  letters and numbers only                                     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   - - - - -   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+     exec     v21  null regex                           yREGEX__testloc       NULL                                  , "onE"                           s_equal     yREGEX_tester    : compilation failed                                                                
+     exec     v21  null source                          yREGEX__testloc       "^[a-zA-Z0-9]+$"                      , NULL                            s_equal     yREGEX_tester    : execution failed                                                                  
+     exec     v21  empty string                         yREGEX__testloc       "^[a-zA-Z0-9]+$"                      , ""                              s_equal     yREGEX_exec stat : beg= -1, end= -1, len= -1                                                         
+     exec     v21  one word                             yREGEX__testloc       "^[a-zA-Z0-9]+$"                      , "onE"                           s_equal     yREGEX_exec stat : beg=  0, end=  2, len=  3                                                         
+     exec     v21  two words                            yREGEX__testloc       "^[a-zA-Z0-9]+$"                      , "onE Two"                       s_equal     yREGEX_exec stat : beg= -1, end= -1, len= -1                                                         
+     exec     v21  much longer word                     yREGEX__testloc       "^[a-zA-Z0-9]+$"                      , "onETwo3rdee"                   s_equal     yREGEX_exec stat : beg=  0, end= 10, len= 11                                                         
+     exec     v21  space at end                         yREGEX__testloc       "^[a-zA-Z0-9]+$"                      , "onE3Two "                      s_equal     yREGEX_exec stat : beg= -1, end= -1, len= -1                                                         
+     exec     v21  space at beginning                   yREGEX__testloc       "^[a-zA-Z0-9]+$"                      , " onE3Two"                      s_equal     yREGEX_exec stat : beg= -1, end= -1, len= -1                                                         
+     exec     v21  back to trimmed                      yREGEX__testloc       "^[a-zA-Z0-9]+$"                      , "onE3Two"                       s_equal     yREGEX_exec stat : beg=  0, end=  6, len=  7                                                         
+
+   COND       v21  integer byte                                                 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   - - - - -   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+     exec     v21  empty string                         yREGEX__testloc       "^(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])$"  , ""            s_equal     yREGEX_exec stat : beg= -1, end= -1, len= -1                                                         
+     exec     v21  zero                                 yREGEX__testloc       "^(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])$"  , "0"           s_equal     yREGEX_exec stat : beg=  0, end=  0, len=  1                                                         
+
+
+   GROUP      v21  wrap up                                                      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   - - - - -   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+
+   COND       v21  complete testing                                             - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.011))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+     exec     v21  stop testing                         yREGEX__unitend                                                                                i_equal     0                                                                                                    
+
 
 
 

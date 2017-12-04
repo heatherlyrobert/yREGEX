@@ -43,11 +43,6 @@ yREGEX__exec_init    (cchar *a_source)
    }
    g_slen = strllen (a_source , LEN_RECD);
    DEBUG_YREGEX  yLOG_value   ("g_slen"    , g_slen);
-   --rce;  if (g_slen <= 0   ) {
-      DEBUG_YREGEX  yLOG_note    ("can not be empty");
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
    rc = strlcpy (g_source, a_source , LEN_RECD);
    DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
    --rce;  if (rc     <  0   ) {
@@ -66,6 +61,142 @@ yREGEX__exec_init    (cchar *a_source)
 /*===----                       normal matching                        ----===*/
 /*====================------------------------------------====================*/
 static void      o___NORMAL__________________o (void) {;}
+
+char         /*-> tbd --------------------------------[ ------ [fe.B44.545.72]*/ /*-[01.0000.03#.#]-*/ /*-[--.---.---.--]-*/
+yREGEX__exec_anchor  (cint a_begin, char a_mode, int a_rpos, int a_tpos, int *a_tend)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   char        rc          =    0;
+   char        x_ch        =  ' ';
+   char        x_mod       =  ' ';
+   int         x_tend      =    0;
+   /*---(header)-------------------------*/
+   DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
+   DEBUG_YREGEX  yLOG_sint    (a_begin);
+   DEBUG_YREGEX  yLOG_schar   (a_mode);
+   DEBUG_YREGEX  yLOG_sint    (a_tpos);
+   DEBUG_YREGEX  yLOG_sint    (a_rpos);
+   DEBUG_YREGEX  yLOG_sint    (*a_tend);
+   /*---(prepare)------------------------*/
+   x_tend      = *a_tend;
+   x_ch        = g_comp [a_rpos];
+   x_mod       = g_mods [a_rpos];
+   DEBUG_YREGEX  yLOG_schar   (x_ch);
+   DEBUG_YREGEX  yLOG_schar   (x_mod);
+   /*---(defense)------------------------*/
+   --rce;  if (strchr (G_ANCHOR, x_ch) == NULL) {
+      DEBUG_YREGEX  yLOG_snote   ("not anchor");
+      DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(handle)-------------------------*/
+   switch (x_ch) {
+   case '^' :
+      if (a_tpos != 0) {
+         DEBUG_YREGEX  yLOG_snote   ("not at BOL");
+         DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
+         return 0;
+      }
+      DEBUG_YREGEX  yLOG_snote   ("BOL");
+      ++a_rpos;
+      break;
+   case '$' :
+      if (a_tpos < g_slen){
+         DEBUG_YREGEX  yLOG_snote   ("not at EOL");
+         DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+         return 0;
+      }
+      --(*a_tend);
+      DEBUG_YREGEX  yLOG_snote   ("EOL");
+      DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
+      return 1;
+   }
+   DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
+   /*---(tail resurse)----------------*/
+   if (a_rpos < g_clen) {
+      switch (a_mode) {
+      case S_CHAR_CHECK   :
+         break;
+      case S_BRANCH_CHECK :
+      case S_FULL_RECURSE :
+         rc = yREGEX__exec_next (a_begin, a_mode, a_rpos, a_tpos, &x_tend);
+         if (rc == 1) *a_tend = x_tend;
+         break;
+      }
+   }
+   /*---(complete)-----------------------*/
+   return rc;
+}
+
+char         /*-> tbd --------------------------------[ ------ [fe.B44.545.72]*/ /*-[01.0000.03#.#]-*/ /*-[--.---.---.--]-*/
+yREGEX__exec_endgrp  (cint a_begin, char a_mode, int a_rpos, int a_tpos, int *a_tend)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   char        rc          =    0;
+   char        x_ch        =  ' ';
+   char        x_mod       =  ' ';
+   int         x_tend      =    0;
+   /*---(header)-------------------------*/
+   DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
+   DEBUG_YREGEX  yLOG_sint    (a_begin);
+   DEBUG_YREGEX  yLOG_schar   (a_mode);
+   DEBUG_YREGEX  yLOG_sint    (a_tpos);
+   DEBUG_YREGEX  yLOG_sint    (a_rpos);
+   DEBUG_YREGEX  yLOG_sint    (*a_tend);
+   /*---(prepare)------------------------*/
+   x_tend      = *a_tend;
+   x_ch        = g_comp [a_rpos];
+   x_mod       = g_mods [a_rpos];
+   DEBUG_YREGEX  yLOG_schar   (x_ch);
+   DEBUG_YREGEX  yLOG_schar   (x_mod);
+   /*---(defense)------------------------*/
+   --rce;  if (strchr ("|)", x_ch) == NULL) {
+      DEBUG_YREGEX  yLOG_snote   ("not end branch");
+      DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(handle)-------------------------*/
+   if (x_ch == '|') {
+      if (a_mode == S_BRANCH_CHECK) {
+         DEBUG_YREGEX  yLOG_snote   ("EOB, check-only");
+         DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
+         return 1;
+      }
+      DEBUG_YREGEX  yLOG_snote   ("EOB, next");
+      a_rpos      = yREGEX__exec_gscan (a_rpos) + 1;
+   } else if (x_ch == ')') {
+      if (a_mode == S_BRANCH_CHECK) {
+         DEBUG_YREGEX  yLOG_snote   ("EOG, check-only");
+         DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
+         return 1;
+      }
+      DEBUG_YREGEX  yLOG_snote   ("EOG, next");
+      ++a_rpos;
+   }
+   if (a_rpos >= g_clen) {
+      *a_tend = a_tpos - 1;
+      DEBUG_YREGEX  yLOG_snote   ("end of regex");
+      DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
+      return 1;
+   }
+   DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
+   /*---(tail resurse)----------------*/
+   if (a_rpos < g_clen) {
+      switch (a_mode) {
+      case S_CHAR_CHECK   :
+         break;
+      case S_BRANCH_CHECK :
+      case S_FULL_RECURSE :
+         rc = yREGEX__exec_next (a_begin, a_mode, a_rpos, a_tpos, &x_tend);
+         if (rc == 1) *a_tend = x_tend;
+         break;
+      }
+   }
+   /*---(complete)-----------------------*/
+   return rc;
+}
 
 char         /*-> tbd --------------------------------[ ------ [fe.B44.545.72]*/ /*-[01.0000.03#.#]-*/ /*-[--.---.---.--]-*/
 yREGEX__exec_doer    (cint a_begin, char a_mode, int a_rpos, int a_tpos, int *a_tend)
@@ -280,27 +411,14 @@ yREGEX__exec_next    (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_t
    DEBUG_YREGEX  yLOG_complex ("current"   , "%c (%c) %3d", x_ch, x_mod, x_tend);
    /*---(anchors)------------------------*/
    if (strchr (G_ANCHOR, x_ch) != NULL) {
-      switch (x_ch) {
-      case '^' :
-         if (a_tpos != 0) {
-            DEBUG_YREGEX  yLOG_note    ("not anchored at beginning, failed");
-            DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
-            return 0;
-         }
-         DEBUG_YREGEX  yLOG_note    ("beginning of line, continue");
-         ++a_rpos;
-         break;
-      case '$' :
-         if (a_tpos < (g_slen - 1)){
-            DEBUG_YREGEX  yLOG_note    ("not anchored at end, failed");
-            DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
-            return 0;
-         }
-         --(*a_tend);
-         DEBUG_YREGEX  yLOG_note    ("end of line, success");
-         DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
-         return 1;
+      DEBUG_YREGEX  yLOG_note    ("found an anchor");
+      rc = yREGEX__exec_anchor  (a_begin, a_mode, a_rpos, a_tpos, &x_tend);
+      if (rc == 1) {
+         *a_tend = x_tend;
+         DEBUG_YREGEX  yLOG_value   ("a_tend"    , *a_tend);
       }
+      DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+      return rc;
    }
    /*---(new group)----------------------*/
    if (x_ch == '(') {
@@ -316,35 +434,14 @@ yREGEX__exec_next    (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_t
    }
    /*---(end of branch)------------------*/
    while (strchr ("|)", x_ch) != NULL) {
-      if (x_ch == '|') {
-         if (a_mode == S_BRANCH_CHECK) {
-            DEBUG_YREGEX  yLOG_note    ("end of branch, check only, return");
-            DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
-            return 1;
-         }
-         DEBUG_YREGEX  yLOG_note    ("end of branch, jump to end of group");
-         a_rpos      = yREGEX__exec_gscan (a_rpos) + 1;
-      } else if (x_ch == ')') {
-         if (a_mode == S_BRANCH_CHECK) {
-            DEBUG_YREGEX  yLOG_note    ("end of branch, check only, return");
-            DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
-            return 1;
-         }
-         DEBUG_YREGEX  yLOG_note    ("end of group, continue");
-         ++a_rpos;
-      }
-      if (a_rpos >= g_clen) {
-         *a_tend = a_tpos - 1;
-         /*> *a_tend = x_tend;                                                        <*/
-         /*> --(*a_tend);                                                             <*/
+      DEBUG_YREGEX  yLOG_note    ("found end of branch");
+      rc = yREGEX__exec_endgrp  (a_begin, a_mode, a_rpos, a_tpos, &x_tend);
+      if (rc == 1) {
+         *a_tend = x_tend;
          DEBUG_YREGEX  yLOG_value   ("a_tend"    , *a_tend);
-         DEBUG_YREGEX  yLOG_note    ("end of regex, success");
-         DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
-         return 1;
       }
-      x_ch        = g_comp [a_rpos];
-      x_mod       = g_mods [a_rpos];
-      DEBUG_YREGEX  yLOG_complex ("after grp" , "%c (%c) %3d", x_ch, x_mod, x_tend);
+      DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+      return rc;
    }
    /*---(launch checkers)----------------*/
    switch (x_mod) {
@@ -416,18 +513,6 @@ yREGEX__exec_branch  (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_t
       if (rc == 1) break;
       x_offset += g_jump [a_rpos + x_offset];
    }
-   /*---(tail resurse)-------------------*/
-   /*> ++a_rpos;                                                                      <* 
-    *> ++a_tpos;                                                                      <* 
-    *> if (rc == 1 && a_mode == 'r') {                                                <* 
-    *>    if (a_rpos >= g_clen) {                                                     <* 
-    *>       rc = 1;                                                                  <* 
-    *>       *a_tend = a_tpos - 1;                                                    <* 
-    *>    } else {                                                                    <* 
-    *>       rc = yREGEX__exec_next (a_begin, '-', a_rpos, a_tpos, &x_tend);          <* 
-    *>       if (rc == 1) *a_tend = x_tend;                                           <* 
-    *>    }                                                                           <* 
-    *> }                                                                              <*/
    /*---(update)-------------------------*/
    DEBUG_YREGEX  yLOG_value   ("done"      , rc);
    if (rc == 1) {

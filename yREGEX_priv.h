@@ -15,8 +15,8 @@
 
 
 /* rapidly evolving version number to aid with visual change confirmation     */
-#define YREGEX_VER_NUM   "0.2r"
-#define YREGEX_VER_TXT   "added full grouping to comp and fixed most unit testing"
+#define YREGEX_VER_NUM   "0.2s"
+#define YREGEX_VER_TXT   "broke out anchor and end-of-group for separate recursion"
 
 
 
