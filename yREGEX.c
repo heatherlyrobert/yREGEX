@@ -42,6 +42,27 @@ yREGEX_version       (void)
 
 
 
+/*====================------------------------------------====================*/
+/*===----                          test access                         ----===*/
+/*====================------------------------------------====================*/
+static void      o___TESTERS_________________o (void) {;}
+
+char*
+yREGEX__testloc      (cchar *a_regex, cchar *a_source)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   int         rc          =    0;
+   /*---(compile)------------------------*/
+   rc = yREGEX_comp (a_regex);
+   if (rc <  0)   return "yREGEX_tester    : compilation failed";
+   /*---(execute)------------------------*/
+   rc = yREGEX_exec (a_source);
+   if (rc <  0)   return "yREGEX_tester    : execution failed";
+   /*---(question)-----------------------*/
+   return yREGEX__unitexec ("stat", 0);
+}
+
+
 
 
 

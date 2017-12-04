@@ -47,9 +47,8 @@
  *   {-n,m}    lazy version
  *   (...)     groups, numbered [1-9]
  *   (#...)    hidden group, lettered [a-zA-Z]
+ *   <...>     default/primary capture
  *   |         or operator on branches
- *   <         gap, break, or separator before word or code element \W
- *   >         gap, break, or separator after word or code element \W
  *
  *
  *   compiled...

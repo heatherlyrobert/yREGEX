@@ -11,9 +11,6 @@ static int  s_end       =  0;
 static int  s_len       =  0;
 
 
-#define     S_GROUP      "(|)"
-#define     S_GREEDY     "*+?"
-#define     S_LAZY       "@~!"
 
 
 #define     S_CHAR_CHECK    'c'
@@ -177,8 +174,8 @@ yREGEX__exec_multiple(int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_t
    x_gmods     = a_rpos;
    if (x_ch == '(')  x_gmods = yREGEX__exec_gscan (a_rpos);
    x_mod       = g_mods [x_gmods];
-   if      (strchr (S_GREEDY, x_mod) != NULL)   x_meth = 'G';
-   else if (strchr (S_LAZY  , x_mod) != NULL)   x_meth = 'L';
+   if      (strchr (G_GREEDY, x_mod) != NULL)   x_meth = 'G';
+   else if (strchr (G_LAZY  , x_mod) != NULL)   x_meth = 'L';
    DEBUG_YREGEX  yLOG_complex ("CURRENT"   , "ch %c, mod %c is %c, x_tend %3d", x_ch, x_mod, x_meth, x_tend);
    /*---(lengths)------------------------*/
    x_rem   = g_slen - a_tpos;
@@ -192,7 +189,7 @@ yREGEX__exec_multiple(int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_t
       return rce;
    }
    /*---(check up to minimum)------------*/
-   DEBUG_YREGEX  yLOG_note    ("MINIMUM -----------------------------------");
+   if (x_min > 0)  DEBUG_YREGEX  yLOG_note    ("MINIMUM -----------------------------------");
    for (i = 0; i < x_min; ++i) {
       DEBUG_YREGEX  yLOG_value   ("LOOP"      , i);
       if (x_ch == '(')  rc = yREGEX__exec_branch (a_begin, S_BRANCH_CHECK, a_rpos, a_tpos + i, &x_tend);
@@ -202,12 +199,11 @@ yREGEX__exec_multiple(int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_t
          DEBUG_YREGEX  yLOG_note    ("failed before min was completed");
          return rc;
       }
-      ++x_match;
-      DEBUG_YREGEX  yLOG_value   ("x_match"   , x_match);
+      x_match = i;
    }
    /*---(check target range)-------------*/
    DEBUG_YREGEX  yLOG_note    ("RANGE -------------------------------------");
-   for (i = x_min; i <  x_max; ++i) {
+   for (i = x_min; i < x_max; ++i) {
       DEBUG_YREGEX  yLOG_value   ("LOOP"      , i);
       if (x_meth == 'G') {
          if (x_ch == '(')  rc = yREGEX__exec_branch (a_begin, S_BRANCH_CHECK, a_rpos, a_tpos + i, &x_tend);
@@ -226,8 +222,18 @@ yREGEX__exec_multiple(int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_t
             return 1;
          }
       }
-      ++x_match;
-      DEBUG_YREGEX  yLOG_value   ("x_match"   , x_match);
+      x_match = i;
+   }
+   /*---(check greedy for real)----------*/
+   if (x_match == 0 && strchr ("?!", x_mod) != NULL) {
+      DEBUG_YREGEX  yLOG_note    ("MULTIPLE, zero matches valid for ?!");
+      rc = yREGEX__exec_next   (a_begin, S_FULL_RECURSE, a_rpos + 1, a_tpos, &x_tend);
+      if (rc == 1) {
+         *a_tend = x_tend;
+         DEBUG_YREGEX  yLOG_value   ("a_tend"    , *a_tend);
+         DEBUG_YREGEX  yLOG_note    ("MULTIPLE, returning zero width success");
+         return 1;
+      }
    }
    if (x_meth == 'L') {
       DEBUG_YREGEX  yLOG_note    ("MULTIPLE, lazy failure");
@@ -272,6 +278,30 @@ yREGEX__exec_next    (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_t
    x_ch        = g_comp [a_rpos];
    x_mod       = g_mods [a_rpos];
    DEBUG_YREGEX  yLOG_complex ("current"   , "%c (%c) %3d", x_ch, x_mod, x_tend);
+   /*---(anchors)------------------------*/
+   if (strchr (G_ANCHOR, x_ch) != NULL) {
+      switch (x_ch) {
+      case '^' :
+         if (a_tpos != 0) {
+            DEBUG_YREGEX  yLOG_note    ("not anchored at beginning, failed");
+            DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+            return 0;
+         }
+         DEBUG_YREGEX  yLOG_note    ("beginning of line, continue");
+         ++a_rpos;
+         break;
+      case '$' :
+         if (a_tpos < (g_slen - 1)){
+            DEBUG_YREGEX  yLOG_note    ("not anchored at end, failed");
+            DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+            return 0;
+         }
+         --(*a_tend);
+         DEBUG_YREGEX  yLOG_note    ("end of line, success");
+         DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+         return 1;
+      }
+   }
    /*---(new group)----------------------*/
    if (x_ch == '(') {
       DEBUG_YREGEX  yLOG_note    ("beginning a new group");
@@ -304,7 +334,10 @@ yREGEX__exec_next    (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_t
          ++a_rpos;
       }
       if (a_rpos >= g_clen) {
-         --(*a_tend);
+         *a_tend = a_tpos - 1;
+         /*> *a_tend = x_tend;                                                        <*/
+         /*> --(*a_tend);                                                             <*/
+         DEBUG_YREGEX  yLOG_value   ("a_tend"    , *a_tend);
          DEBUG_YREGEX  yLOG_note    ("end of regex, success");
          DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
          return 1;
@@ -489,6 +522,7 @@ yREGEX_exec          (cchar *a_source)
    s_begin = s_end = s_len = -1;
    for (x_begin = 0; x_begin < g_slen; ++x_begin) {
       DEBUG_YREGEX  yLOG_value   ("BEGIN AT"  , x_begin);
+      x_tend = x_begin;
       rc = yREGEX__exec_next (x_begin, S_FULL_RECURSE, 0, x_begin, &x_tend);
       DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
       if (rc == 1) {

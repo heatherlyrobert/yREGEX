@@ -15,8 +15,8 @@
 
 
 /* rapidly evolving version number to aid with visual change confirmation     */
-#define YREGEX_VER_NUM   "0.2g"
-#define YREGEX_VER_TXT   "groups now working on couple tests"
+#define YREGEX_VER_NUM   "0.2r"
+#define YREGEX_VER_TXT   "added full grouping to comp and fixed most unit testing"
 
 
 
@@ -26,6 +26,10 @@
 #define     LEN_NAME        20
 
 
+#define     G_ANCHOR     "^$"
+#define     S_GROUP      "(|)"
+#define     G_GREEDY     "*+?{"
+#define     G_LAZY       "@~!}"
 
 /*---(sets)-----------------*/
 typedef struct cSETS  tSETS;
@@ -55,16 +59,16 @@ extern char      g_source    [LEN_RECD];
 extern int       g_slen;
 
 /*---(regex)----------------*/
-extern char      g_source     [LEN_RECD];
+extern char      g_regex      [LEN_RECD];
 extern int       g_rlen;
 
 /*---(compiled)-------------*/
 extern char      g_comp      [LEN_RECD];
-extern uchar     g_indx      [LEN_RECD];
+extern int       g_indx      [LEN_RECD];
 extern char      g_mods      [LEN_RECD];
-extern uchar     g_mins      [LEN_RECD];
-extern uchar     g_maxs      [LEN_RECD];
-extern uchar     g_jump      [LEN_RECD];
+extern int       g_mins      [LEN_RECD];
+extern int       g_maxs      [LEN_RECD];
+extern int       g_jump      [LEN_RECD];
 extern int       g_clen;
 
 /*---(struct.re)--------+-----------+-*//*-+----------------------------------*/
@@ -117,10 +121,13 @@ char        yREGEX__exec_next    (int a_begin, char a_mode, int a_rpos, int a_tp
 /*---(groups)---------------*/
 char        yREGEX__exec_multiple(int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_tend);
 char        yREGEX__exec_branch  (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_tend);
-char        yREGEX__exec_group   (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_tend) ;
+char        yREGEX__exec_group   (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_tend);
 /*---(multiple)-------------*/
 char*       yREGEX__unitexec     (char *a_question, int a_num);
+
+char*       yREGEX__testloc      (cchar *a_regex, cchar *a_source);
 
 
 
 #endif
+
