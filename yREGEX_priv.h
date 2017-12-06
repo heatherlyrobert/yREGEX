@@ -15,8 +15,8 @@
 
 
 /* rapidly evolving version number to aid with visual change confirmation     */
-#define YREGEX_VER_NUM   "0.2s"
-#define YREGEX_VER_TXT   "broke out anchor and end-of-group for separate recursion"
+#define YREGEX_VER_NUM   "0.2t"
+#define YREGEX_VER_TXT   "word boundaries working as well as new shortcut"
 
 
 
@@ -26,10 +26,11 @@
 #define     LEN_NAME        20
 
 
-#define     G_ANCHOR     "^$"
+#define     G_ANCHOR     "^$`"
 #define     S_GROUP      "(|)"
 #define     G_GREEDY     "*+?{"
 #define     G_LAZY       "@~!}"
+#define     G_ZERO       "*@?!"
 
 /*---(sets)-----------------*/
 typedef struct cSETS  tSETS;
@@ -118,8 +119,14 @@ char        yREGEX__exec_init    (cchar *a_source);
 /*---(single)---------------*/
 char        yREGEX__exec_doer    (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_tend);
 char        yREGEX__exec_next    (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_tend);
+/*---(multiples)------------*/
+char        yREGEX__exec_min     (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_tend, char a_mod, int a_min, int a_max, int *a_match);
+char        yREGEX__exec_max     (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_tend, char a_mod, int a_min, int a_max, int *a_match);
+char        yREGEX__exec_fwd     (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_tend, char a_mod, int a_min, int a_max, int *a_match);
+char        yREGEX__exec_rev     (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_tend, char a_mod, int a_min, int a_max, int *a_match);
+char        yREGEX__exec_zero    (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_tend, char a_mod, int a_min, int a_max, int *a_match);
+char        yREGEX__exec_many    (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_tend);
 /*---(groups)---------------*/
-char        yREGEX__exec_multiple(int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_tend);
 char        yREGEX__exec_branch  (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_tend);
 char        yREGEX__exec_group   (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_tend);
 /*---(multiple)-------------*/

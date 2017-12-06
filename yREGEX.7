@@ -1,0 +1,86 @@
+.TH ySTR 7 2017-nov "linux" "heatherly custom tools manual"
+
+.SH NAME
+ySTR \- decision rationale, objectives, and overview
+
+.SH SUMMARY
+yREGEX is a light, clean, highly debuggable library for regex processing
+implementing posix-ERE (extended regular expressions) plus a few hand-picked,
+useful extentions from perl, python, vim, and others.
+
+.SH SCOPE, REASONING and DECISION
+
+.B concept (C).  
+regular expressions (regex) are a critical computer science theory to efficently
+describe, match, validate, extract, and manipulate textual patterns within
+strings, files, data bases, and large data sets.
+
+.B background (B).  
+in 1956, mathematician stephen cole kleene formalized the concept of a regular
+language which could be described using his regular set notation.  ken thompson
+was the first to migrate this concept into computer programs, including the
+unix editor ed.  after proving there worth, regular expression moved into vi,
+grep, awk, sed, emacs, databases, etc and into the posix standard in 1992.
+since the 1980's, tcl and perl have been advancing regex's far beyond their
+original bounds.  today, regex support exists in almost every progamming tool
+and most editors.
+
+.B situation (S).  
+today, there are a large number of freely available standard regular expression
+libraries which any programmer can use.  they typically implement the posix
+regular expression standard plus many extensions.
+
+.B complication (C).  
+current regular expression engines and libraries are very big, complex,
+opaque, optimizing affiars that are seriously complicated and beyond my keen.
+i do not wish to shackle myself to one of these monsters.
+
+.B solution (S).  
+i will write my own regex library to implement posix extended regex, plus some
+extentions, but nowhere near the perl level.  i will standardize, understand,
+and own this library on which i can standardize my tools without risking
+dependency on others.
+
+.B target user (T).  
+me, just me.
+
+.B as always, all my applications must (#).  
+   -- run on any linux box from raspberry to cray
+   -- stay focused, small, tight, reliable, and secure
+   -- focus on maintainability and debugging, not just speed
+   -- forgo sloppy, kitchen-sink languages, like python, java, or perl
+   -- stay away from dependency on external code libraries, like boost
+   -- only human-readable, 7-bit safe, ascii streams (not database)
+   -- have dedicated, maintained, automated unit testing
+   -- provide either detailed reporting or logging for debugging
+   -- use secure communications between systems where required
+   -- clean, clean code so i can maintain after long absences
+   -- no international, multi-lang, multi-byte support (freaking ever)
+   -- all tables must be self describing with labels and queries
+   -- all data structures must include dumps, reports, and audits
+
+.B accepted functionality (a).  
+   -- posix extended regular expression symbol standard (ERE)
+   -- implement the 14 base metacharacters   .[]  *+?  {}  ^$  ()|  \\
+   -- add short, lazy versions of *+? using the @~! symbols
+   -- (#...) for a non-capuring (hidden) group rather that (?:...)
+   -- <...> for the primary focus to avoid looks (?>=...), etc
+   -- \n back references and &n back patterns
+
+.B rejected functionality (r).  
+   -- no optimization (this is amazing, but crazy stuff)
+   -- no unicode or other encodings
+   -- avoid backslash hell by ignoring BRE (basic regular expressions)
+
+.SH SEE ALSO
+this documentation is layered to provide easier navigation.
+   yREGEX  (3), library overview and calling
+   yREGEX  (7), decision rationale, objectives, and overview
+
+.SH AUTHOR
+heatherly <jelloshrke at gmail dot com>
+
+.SH COLOPHON
+this page is part of a documentation package mean to make the use of the
+heatherly tools easier and faster
+

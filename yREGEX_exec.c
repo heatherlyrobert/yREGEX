@@ -58,9 +58,9 @@ yREGEX__exec_init    (cchar *a_source)
 
 
 /*====================------------------------------------====================*/
-/*===----                       normal matching                        ----===*/
+/*===----                          singles                             ----===*/
 /*====================------------------------------------====================*/
-static void      o___NORMAL__________________o (void) {;}
+static void      o___SINGLE__________________o (void) {;}
 
 char         /*-> tbd --------------------------------[ ------ [fe.B44.545.72]*/ /*-[01.0000.03#.#]-*/ /*-[--.---.---.--]-*/
 yREGEX__exec_anchor  (cint a_begin, char a_mode, int a_rpos, int a_tpos, int *a_tend)
@@ -70,7 +70,11 @@ yREGEX__exec_anchor  (cint a_begin, char a_mode, int a_rpos, int a_tpos, int *a_
    char        rc          =    0;
    char        x_ch        =  ' ';
    char        x_mod       =  ' ';
+   char        x_tch       =  ' ';
+   char        x_pch       =  ' ';
    int         x_tend      =    0;
+   char       *x_valid     = "abcdefghijklmnopqrstuvwxyz";
+   int         x_set       =    0;
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
    DEBUG_YREGEX  yLOG_sint    (a_begin);
@@ -101,29 +105,55 @@ yREGEX__exec_anchor  (cint a_begin, char a_mode, int a_rpos, int a_tpos, int *a_
       DEBUG_YREGEX  yLOG_snote   ("BOL");
       ++a_rpos;
       break;
+   case '`' :
+      x_tch = g_source [a_tpos];
+      if (a_tpos > 0)  x_pch = g_source [a_tpos - 1];
+      switch (g_sets [g_indx [a_rpos]].map [x_tch]) {
+      case '.' :
+         if (g_sets [g_indx [a_rpos]].map [x_pch] == ' ')  rc = 1;
+         break;
+      case ' ' :
+         if (g_sets [g_indx [a_rpos]].map [x_pch] == '.')  rc = 1;
+         break;
+      }
+      if (rc == 0) {
+         DEBUG_YREGEX  yLOG_snote   ("not at WB");
+         DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
+         return 0;
+      }
+      DEBUG_YREGEX  yLOG_snote   ("BOL");
+      ++a_rpos;
+      break;
    case '$' :
       if (a_tpos < g_slen){
          DEBUG_YREGEX  yLOG_snote   ("not at EOL");
-         DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+         DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
          return 0;
       }
-      --(*a_tend);
+      *a_tend = a_tpos - 1;
       DEBUG_YREGEX  yLOG_snote   ("EOL");
+      DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
+      return 1;
+   }
+   /*---(check for end)---------------*/
+   if (a_rpos >= g_clen) {
+      *a_tend = a_tpos - 1;
+      DEBUG_YREGEX  yLOG_snote   ("end of regex");
       DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
       return 1;
    }
    DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
    /*---(tail resurse)----------------*/
-   if (a_rpos < g_clen) {
-      switch (a_mode) {
-      case S_CHAR_CHECK   :
-         break;
-      case S_BRANCH_CHECK :
-      case S_FULL_RECURSE :
-         rc = yREGEX__exec_next (a_begin, a_mode, a_rpos, a_tpos, &x_tend);
-         if (rc == 1) *a_tend = x_tend;
-         break;
-      }
+   switch (a_mode) {
+   case S_CHAR_CHECK   :
+      break;
+   case S_BRANCH_CHECK :
+      rc = yREGEX__exec_next (a_begin, a_mode, a_rpos, a_tpos, &x_tend);
+      break;
+   case S_FULL_RECURSE :
+      rc = yREGEX__exec_next (a_begin, a_mode, a_rpos, a_tpos, &x_tend);
+      if (rc == 1) *a_tend = x_tend;
+      break;
    }
    /*---(complete)-----------------------*/
    return rc;
@@ -175,6 +205,7 @@ yREGEX__exec_endgrp  (cint a_begin, char a_mode, int a_rpos, int a_tpos, int *a_
       DEBUG_YREGEX  yLOG_snote   ("EOG, next");
       ++a_rpos;
    }
+   /*---(check for end)---------------*/
    if (a_rpos >= g_clen) {
       *a_tend = a_tpos - 1;
       DEBUG_YREGEX  yLOG_snote   ("end of regex");
@@ -183,16 +214,16 @@ yREGEX__exec_endgrp  (cint a_begin, char a_mode, int a_rpos, int a_tpos, int *a_
    }
    DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
    /*---(tail resurse)----------------*/
-   if (a_rpos < g_clen) {
-      switch (a_mode) {
-      case S_CHAR_CHECK   :
-         break;
-      case S_BRANCH_CHECK :
-      case S_FULL_RECURSE :
-         rc = yREGEX__exec_next (a_begin, a_mode, a_rpos, a_tpos, &x_tend);
-         if (rc == 1) *a_tend = x_tend;
-         break;
-      }
+   switch (a_mode) {
+   case S_CHAR_CHECK   :
+      break;
+   case S_BRANCH_CHECK :
+      rc = yREGEX__exec_next (a_begin, a_mode, a_rpos, a_tpos, &x_tend);
+      break;
+   case S_FULL_RECURSE :
+      rc = yREGEX__exec_next (a_begin, a_mode, a_rpos, a_tpos, &x_tend);
+      if (rc == 1) *a_tend = x_tend;
+      break;
    }
    /*---(complete)-----------------------*/
    return rc;
@@ -216,8 +247,8 @@ yREGEX__exec_doer    (cint a_begin, char a_mode, int a_rpos, int a_tpos, int *a_
    DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
    DEBUG_YREGEX  yLOG_sint    (a_begin);
    DEBUG_YREGEX  yLOG_schar   (a_mode);
-   DEBUG_YREGEX  yLOG_sint    (a_tpos);
    DEBUG_YREGEX  yLOG_sint    (a_rpos);
+   DEBUG_YREGEX  yLOG_sint    (a_tpos);
    DEBUG_YREGEX  yLOG_sint    (*a_tend);
    /*---(defenses)-----------------------*/
    --rce;  if (a_tpos <  0     ) {
@@ -254,139 +285,39 @@ yREGEX__exec_doer    (cint a_begin, char a_mode, int a_rpos, int a_tpos, int *a_
       DEBUG_YREGEX  yLOG_snote   ("CHAR");
       if (x_reg == x_src)                               rc = 1;
    }
-   /*---(check)--------------------------*/
+   /*---(check for failure)--------------*/
    DEBUG_YREGEX  yLOG_sint    (rc);
+   if (rc <= 0) {
+      DEBUG_YREGEX  yLOG_snote   ("FAILED");
+      return rc;
+   }
+   DEBUG_YREGEX  yLOG_snote   ("pass");
+   /*---(check for end)---------------*/
+   if (a_rpos >= g_clen) {
+      *a_tend = a_tpos - 1;
+      DEBUG_YREGEX  yLOG_snote   ("end of regex");
+      DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
+      return 1;
+   }
    DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
-   if (rc == 1) {
-      /*---(update values)---------------*/
-      *a_tend = a_tpos;
-      ++a_rpos;
-      ++a_tpos;
-      ++x_tend;
-      /*---(tail resurse)----------------*/
-      if (a_rpos < g_clen) {
-         switch (a_mode) {
-         case S_CHAR_CHECK   :
-            break;
-         case S_BRANCH_CHECK :
-         case S_FULL_RECURSE :
-            rc = yREGEX__exec_next (a_begin, a_mode, a_rpos, a_tpos, &x_tend);
-            if (rc == 1) *a_tend = x_tend;
-            break;
-         }
-      }
+   /*---(update values)---------------*/
+   ++a_rpos;
+   ++a_tpos;
+   x_tend = a_tpos - 1;
+   /*---(tail resurse)----------------*/
+   switch (a_mode) {
+   case S_CHAR_CHECK   :
+      break;
+   case S_BRANCH_CHECK :
+      rc = yREGEX__exec_next (a_begin, a_mode, a_rpos, a_tpos, &x_tend);
+      break;
+   case S_FULL_RECURSE :
+      rc = yREGEX__exec_next (a_begin, a_mode, a_rpos, a_tpos, &x_tend);
+      if (rc == 1) *a_tend = x_tend;
+      break;
    }
    /*---(complete)-----------------------*/
    return rc;
-}
-
-char         /*-> tbd --------------------------------[ ------ [fe.K96.5D5.91]*/ /*-[03.0000.02#.!]-*/ /*-[--.---.---.--]-*/
-yREGEX__exec_multiple(int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_tend) 
-{
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   char        rc          =    0;
-   char        x_ch        =  ' ';
-   uchar       x_mod       =  ' ';
-   char        x_meth      =  '-';
-   int         x_rem       =    0;
-   uchar       x_min       =    0;
-   uchar       x_max       =    0;
-   int         x_pos       = a_tpos;
-   int         i           =    0;
-   int         x_match     =    0;
-   int         x_tend      =    0;
-   char        x_gmods     =  ' ';
-   /*---(header)-------------------------*/
-   DEBUG_YREGEX  yLOG_note    ("MULTIPLE");
-   /*---(prepare)------------------------*/
-   x_tend      = *a_tend;
-   x_ch        = g_comp [a_rpos];
-   x_gmods     = a_rpos;
-   if (x_ch == '(')  x_gmods = yREGEX__exec_gscan (a_rpos);
-   x_mod       = g_mods [x_gmods];
-   if      (strchr (G_GREEDY, x_mod) != NULL)   x_meth = 'G';
-   else if (strchr (G_LAZY  , x_mod) != NULL)   x_meth = 'L';
-   DEBUG_YREGEX  yLOG_complex ("CURRENT"   , "ch %c, mod %c is %c, x_tend %3d", x_ch, x_mod, x_meth, x_tend);
-   /*---(lengths)------------------------*/
-   x_rem   = g_slen - a_tpos;
-   x_min   = g_mins [x_gmods];
-   x_max   = g_maxs [x_gmods];
-   if (x_max > x_rem)  x_max = x_rem;
-   if (x_mod == ' ' )  x_min = x_max = 1;
-   DEBUG_YREGEX  yLOG_complex ("LIMITS"    , "rem %3d, min %3d to max %3d", x_rem, x_min, x_max);
-   --rce;  if (x_min > x_rem) {
-      DEBUG_YREGEX  yLOG_note    ("MULTIPLE, leave looping, minimum to large");
-      return rce;
-   }
-   /*---(check up to minimum)------------*/
-   if (x_min > 0)  DEBUG_YREGEX  yLOG_note    ("MINIMUM -----------------------------------");
-   for (i = 0; i < x_min; ++i) {
-      DEBUG_YREGEX  yLOG_value   ("LOOP"      , i);
-      if (x_ch == '(')  rc = yREGEX__exec_branch (a_begin, S_BRANCH_CHECK, a_rpos, a_tpos + i, &x_tend);
-      else              rc = yREGEX__exec_doer   (a_begin, S_CHAR_CHECK  , a_rpos, a_tpos + i, &x_tend);
-      DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
-      if (rc <= 0) {
-         DEBUG_YREGEX  yLOG_note    ("failed before min was completed");
-         return rc;
-      }
-      x_match = i;
-   }
-   /*---(check target range)-------------*/
-   DEBUG_YREGEX  yLOG_note    ("RANGE -------------------------------------");
-   for (i = x_min; i < x_max; ++i) {
-      DEBUG_YREGEX  yLOG_value   ("LOOP"      , i);
-      if (x_meth == 'G') {
-         if (x_ch == '(')  rc = yREGEX__exec_branch (a_begin, S_BRANCH_CHECK, a_rpos, a_tpos + i, &x_tend);
-         else              rc = yREGEX__exec_doer   (a_begin, S_CHAR_CHECK  , a_rpos, a_tpos + i, &x_tend);
-         DEBUG_YREGEX  yLOG_value   ("greedy rc" , rc);
-         if (rc <= 0) break;
-      }
-      if (x_meth == 'L') {
-         if (x_ch == '(')  rc = yREGEX__exec_branch (a_begin, S_FULL_RECURSE, a_rpos, a_tpos + i, &x_tend);
-         else              rc = yREGEX__exec_doer   (a_begin, S_FULL_RECURSE, a_rpos, a_tpos + i, &x_tend);
-         DEBUG_YREGEX  yLOG_value   ("lazy rc"   , rc);
-         if (rc == 1) {
-            *a_tend = x_tend;
-            DEBUG_YREGEX  yLOG_value   ("a_tend"    , *a_tend);
-            DEBUG_YREGEX  yLOG_note    ("MULTIPLE, returning lazy success");
-            return 1;
-         }
-      }
-      x_match = i;
-   }
-   /*---(check greedy for real)----------*/
-   if (x_match == 0 && strchr ("?!", x_mod) != NULL) {
-      DEBUG_YREGEX  yLOG_note    ("MULTIPLE, zero matches valid for ?!");
-      rc = yREGEX__exec_next   (a_begin, S_FULL_RECURSE, a_rpos + 1, a_tpos, &x_tend);
-      if (rc == 1) {
-         *a_tend = x_tend;
-         DEBUG_YREGEX  yLOG_value   ("a_tend"    , *a_tend);
-         DEBUG_YREGEX  yLOG_note    ("MULTIPLE, returning zero width success");
-         return 1;
-      }
-   }
-   if (x_meth == 'L') {
-      DEBUG_YREGEX  yLOG_note    ("MULTIPLE, lazy failure");
-      return 0;
-   }
-   /*---(check greedy for real)----------*/
-   DEBUG_YREGEX  yLOG_note    ("GREEDY REVERSE ----------------------------");
-   for (i = x_match; i >= x_min - 1; --i) {
-      DEBUG_YREGEX  yLOG_value   ("LOOP"      , i);
-      if (x_ch == '(')  rc = yREGEX__exec_branch (a_begin, S_FULL_RECURSE, a_rpos, a_tpos + i, &x_tend);
-      else              rc = yREGEX__exec_doer   (a_begin, S_FULL_RECURSE, a_rpos, a_tpos + i, &x_tend);
-      DEBUG_YREGEX  yLOG_value   ("greedy rc" , rc);
-      if (rc == 1) {
-         *a_tend = x_tend;
-         DEBUG_YREGEX  yLOG_value   ("a_tend"    , *a_tend);
-         DEBUG_YREGEX  yLOG_note    ("MULTIPLE, returning greedy success");
-         return 1;
-      }
-   }
-   /*---(failed)-------------------------*/
-   DEBUG_YREGEX  yLOG_note    ("MULTIPLE, fell out bottom");
-   return 0;
 }
 
 char         /*-> tbd --------------------------------[ ------ [fc.D53.553.B4]*/ /*-[01.0000.03#.!]-*/ /*-[--.---.---.--]-*/
@@ -410,7 +341,7 @@ yREGEX__exec_next    (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_t
    x_mod       = g_mods [a_rpos];
    DEBUG_YREGEX  yLOG_complex ("current"   , "%c (%c) %3d", x_ch, x_mod, x_tend);
    /*---(anchors)------------------------*/
-   if (strchr (G_ANCHOR, x_ch) != NULL) {
+   if (strchr (G_ANCHOR, x_ch) != NULL && x_ch == x_mod) {
       DEBUG_YREGEX  yLOG_note    ("found an anchor");
       rc = yREGEX__exec_anchor  (a_begin, a_mode, a_rpos, a_tpos, &x_tend);
       if (rc == 1) {
@@ -447,11 +378,11 @@ yREGEX__exec_next    (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_t
    switch (x_mod) {
    case '*' : case '+' : case '?' : case '{' :
       DEBUG_YREGEX  yLOG_note    ("greedy character check");
-      rc = yREGEX__exec_multiple (a_begin, a_mode, a_rpos, a_tpos, &x_tend);
+      rc = yREGEX__exec_many (a_begin, a_mode, a_rpos, a_tpos, &x_tend);
       break;
    case '@' : case '~' : case '!' : case '}' :
       DEBUG_YREGEX  yLOG_note    ("lazy character check");
-      rc = yREGEX__exec_multiple (a_begin, a_mode, a_rpos, a_tpos, &x_tend);
+      rc = yREGEX__exec_many (a_begin, a_mode, a_rpos, a_tpos, &x_tend);
       break;
    default  :
       DEBUG_YREGEX  yLOG_note    ("single character check");
@@ -467,6 +398,252 @@ yREGEX__exec_next    (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_t
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
    return rc;
+}
+
+
+
+/*====================------------------------------------====================*/
+/*===----                          multiples                           ----===*/
+/*====================------------------------------------====================*/
+static void      o___MULTIPLE________________o (void) {;}
+
+char         /*-> tbd --------------------------------[ ------ [fe.K96.5D5.91]*/ /*-[03.0000.02#.!]-*/ /*-[--.---.---.--]-*/
+yREGEX__exec_min     (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_tend, char a_mod, int a_min, int a_max, int *a_match)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rc          =    0;
+   char        x_ch        =  ' ';
+   int         x_match     =    0;
+   int         i           =    0;
+   int         x_tend      =    0;
+   /*---(defense)------------------------*/
+   DEBUG_YREGEX  yLOG_note    ("MULTIPLE, minimum surface check --------------");
+   if (a_min <= 0) {
+      DEBUG_YREGEX  yLOG_note    ("no required minimum to reach");
+      return 1;
+   }
+   /*---(prepare)------------------------*/
+   x_ch        = g_comp [a_rpos];
+   x_match     = *a_match;
+   /*---(check)--------------------------*/
+   for (i = 0; i < a_min; ++i) {
+      DEBUG_YREGEX  yLOG_value   ("CHECK"     , i + 1);
+      if (x_ch == '(')  rc = yREGEX__exec_branch (a_begin, S_BRANCH_CHECK, a_rpos, a_tpos + i, &x_tend);
+      else              rc = yREGEX__exec_doer   (a_begin, S_CHAR_CHECK  , a_rpos, a_tpos + i, &x_tend);
+      if (rc <= 0) {
+         DEBUG_YREGEX  yLOG_note    ("failed before min was completed");
+         DEBUG_YREGEX  yLOG_note    ("MULTIPLE, minimum failed ---------------------");
+         return rc;
+      }
+      x_match = i;
+   }
+   /*---(clean-up)-----------------------*/
+   *a_match = x_match;
+   /*---(complete)-----------------------*/
+   return 1;
+}
+
+char         /*-> tbd --------------------------------[ ------ [fe.K96.5D5.91]*/ /*-[03.0000.02#.!]-*/ /*-[--.---.---.--]-*/
+yREGEX__exec_max     (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_tend, char a_mod, int a_min, int a_max, int *a_match)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rc          =    0;
+   char        x_ch        =  ' ';
+   int         x_start     =    0;
+   int         x_match     =    0;
+   int         i           =    0;
+   int         x_tend      =    0;
+   /*---(defense)------------------------*/
+   if (strchr (G_LAZY, a_mod) == NULL)  return 0;
+   DEBUG_YREGEX  yLOG_note    ("MULTIPLE, lazy deep dive ---------------------");
+   if (a_max <= 0) {
+      DEBUG_YREGEX  yLOG_note    ("no required maximum to reach");
+      return 1;
+   }
+   /*---(prepare)------------------------*/
+   x_tend      = *a_tend;
+   x_ch        = g_comp [a_rpos];
+   x_match     = *a_match;
+   x_start = a_min;
+   if (x_start > 0)  --x_start;
+   /*---(check)--------------------------*/
+   for (i = a_min; i < a_max; ++i) {
+      DEBUG_YREGEX  yLOG_value   ("CHECK"     , i + 1);
+      if (x_ch == '(')  rc = yREGEX__exec_branch (a_begin, S_FULL_RECURSE, a_rpos, a_tpos + i, &x_tend);
+      else              rc = yREGEX__exec_doer   (a_begin, S_FULL_RECURSE, a_rpos, a_tpos + i, &x_tend);
+      DEBUG_YREGEX  yLOG_value   ("lazy rc"   , rc);
+      if (rc == 1) {
+         *a_tend  = x_tend;
+         *a_match = x_match;
+         DEBUG_YREGEX  yLOG_value   ("a_tend"    , *a_tend);
+         DEBUG_YREGEX  yLOG_note    ("MULTIPLE, lazy success -----------------------");
+         return 1;
+      }
+      x_match = i;
+   }
+   /*---(complete)-----------------------*/
+   return rc;
+}
+
+char         /*-> tbd --------------------------------[ ------ [fe.K96.5D5.91]*/ /*-[03.0000.02#.!]-*/ /*-[--.---.---.--]-*/
+yREGEX__exec_fwd     (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_tend, char a_mod, int a_min, int a_max, int *a_match)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rc          =    0;
+   char        x_ch        =  ' ';
+   int         x_match     =    0;
+   int         i           =    0;
+   int         x_tend      =    0;
+   /*---(defense)------------------------*/
+   if (strchr (G_GREEDY, a_mod) == NULL)  return 1;
+   DEBUG_YREGEX  yLOG_note    ("MULTIPLE, greedy surface check ---------------");
+   if (a_min >= a_max) {
+      DEBUG_YREGEX  yLOG_note    ("nothing required after minimum");
+      return 1;
+   }
+   /*---(prepare)------------------------*/
+   x_ch        = g_comp [a_rpos];
+   x_match     = *a_match;
+   /*---(check)--------------------------*/
+   for (i = a_min; i < a_max; ++i) {
+      DEBUG_YREGEX  yLOG_value   ("CHECK"     , i + 1);
+      if (x_ch == '(')  rc = yREGEX__exec_branch (a_begin, S_BRANCH_CHECK, a_rpos, a_tpos + i, &x_tend);
+      else              rc = yREGEX__exec_doer   (a_begin, S_CHAR_CHECK  , a_rpos, a_tpos + i, &x_tend);
+      if (rc <= 0) break;
+      x_match = i;
+   }
+   /*---(return)-------------------------*/
+   *a_match = x_match;
+   /*---(complete)-----------------------*/
+   return 1;
+}
+
+char         /*-> tbd --------------------------------[ ------ [fe.K96.5D5.91]*/ /*-[03.0000.02#.!]-*/ /*-[--.---.---.--]-*/
+yREGEX__exec_rev     (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_tend, char a_mod, int a_min, int a_max, int *a_match)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rc          =    0;
+   char        x_ch        =  ' ';
+   int         x_match     =    0;
+   int         i           =    0;
+   int         x_tend      =    0;
+   int         x_start     =    0;
+   /*---(defense)------------------------*/
+   if (strchr (G_GREEDY, a_mod) == NULL)  return 1;
+   DEBUG_YREGEX  yLOG_note    ("MULTIPLE, greedy reverse dive ----------------");
+   /*---(prepare)------------------------*/
+   x_ch        = g_comp [a_rpos];
+   x_match     = *a_match;
+   x_start = a_min;
+   if (x_start > 0)  --x_start;
+   /*---(check)--------------------------*/
+   for (i = x_match; i >= x_start; --i) {
+      DEBUG_YREGEX  yLOG_value   ("CHECK"     , i + 1);
+      if (x_ch == '(')  rc = yREGEX__exec_branch (a_begin, S_FULL_RECURSE, a_rpos, a_tpos + i, &x_tend);
+      else              rc = yREGEX__exec_doer   (a_begin, S_FULL_RECURSE, a_rpos, a_tpos + i, &x_tend);
+      DEBUG_YREGEX  yLOG_value   ("greedy rc" , rc);
+      if (rc == 1) {
+         *a_tend = x_tend;
+         DEBUG_YREGEX  yLOG_value   ("a_tend"    , *a_tend);
+         DEBUG_YREGEX  yLOG_note    ("MULTIPLE, greedy success ---------------------");
+         return 1;
+      }
+   }
+   /*---(failure)------------------------*/
+   return rc;
+}
+
+char         /*-> tbd --------------------------------[ ------ [fe.K96.5D5.91]*/ /*-[03.0000.02#.!]-*/ /*-[--.---.---.--]-*/
+yREGEX__exec_zero    (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_tend, char a_mod, int a_min, int a_max, int *a_match)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rc          =    0;
+   char        x_ch        =  ' ';
+   int         x_match     =    0;
+   int         i           =    0;
+   int         x_tend      =    0;
+   /*---(defense)------------------------*/
+   if (a_min > 0)  return 0;
+   /*---(prepare)------------------------*/
+   x_ch        = g_comp [a_rpos];
+   x_match     = *a_match;
+   /*---(zero)---------------------------*/
+   DEBUG_YREGEX  yLOG_note    ("MULTIPLE, zero matches is valid --------------");
+   if (x_ch == '(')  a_rpos      = yREGEX__exec_gscan (a_rpos);
+   rc = yREGEX__exec_next   (a_begin, S_FULL_RECURSE, a_rpos + 1, a_tpos, &x_tend);
+   if (rc == 1) {
+      *a_tend = x_tend;
+      DEBUG_YREGEX  yLOG_value   ("a_tend"    , *a_tend);
+      return 1;
+   }
+   /*---(complete)-----------------------*/
+   return rc;
+}
+
+char         /*-> tbd --------------------------------[ ------ [fe.K96.5D5.91]*/ /*-[03.0000.02#.!]-*/ /*-[--.---.---.--]-*/
+yREGEX__exec_many     (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_tend) 
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   char        rc          =    0;
+   char        x_ch        =  ' ';
+   uchar       x_mod       =  ' ';
+   char        x_meth      =  '-';
+   int         x_rem       =    0;
+   uchar       x_min       =    0;
+   uchar       x_max       =    0;
+   int         x_match     =    0;
+   int         x_tend      =    0;
+   char        x_gmods     =  ' ';
+   /*---(header)-------------------------*/
+   DEBUG_YREGEX  yLOG_note    ("MULTIPLE processing --------------------------");
+   /*---(prepare)------------------------*/
+   x_tend      = *a_tend;
+   x_ch        = g_comp [a_rpos];
+   x_gmods     = a_rpos;
+   if (x_ch == '(')  x_gmods = yREGEX__exec_gscan (a_rpos);
+   x_mod       = g_mods [x_gmods];
+   if      (strchr (G_GREEDY, x_mod) != NULL)   x_meth = 'G';
+   else if (strchr (G_LAZY  , x_mod) != NULL)   x_meth = 'L';
+   DEBUG_YREGEX  yLOG_complex ("CURRENT"   , "ch %c, mod %c is %c, x_tend %3d", x_ch, x_mod, x_meth, x_tend);
+   /*---(lengths)------------------------*/
+   x_rem   = g_slen - a_tpos;
+   x_min   = g_mins [x_gmods];
+   x_max   = g_maxs [x_gmods];
+   if (x_max > x_rem)  x_max = x_rem;
+   if (x_mod == ' ' )  x_min = x_max = 1;
+   DEBUG_YREGEX  yLOG_complex ("LIMITS"    , "rem %3d, min %3d to max %3d", x_rem, x_min, x_max);
+   --rce;  if (x_min > x_rem) {
+      DEBUG_YREGEX  yLOG_note    ("MULTIPLE, leave looping, minimum to large");
+      return rce;
+   }
+   /*---(greedy)-------------------------*/
+   if (x_meth == 'G') {
+      rc = yREGEX__exec_min    (a_begin, a_mode, a_rpos, a_tpos, &x_tend, x_mod, x_min, x_max, &x_match);
+      if (rc <= 0)  return rc;
+      rc = yREGEX__exec_fwd    (a_begin, a_mode, a_rpos, a_tpos, &x_tend, x_mod, x_min, x_max, &x_match);
+      if (rc <= 0)  return rc;
+      rc = yREGEX__exec_rev    (a_begin, a_mode, a_rpos, a_tpos, &x_tend, x_mod, x_min, x_max, &x_match);
+      if (rc <= 0) {
+         rc = yREGEX__exec_zero   (a_begin, a_mode, a_rpos, a_tpos, &x_tend, x_mod, x_min, x_max, &x_match);
+         if (rc <= 0)  return rc;
+      }
+   }
+   /*---(lazy)---------------------------*/
+   else {
+      rc = yREGEX__exec_min    (a_begin, a_mode, a_rpos, a_tpos, &x_tend, x_mod, x_min, x_max, &x_match);
+      if (rc <= 0)  return rc;
+      rc = yREGEX__exec_max    (a_begin, a_mode, a_rpos, a_tpos, &x_tend, x_mod, x_min, x_max, &x_match);
+      if (rc <= 0) {
+         rc = yREGEX__exec_zero   (a_begin, a_mode, a_rpos, a_tpos, &x_tend, x_mod, x_min, x_max, &x_match);
+         if (rc <= 0)  return rc;
+      }
+   }
+   /*---(update)-------------------------*/
+   *a_tend = x_tend;
+   DEBUG_YREGEX  yLOG_value   ("a_tend"    , *a_tend);
+   /*---(complete)-----------------------*/
+   return 1;
 }
 
 
@@ -555,11 +732,11 @@ yREGEX__exec_group   (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_t
    switch (x_mod) {
    case '*' : case '+' : case '?' : case '{' :
       DEBUG_YREGEX  yLOG_note    ("greedy group check");
-      rc = yREGEX__exec_multiple (a_begin, a_mode, a_rpos, a_tpos, &x_tend);
+      rc = yREGEX__exec_many (a_begin, a_mode, a_rpos, a_tpos, &x_tend);
       break;
    case '@' : case '~' : case '!' : case '}' :
       DEBUG_YREGEX  yLOG_note    ("lazy group check");
-      rc = yREGEX__exec_multiple (a_begin, a_mode, a_rpos, a_tpos, &x_tend);
+      rc = yREGEX__exec_many (a_begin, a_mode, a_rpos, a_tpos, &x_tend);
       break;
    default  :
       DEBUG_YREGEX  yLOG_note    ("single group check");

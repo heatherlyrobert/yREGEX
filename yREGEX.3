@@ -1,0 +1,80 @@
+.TH ySTR 3 2017-nov "linux" "heatherly custom tools manual"
+
+.SH NAME
+yREGEX \- small, clean, custom regular expression library
+
+.SH SYNOPSIS
+.nf
+.B #include  <yREGEX.h>
+.sp
+---(regex)-------------------------------------
+.BI "char  yREGEX_comp       (cchar *" "a_re " ");"
+.BI "char  yREGEX_exec       (int    " "a_id " ", cchar *" "a_src" ");"
+.BI "char  yREGEX_match      (int    " "a_id " "         " "     " ", int* " "a_beg" ", int* " "a_len" ");"
+.BI "char  yREGEX_ref        (int    " "a_id " ", int    " "a_num" ", int* " "a_beg" ", int* " "a_len" ");"
+.BI "char  yREGEX_full       (cchar *" "a_re " ", cchar* " "a_src" ", int* " "a_beg" ", int* " "a_len" ");"
+.sp
+---(conversion)--------------------------------
+.sp
+---(logging/unit testing)----------------------
+.BI "char* yREGEX_version    (void);"
+.BI "char  yREGEX_testloud   (void);"
+.BI "char  yREGEX_testquiet  (void);"
+.BI "char  yREGEX_testend    (void);"
+.sp
+.B link with -L/usr/local/libs -lyREGEX or -lyREGEX_debug
+
+.SH LANGUAGE ADDITIONS
+yREGEX uses the 14 standard extended regular expression meta-characters,
+plus a few additional ones for either ease or more functionality.  i will
+not explain regular expressions or the standard characters, that is well
+documented elsewhere.
+
+.B new quantifier variations
+   @           lazy version of 0-many, hated *? notation
+   ~           lazy version of 1-many, hated +? notation
+   !           lazy version of 0-1   , hated ?? notation
+   {-...}      lazy version of {...}
+   {m}         exact match, instead of {m,m}
+
+.B new grouping variations
+   (#...)      hidden group, hate (?:...) notation
+   <...>       marks focus, hate pos/neg look-aheads
+
+.B new anchor variations
+   `           boundary markers instead of \\b
+
+.B new escape variations
+   \\f  \\F      field and group separators in my files (or not)
+   \\g  \\G      greek letter, same as [:greek:] below (or not)
+
+.B new posix-type class variations
+   [:greek:]   my greek lessers at the top of ascii 8bit
+
+.B new back-reference variations
+   &n          copies pattern, not result, from group n [0-9]
+
+.B new prefix/options
+   !           means the rest of the regex is literal (no meta)
+   $           super-basic microsoft explorer rules (* means .*)
+   #           bash command line replacement rules
+   !           standard posix regular expressions, nothing more
+   *           full, yREGEX mode (default)
+
+.SH RATIONAL LIMITS
+yREGEX is a 80% solution.  it is meant to fulfill my day-to-day needs while
+being maintainable, flexible, and tailored.  if i need serious regex crunching,
+i will use a professional, optimizing library ;)
+
+.SH SEE ALSO
+this documentation is layered to provide easier navigation.
+   yREGEX  (3), library overview and calling
+   yREGEX  (7), decision rationale, objectives, and overview
+
+.SH AUTHOR
+heatherly <jelloshrke at gmail dot com>
+
+.SH COLOPHON
+this page is part of a documentation package mean to make the use of the
+heatherly tools easier and faster
+
