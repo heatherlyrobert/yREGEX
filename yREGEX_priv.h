@@ -15,14 +15,16 @@
 
 
 /* rapidly evolving version number to aid with visual change confirmation     */
-#define YREGEX_VER_NUM   "0.2u"
-#define YREGEX_VER_TXT   "updated unit testing and primary group marker"
+#define YREGEX_VER_NUM   "0.3a"
+#define YREGEX_VER_TXT   "added saved pattern structure and init"
 
 
 
+#define     MAX_PATS       250
 #define     MAX_SETS       250
 #define     MAX_CAPS        10
 #define     LEN_RECD      2000
+#define     LEN_PAT        300
 #define     LEN_NAME        20
 
 
@@ -42,6 +44,19 @@ struct cSETS {
 };
 extern tSETS     g_sets [MAX_SETS];
 extern int       g_nset;
+
+
+/*---(patterns)-------------*/
+typedef struct cPATS  tPATS;
+struct cPATS {
+   char        abbr;                        /* shortcut name                  */
+   char        name        [LEN_NAME];      /* pattern name                   */
+   char        pat         [LEN_PAT ];      /* actual pattern                 */
+   int         len;                         /* length of name                 */
+   int         size;                        /* length of pattern              */
+};
+extern tPATS     g_pats [MAX_PATS];
+extern int       g_npat;
 
 
 /*---(captures)-------------*/
@@ -103,6 +118,8 @@ extern char        unit_answer  [LEN_RECD];
 char        yREGEX__comp_init    (cchar *a_regex);
 /*---(literals)-------------*/
 char        yREGEX__comp_literal (int *a_rpos);
+/*---(patterns)-------------*/
+char        yREGEX__comp_patinit (void);
 /*---(sets)-----------------*/
 char        yREGEX__comp_setinit (void);
 char        yREGEX__comp_setabbr (cchar  a_abbr);

@@ -5,6 +5,19 @@
 
 
 
+tPATS       g_pats [MAX_PATS] = {
+   /*      0         1            0         1         2         3         4         5         6         7         8         9         A         B         C         D         E         F                  */
+   /*1234  01234567890123456789   01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890        */
+   /*abbr  ---name-------------   ---pattern-------------------------------------------------------------------------------------------------------------------------------------------------------  ln sz */
+   { '-', "float"              , "(-)?(0|[1-9][0-9]*)([.][0-9]+)?"                                                                                                                                  , 0, 0 },
+   { '-', "byte"               , "(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])$"                                                                                                              , 0, 0 },
+   { '-', "int"                , "(-)?(0|[1-9][0-9]*)"                                                                                                                                              , 0, 0 },
+   {  0 , ""                   , ""                                                                                                                                                                 , 0, 0 },
+};
+int       g_npat      = 0;
+
+
+
 tSETS       g_sets [MAX_SETS] = {
    /*           0         1            0               1               2               3               4               5               6               7               8               9               A               B               C               D               E               F                 */
    /*1234 1234  01234567890123456789   0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef  */
@@ -51,7 +64,7 @@ tSETS       g_sets [MAX_SETS] = {
    {  0 , '-', ""                   , "                                                                                                                                                                                                                                                                " },
 };
 int         g_nset      = 0;
-#define     BSLASHSET   "entfswdlugaxWDSF"
+#define     BSLASHSET   "entfswdlugaxWDSFG"
 #define     MOD_SET      "*+?@~!"
 #define     GRP_SET      "()|"
 #define     MAX_QUAN    255
@@ -136,6 +149,7 @@ yREGEX__comp_init    (cchar *a_regex)
    s_gfocus   = '-';
    /*---(initialize sets)----------------*/
    yREGEX__comp_setinit ();
+   yREGEX__comp_patinit ();
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
    return 0;
@@ -224,6 +238,34 @@ yREGEX__comp_literal (int *a_rpos)
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
    return 1;
+}
+
+
+
+/*====================------------------------------------====================*/
+/*===----                       pattern handling                       ----===*/
+/*====================------------------------------------====================*/
+static void      o___PATTERNS________________o (void) {;}
+
+char         /*-> initialize patterns ----------------[ leaf   [fz.531.021.10]*/ /*-[02.0000.01#.!]-*/ /*-[--.---.---.--]-*/
+yREGEX__comp_patinit (void)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   int         i           =    0;
+   int         j           =    0;
+   /*---(header)-------------------------*/
+   DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
+   /*---(initialize sets)----------------*/
+   g_npat = 0;
+   for (i = 0; i < MAX_PATS; ++i) {
+      if (g_pats [i].abbr == 0)  break;
+      ++g_npat;
+      g_pats [i].len  = strllen (g_pats [i].name, LEN_NAME);
+      g_pats [i].size = strllen (g_pats [i].pat , LEN_PAT );
+   }
+   /*---(complete)-----------------------*/
+   DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
+   return 0;
 }
 
 
@@ -965,31 +1007,22 @@ yREGEX__comp_group   (int *a_rpos)
       s_gstack [s_glevel] = x_grp;
       DEBUG_YREGEX  yLOG_complex ("current"   , "lvl %2d, nrm %2d, hid %2d, grp %2d", s_glevel, s_ggroup, s_ghidden, x_grp);
       break;
-   case '%' :
-      /*> if (s_gfocus == '-') {                                                                                                      <* 
-       *>    DEBUG_YREGEX  yLOG_note    ("open primary group");                                                                       <* 
-       *>    ++s_glevel;                                                                                                              <* 
-       *>    x_grp = 999;                                                                                                             <* 
-       *>    rc = yREGEX__comp_add  ('(', x_grp);                                                                                     <* 
-       *>    s_gstack [s_glevel] = x_grp;                                                                                             <* 
-       *>    s_gfocus = 'y';                                                                                                          <* 
-       *> } else {                                                                                                                    <* 
-       *>    DEBUG_YREGEX  yLOG_note    ("close primary group");                                                                      <* 
-       *>    x_grp = s_gstack [s_glevel];                                                                                             <* 
-       *>    if (x_grp != 999) {                                                                                                      <* 
-       *>       DEBUG_YREGEX  yLOG_note    ("primary focus parens do not match");                                                     <* 
-       *>       DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);                                                                            <* 
-       *>       return -1;                                                                                                            <* 
-       *>    }                                                                                                                        <* 
-       *>    rc = yREGEX__comp_add  (')', x_grp);                                                                                     <* 
-       *>    rc = yREGEX__comp_gfix (x_grp);                                                                                          <* 
-       *>    DEBUG_YREGEX  yLOG_complex ("current"   , "lvl %2d, nrm %2d, hid %2d, grp %2d", s_glevel, s_ggroup, s_ghidden, x_grp);   <* 
-       *>    --s_glevel;                                                                                                              <* 
-       *> }                                                                                                                           <* 
-       *> DEBUG_YREGEX  yLOG_complex ("current"   , "lvl %2d, nrm %2d, hid %2d, grp %2d", s_glevel, s_ggroup, s_ghidden, x_grp);      <* 
-       *> break;                                                                                                                      <*/
+   case '<' :
+      DEBUG_YREGEX  yLOG_note    ("close primary group");
+      x_grp = s_gstack [s_glevel];
+         if (x_grp != 999) {
+            DEBUG_YREGEX  yLOG_note    ("primary focus parens do not match");
+            DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+            return -1;
+         }
+      rc = yREGEX__comp_add  (')', x_grp);
+      rc = yREGEX__comp_gfix (x_grp);
+      DEBUG_YREGEX  yLOG_complex ("current"   , "lvl %2d, nrm %2d, hid %2d, grp %2d", s_glevel, s_ggroup, s_ghidden, x_grp);
+      --s_glevel;
+      ++*a_rpos;
+      break;
    case ')' :
-      DEBUG_YREGEX  yLOG_note    ("close the group");
+      DEBUG_YREGEX  yLOG_note    ("close normal/hidden group");
       x_grp = s_gstack [s_glevel];
       rc = yREGEX__comp_add  (x_ch, x_grp);
       rc = yREGEX__comp_gfix (x_grp);
@@ -1023,6 +1056,7 @@ yREGEX_comp          (cchar *a_regex)
    char        rc          =    0;
    int         i           =    0;
    uchar       x_ch        =  ' ';          /* current character              */
+   uchar       x_nch       =  ' ';          /* next character                 */
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    DEBUG_YREGEX  yLOG_point   ("a_regex"   , a_regex);
@@ -1040,6 +1074,7 @@ yREGEX_comp          (cchar *a_regex)
       DEBUG_YREGEX  yLOG_value   ("LOOP"      , i);
       /*---(prepare)---------------------*/
       x_ch   = g_regex [i];
+      x_nch  = g_regex [i + 1];
       /*---(backslashed metas)-----------*/
       if (x_ch == G_KEY_BSLASH) {
          DEBUG_YREGEX  yLOG_note    ("handle escaped character");
@@ -1052,6 +1087,12 @@ yREGEX_comp          (cchar *a_regex)
          rc = yREGEX__comp_dot (&i);
          continue;
       }
+      /*---(group handling)--------------*/
+      if (strchr (GRP_SET, x_ch) != NULL || (x_ch == '<' && x_nch == ')')) {
+         DEBUG_YREGEX  yLOG_note    ("handle grouping");
+         rc = yREGEX__comp_group (&i);
+         if (rc >= 0)  continue;
+      }
       /*---(anchors)---------------------*/
       if (strchr (G_ANCHOR, x_ch) != NULL) {
          DEBUG_YREGEX  yLOG_note    ("handle anchors");
@@ -1059,12 +1100,6 @@ yREGEX_comp          (cchar *a_regex)
          else                             yREGEX__comp_add (x_ch, 0);
          yREGEX__comp_mod (x_ch, 0, 0);
          continue;
-      }
-      /*---(group handling)--------------*/
-      if (strchr (GRP_SET, x_ch) != NULL) {
-         DEBUG_YREGEX  yLOG_note    ("handle grouping");
-         rc = yREGEX__comp_group (&i);
-         if (rc >= 0)  continue;
       }
       /*---(set handling)----------------*/
       if (x_ch == '[') {
