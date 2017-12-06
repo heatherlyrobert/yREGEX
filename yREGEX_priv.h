@@ -15,8 +15,8 @@
 
 
 /* rapidly evolving version number to aid with visual change confirmation     */
-#define YREGEX_VER_NUM   "0.2t"
-#define YREGEX_VER_TXT   "word boundaries working as well as new shortcut"
+#define YREGEX_VER_NUM   "0.2u"
+#define YREGEX_VER_TXT   "updated unit testing and primary group marker"
 
 
 
@@ -26,7 +26,7 @@
 #define     LEN_NAME        20
 
 
-#define     G_ANCHOR     "^$`"
+#define     G_ANCHOR     "^$<>"
 #define     S_GROUP      "(|)"
 #define     G_GREEDY     "*+?{"
 #define     G_LAZY       "@~!}"
@@ -111,6 +111,7 @@ char        yREGEX__comp_setname (cchar *a_name);
 char        yREGEX__comp_setstd  (int   *a_rpos);
 char        yREGEX__comp_setmap  (int   *a_rpos);
 char        yREGEX__comp_dot     (int   *a_rpos);
+char        yREGEX__unitmap      (char a_type, int a_value);
 char*       yREGEX__unitcomp     (char *a_question, int a_num);
 
 

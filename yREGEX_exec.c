@@ -70,8 +70,8 @@ yREGEX__exec_anchor  (cint a_begin, char a_mode, int a_rpos, int a_tpos, int *a_
    char        rc          =    0;
    char        x_ch        =  ' ';
    char        x_mod       =  ' ';
-   char        x_tch       =  ' ';
-   char        x_pch       =  ' ';
+   char        x_curr      =  ' ';
+   char        x_oth       =  ' ';
    int         x_tend      =    0;
    char       *x_valid     = "abcdefghijklmnopqrstuvwxyz";
    int         x_set       =    0;
@@ -88,6 +88,8 @@ yREGEX__exec_anchor  (cint a_begin, char a_mode, int a_rpos, int a_tpos, int *a_
    x_mod       = g_mods [a_rpos];
    DEBUG_YREGEX  yLOG_schar   (x_ch);
    DEBUG_YREGEX  yLOG_schar   (x_mod);
+   x_curr = g_source [a_tpos];
+   DEBUG_YREGEX  yLOG_schar   (x_curr);
    /*---(defense)------------------------*/
    --rce;  if (strchr (G_ANCHOR, x_ch) == NULL) {
       DEBUG_YREGEX  yLOG_snote   ("not anchor");
@@ -105,23 +107,28 @@ yREGEX__exec_anchor  (cint a_begin, char a_mode, int a_rpos, int a_tpos, int *a_
       DEBUG_YREGEX  yLOG_snote   ("BOL");
       ++a_rpos;
       break;
-   case '`' :
-      x_tch = g_source [a_tpos];
-      if (a_tpos > 0)  x_pch = g_source [a_tpos - 1];
-      switch (g_sets [g_indx [a_rpos]].map [x_tch]) {
-      case '.' :
-         if (g_sets [g_indx [a_rpos]].map [x_pch] == ' ')  rc = 1;
-         break;
-      case ' ' :
-         if (g_sets [g_indx [a_rpos]].map [x_pch] == '.')  rc = 1;
-         break;
-      }
-      if (rc == 0) {
-         DEBUG_YREGEX  yLOG_snote   ("not at WB");
+   case '<' :
+      if (a_tpos > 0)  x_oth = g_source [a_tpos - 1];
+      DEBUG_YREGEX  yLOG_schar   (x_oth);
+      if (g_sets [g_indx [a_rpos]].map [x_oth ] == '.' ||
+          g_sets [g_indx [a_rpos]].map [x_curr] == ' ') {
+         DEBUG_YREGEX  yLOG_snote   ("not at word beg");
          DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
          return 0;
       }
-      DEBUG_YREGEX  yLOG_snote   ("BOL");
+      DEBUG_YREGEX  yLOG_snote   ("BEG WORD");
+      ++a_rpos;
+      break;
+   case '>' :
+      if (a_tpos <= g_slen)  x_oth = g_source [a_tpos + 1];
+      DEBUG_YREGEX  yLOG_schar   (x_oth);
+      if (g_sets [g_indx [a_rpos]].map [x_oth ] == ' ' ||
+          g_sets [g_indx [a_rpos]].map [x_curr] == '.') {
+         DEBUG_YREGEX  yLOG_snote   ("not at word end");
+         DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
+         return 0;
+      }
+      DEBUG_YREGEX  yLOG_snote   ("END WORD");
       ++a_rpos;
       break;
    case '$' :
@@ -289,6 +296,7 @@ yREGEX__exec_doer    (cint a_begin, char a_mode, int a_rpos, int a_tpos, int *a_
    DEBUG_YREGEX  yLOG_sint    (rc);
    if (rc <= 0) {
       DEBUG_YREGEX  yLOG_snote   ("FAILED");
+      DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rc);
       return rc;
    }
    DEBUG_YREGEX  yLOG_snote   ("pass");

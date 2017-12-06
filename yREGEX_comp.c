@@ -53,7 +53,7 @@ tSETS       g_sets [MAX_SETS] = {
 int         g_nset      = 0;
 #define     BSLASHSET   "entfswdlugaxWDSF"
 #define     MOD_SET      "*+?@~!"
-#define     GRP_SET      "()|<>"
+#define     GRP_SET      "()|"
 #define     MAX_QUAN    255
 
 char        g_regex     [LEN_RECD]  = "";
@@ -74,6 +74,7 @@ int         s_gstack    [100];
 int         s_glevel          =  0;
 int         s_ggroup          =  0;
 int         s_ghidden         = 10;
+char        s_gfocus          = '-';
 
 
 /*====================------------------------------------====================*/
@@ -132,6 +133,7 @@ yREGEX__comp_init    (cchar *a_regex)
    s_glevel   =  0;
    s_ggroup   =  0;
    s_ghidden  = 10;
+   s_gfocus   = '-';
    /*---(initialize sets)----------------*/
    yREGEX__comp_setinit ();
    /*---(complete)-----------------------*/
@@ -332,9 +334,16 @@ yREGEX__comp_bslash  (int *a_rpos)
    }
    /*---(boundaries)---------------------*/
    if (x_ch == 'b') {
-      DEBUG_YREGEX  yLOG_note    ("boundary marker");
-      yREGEX__comp_add ('`', yREGEX__comp_setabbr ('w'));
-      yREGEX__comp_mod ('`', 0, 0);
+      DEBUG_YREGEX  yLOG_note    ("begin word marker");
+      yREGEX__comp_add ('<', yREGEX__comp_setabbr ('w'));
+      yREGEX__comp_mod ('<', 0, 0);
+      DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+      return 1;
+   }
+   if (x_ch == 'B') {
+      DEBUG_YREGEX  yLOG_note    ("end word marker");
+      yREGEX__comp_add ('>', yREGEX__comp_setabbr ('w'));
+      yREGEX__comp_mod ('>', 0, 0);
       DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
       return 1;
    }
@@ -838,6 +847,8 @@ yREGEX__comp_cmods   (int *a_rpos)
             sprintf (t, "%*.*s", x_len, x_len, g_regex + *a_rpos - x_len);
             DEBUG_YREGEX  yLOG_info    ("t"         , t);
             x_max = atoi (t);
+         } else {
+            x_max = MAX_QUAN;
          }
          DEBUG_YREGEX  yLOG_value   ("x_max"     , x_max);
          break;
@@ -935,13 +946,18 @@ yREGEX__comp_group   (int *a_rpos)
    DEBUG_YREGEX  yLOG_complex ("position"  , "pos %2d, ch  %c, nch %c", *a_rpos, x_ch, x_nch);
    switch (x_ch) {
    case '(' :
-      DEBUG_YREGEX  yLOG_note    ("open the group");
       ++s_glevel;
       if (x_nch == '#') {
-         DEBUG_YREGEX  yLOG_note    ("identified a hidden group");
+         DEBUG_YREGEX  yLOG_note    ("open hidden group");
          ++*a_rpos;
          x_grp = ++s_ghidden;
+      } else if (x_nch == '>') {
+         DEBUG_YREGEX  yLOG_note    ("open primary group");
+         s_gfocus = 'y';
+         ++*a_rpos;
+         x_grp = 999;
       } else {
+         DEBUG_YREGEX  yLOG_note    ("open normal group");
          x_grp = ++s_ggroup;
          if (s_ggroup > 10)  x_grp = ++s_ghidden;
       }
@@ -949,26 +965,33 @@ yREGEX__comp_group   (int *a_rpos)
       s_gstack [s_glevel] = x_grp;
       DEBUG_YREGEX  yLOG_complex ("current"   , "lvl %2d, nrm %2d, hid %2d, grp %2d", s_glevel, s_ggroup, s_ghidden, x_grp);
       break;
-   case '<' :
-      DEBUG_YREGEX  yLOG_note    ("open primary group");
-      ++s_glevel;
-      x_grp = 999;
-      rc = yREGEX__comp_add  ('(', x_grp);
-      s_gstack [s_glevel] = x_grp;
-      DEBUG_YREGEX  yLOG_complex ("current"   , "lvl %2d, nrm %2d, hid %2d, grp %2d", s_glevel, s_ggroup, s_ghidden, x_grp);
-      break;
+   case '%' :
+      /*> if (s_gfocus == '-') {                                                                                                      <* 
+       *>    DEBUG_YREGEX  yLOG_note    ("open primary group");                                                                       <* 
+       *>    ++s_glevel;                                                                                                              <* 
+       *>    x_grp = 999;                                                                                                             <* 
+       *>    rc = yREGEX__comp_add  ('(', x_grp);                                                                                     <* 
+       *>    s_gstack [s_glevel] = x_grp;                                                                                             <* 
+       *>    s_gfocus = 'y';                                                                                                          <* 
+       *> } else {                                                                                                                    <* 
+       *>    DEBUG_YREGEX  yLOG_note    ("close primary group");                                                                      <* 
+       *>    x_grp = s_gstack [s_glevel];                                                                                             <* 
+       *>    if (x_grp != 999) {                                                                                                      <* 
+       *>       DEBUG_YREGEX  yLOG_note    ("primary focus parens do not match");                                                     <* 
+       *>       DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);                                                                            <* 
+       *>       return -1;                                                                                                            <* 
+       *>    }                                                                                                                        <* 
+       *>    rc = yREGEX__comp_add  (')', x_grp);                                                                                     <* 
+       *>    rc = yREGEX__comp_gfix (x_grp);                                                                                          <* 
+       *>    DEBUG_YREGEX  yLOG_complex ("current"   , "lvl %2d, nrm %2d, hid %2d, grp %2d", s_glevel, s_ggroup, s_ghidden, x_grp);   <* 
+       *>    --s_glevel;                                                                                                              <* 
+       *> }                                                                                                                           <* 
+       *> DEBUG_YREGEX  yLOG_complex ("current"   , "lvl %2d, nrm %2d, hid %2d, grp %2d", s_glevel, s_ggroup, s_ghidden, x_grp);      <* 
+       *> break;                                                                                                                      <*/
    case ')' :
       DEBUG_YREGEX  yLOG_note    ("close the group");
       x_grp = s_gstack [s_glevel];
       rc = yREGEX__comp_add  (x_ch, x_grp);
-      rc = yREGEX__comp_gfix (x_grp);
-      DEBUG_YREGEX  yLOG_complex ("current"   , "lvl %2d, nrm %2d, hid %2d, grp %2d", s_glevel, s_ggroup, s_ghidden, x_grp);
-      --s_glevel;
-      break;
-   case '>' :
-      DEBUG_YREGEX  yLOG_note    ("close primary group");
-      x_grp = s_gstack [s_glevel];
-      rc = yREGEX__comp_add  (')', x_grp);
       rc = yREGEX__comp_gfix (x_grp);
       DEBUG_YREGEX  yLOG_complex ("current"   , "lvl %2d, nrm %2d, hid %2d, grp %2d", s_glevel, s_ggroup, s_ghidden, x_grp);
       --s_glevel;
@@ -999,7 +1022,7 @@ yREGEX_comp          (cchar *a_regex)
    char        rce         =  -10;
    char        rc          =    0;
    int         i           =    0;
-   uchar       x_ch        =  ' ';
+   uchar       x_ch        =  ' ';          /* current character              */
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    DEBUG_YREGEX  yLOG_point   ("a_regex"   , a_regex);
@@ -1032,8 +1055,8 @@ yREGEX_comp          (cchar *a_regex)
       /*---(anchors)---------------------*/
       if (strchr (G_ANCHOR, x_ch) != NULL) {
          DEBUG_YREGEX  yLOG_note    ("handle anchors");
-         if (x_ch == '`')  yREGEX__comp_add (x_ch, yREGEX__comp_setabbr ('w'));
-         else              yREGEX__comp_add (x_ch, 0);
+         if (x_ch == '<' || x_ch == '>')  yREGEX__comp_add (x_ch, yREGEX__comp_setabbr ('w'));
+         else                             yREGEX__comp_add (x_ch, 0);
          yREGEX__comp_mod (x_ch, 0, 0);
          continue;
       }
@@ -1079,6 +1102,32 @@ static void      o___UNITTEST________________o (void) {;}
 
 char        unit_answer  [LEN_RECD];
 
+char         /*-> unit test accessor -----------------[ light  [us.D90.241.L0]*/ /*-[03.0000.00#.#]-*/ /*-[--.---.---.--]-*/
+yREGEX__unitmap    (char a_type, int a_value)
+{
+   char        x_ch        = ' ';
+   char       *x_range     = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ***********************************************************************";
+   char       *x_range2    = " 123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ***********************************************************************";
+   char       *x_range3    = " .123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ**********************************************************************";
+   switch (a_type) {
+   case '(' :
+      if      (a_value == 999)   x_ch = '<';
+      else if (a_value >= 65 )   x_ch = '*';
+      else                       x_ch = x_range3 [a_value];
+      break;
+   case 'i' :
+      if      (a_value >= 65 )   x_ch = '*';
+      else                       x_ch = x_range2 [a_value];
+      break;
+   case 'm' : case 'x' : case 'j' :
+      if      (a_value ==  0)    x_ch = ' ';
+      else if (a_value >= 62)    x_ch = '*';
+      else                       x_ch = x_range [a_value];
+      break;
+   }
+   return x_ch;
+}
+
 char*        /*-> unit test accessor -----------------[ light  [us.D90.241.L0]*/ /*-[03.0000.00#.#]-*/ /*-[--.---.---.--]-*/
 yREGEX__unitcomp   (char *a_question, int a_num)
 {
@@ -1112,41 +1161,23 @@ yREGEX__unitcomp   (char *a_question, int a_num)
       snprintf (unit_answer, LEN_RECD, "yREGEX_comp base : %2d [%-45.45s]", g_clen, g_comp);
    } else if (strncmp (a_question, "indx"      , 20)  == 0) {
       for (i = 0; i < 45; ++i) {
-         if (strchr ("(|)", g_comp [i]) != NULL) {
-            if      (g_indx [i] == 999)   t [i] = '<';
-            else if (g_indx [i] >= 65 )   t [i] = '*';
-            else                          t [i] = x_range3 [g_indx [i]];
-         } else {
-            if      (g_indx [i] >= 65 )   t [i] = '*';
-            else                          t [i] = x_range2 [g_indx [i]];
-         }
+         if (strchr ("(|)", g_comp [i]) != NULL)  t [i] = yREGEX__unitmap ('(', g_indx [i]);
+         else                                     t [i] = yREGEX__unitmap ('i', g_indx [i]);
       }
       t [45] = 0;
       snprintf (unit_answer, LEN_RECD, "yREGEX_comp indx : %2d [%-45.45s]", g_clen, t);
    } else if (strncmp (a_question, "mods"      , 20)  == 0) {
       snprintf (unit_answer, LEN_RECD, "yREGEX_comp mods : %2d [%-45.45s]", g_clen, g_mods);
    } else if (strncmp (a_question, "mins"      , 20)  == 0) {
-      for (i = 0; i < 45; ++i) {
-         if      (g_mins [i] ==  0)  t [i] = ' ';
-         else if (g_mins [i] >= 62)  t [i] = '*';
-         else                        t [i] = x_range [g_mins [i]];
-      }
+      for (i = 0; i < 45; ++i)   t [i] = yREGEX__unitmap ('m', g_mins [i]);
       t [45] = 0;
       snprintf (unit_answer, LEN_RECD, "yREGEX_comp mins : %2d [%-45.45s]", g_clen, t);
    } else if (strncmp (a_question, "maxs"      , 20)  == 0) {
-      for (i = 0; i < 45; ++i) {
-         if      (g_maxs [i] ==  0)  t [i] = ' ';
-         else if (g_maxs [i] >= 62)  t [i] = '*';
-         else                        t [i] = x_range [g_maxs [i]];
-      }
+      for (i = 0; i < 45; ++i)   t [i] = yREGEX__unitmap ('x', g_maxs [i]);
       t [45] = 0;
       snprintf (unit_answer, LEN_RECD, "yREGEX_comp maxs : %2d [%-45.45s]", g_clen, t);
    } else if (strncmp (a_question, "jump"      , 20)  == 0) {
-      for (i = 0; i < 45; ++i) {
-         if      (g_jump [i] ==  0)  t [i] = ' ';
-         else if (g_jump [i] >= 62)  t [i] = '*';
-         else                        t [i] = x_range [g_jump [i]];
-      }
+      for (i = 0; i < 45; ++i)   t [i] = yREGEX__unitmap ('j', g_jump [i]);
       t [45] = 0;
       snprintf (unit_answer, LEN_RECD, "yREGEX_comp jump : %2d [%-45.45s]", g_clen, t);
    }
