@@ -292,6 +292,27 @@ SCRP          v21  (regex ) verify grouping of matches                        
      exec     v21  perform the matching                 yREGEX_exec           "ab"                                                                    i_greater   0                                                                                                    
      get      v21  get match beginning position         yREGEX__unitexec      "stat"         , 0                                                      s_equal     yREGEX_exec stat : beg=  0, end=  1, len=  2                                                         
 
+   GROUP      v21  wrap up                                                      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   - - - - -   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+
+   COND       v21  complete testing                                             - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.011))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+     exec     v21  stop testing                         yREGEX__unitend                                                                                i_equal     0                                                                                                    
+
+
+
+#23456789-12  123  123456789-123456789-123456789-12345  123456789-123456789-  123456789-123456789-123456789-123456789-123456789-123456789-123456789-  123456789-  123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-  -  123456789-123456789- 
+#==(verb)===  ver  ===========(description)===========  =====(function)=====  ========================(arguments)===================================  ==(test)==  ==========================(results)=================================================================  t  ========(var)======= 
+SCRP          v21  (regex ) verify groups with repeating matches                yREGEX_exec                                                             ((01.---))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+
+   COND       v21  initialize the testing environment                           - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.001))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+     exec     v21  start testing                        yREGEX__unitquiet                                                                             i_equal     0                                                                                                    
+     code     v21  create a position indicator          - - - - - - - - - -   int    x_len         = 0;                                                                                                                                                                    
+
+   GROUP      v21  test char map directly                                       - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   - - - - -   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+
+   COND       v21  verify a small repeating group                               - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.003))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+     exec     v21  call regex patter compilation        yREGEX_comp           "(ea)+"                                                                 i_equal     0                                                                                                    
+     exec     v21  perform the matching                 yREGEX_exec           "aaeaeaeabb"                                                            i_greater   0                                                                                                    
+     get      v21  get match beginning position         yREGEX__unitexec      "stat"         , 0                                                      s_equal     yREGEX_exec stat : beg=  2, end=  7, len=  6                                                         
 
    GROUP      v21  wrap up                                                      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   - - - - -   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
 

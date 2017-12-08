@@ -4,12 +4,17 @@
 
 
 
-char        g_source    [LEN_RECD]  = "";
-int         g_slen      = -1;
-static int  s_begin     =  0;
-static int  s_end       =  0;
-static int  s_len       =  0;
+char        g_all       =  '-';
+tFIND       g_finds     [MAX_FIND];
+int         g_nfind     =    0;
 
+
+
+char        g_source    [LEN_RECD]  = "";
+int         g_slen      =   -1;
+static int  s_begin     =    0;
+static int  s_end       =    0;
+static int  s_len       =    0;
 
 
 
@@ -50,8 +55,28 @@ yREGEX__exec_init    (cchar *a_source)
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
+   /*---(finds)--------------------------*/
+   for (i = 0; i < MAX_FIND; ++i) {
+      g_finds [i].beg = -1;
+      g_finds [i].end = -1;
+   }
+   g_nfind = 0;
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+   return 0;
+}
+
+char         /*-> tbd --------------------------------[ shoot  [fe.833.144.30]*/ /*-[01.0000.01#.H]-*/ /*-[--.---.---.--]-*/
+yREGEX__exec_find    (int a_begin, int a_tend)
+{
+   DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
+   DEBUG_YREGEX  yLOG_sint    (a_begin);
+   g_finds [g_nfind].beg = a_begin;
+   DEBUG_YREGEX  yLOG_sint    (a_tend);
+   g_finds [g_nfind].end = a_tend;
+   ++g_nfind;
+   DEBUG_YREGEX  yLOG_sint    (g_nfind);
+   DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
    return 0;
 }
 
@@ -145,6 +170,7 @@ yREGEX__exec_anchor  (cint a_begin, char a_mode, int a_rpos, int a_tpos, int *a_
    /*---(check for end)---------------*/
    if (a_rpos >= g_clen) {
       *a_tend = a_tpos - 1;
+      yREGEX__exec_find  (a_begin, *a_tend);
       DEBUG_YREGEX  yLOG_snote   ("end of regex");
       DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
       return 1;
@@ -215,6 +241,7 @@ yREGEX__exec_endgrp  (cint a_begin, char a_mode, int a_rpos, int a_tpos, int *a_
    /*---(check for end)---------------*/
    if (a_rpos >= g_clen) {
       *a_tend = a_tpos - 1;
+      yREGEX__exec_find  (a_begin, *a_tend);
       DEBUG_YREGEX  yLOG_snote   ("end of regex");
       DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
       return 1;
@@ -303,6 +330,7 @@ yREGEX__exec_doer    (cint a_begin, char a_mode, int a_rpos, int a_tpos, int *a_
    /*---(check for end)---------------*/
    if (a_rpos >= g_clen) {
       *a_tend = a_tpos - 1;
+      yREGEX__exec_find  (a_begin, *a_tend);
       DEBUG_YREGEX  yLOG_snote   ("end of regex");
       DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
       return 1;
@@ -695,7 +723,7 @@ yREGEX__exec_branch  (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_t
    for (i = 0; i < x_ndiv; ++i) {
       DEBUG_YREGEX  yLOG_complex ("branch"    , "num %2d of %2d, a_rpos %3d, off %3d, loc %3d", i + 1, x_ndiv, a_rpos, x_offset, a_rpos + x_offset);
       rc = yREGEX__exec_next (a_begin, a_mode, a_rpos + x_offset + 1, a_tpos, &x_tend);
-      if (rc == 1) break;
+      if (g_all == 'y' && rc == 1) break;
       x_offset += g_jump [a_rpos + x_offset];
    }
    /*---(update)-------------------------*/
@@ -776,6 +804,7 @@ yREGEX_exec          (cchar *a_source)
    char        rc          =    0;
    int         x_begin     =    0;
    int         x_tend      =    0;
+   int         i           =    0;
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    DEBUG_YREGEX  yLOG_point   ("a_source"  , a_source);
@@ -795,7 +824,7 @@ yREGEX_exec          (cchar *a_source)
       x_tend = x_begin;
       rc = yREGEX__exec_next (x_begin, S_FULL_RECURSE, 0, x_begin, &x_tend);
       DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
-      if (rc == 1) {
+      if (g_all == '-' && rc == 1) {
          s_begin = x_begin;
          s_end   = x_tend;
          s_len   = x_tend - x_begin + 1;
@@ -805,6 +834,12 @@ yREGEX_exec          (cchar *a_source)
    DEBUG_YREGEX  yLOG_value   ("s_begin"   , s_begin);
    DEBUG_YREGEX  yLOG_value   ("s_end"     , s_end);
    DEBUG_YREGEX  yLOG_value   ("s_len"     , s_len);
+   /*---(show)---------------------------*/
+   DEBUG_YREGEX  yLOG_value   ("g_nfind"   , g_nfind);
+   for (i = 0; i < g_nfind; ++i) {
+      if ((i % 5) == 0) printf ("ref beg end len\n");
+      printf ("%3d %3d %3d %3d\n", i, g_finds [i].beg, g_finds [i].end, g_finds [i].end - g_finds [i].beg + 1);
+   }
    /*---(check)--------------------------*/
    if (rc != 1) rc = 0;
    DEBUG_YREGEX  yLOG_value   ("return"    , rc);

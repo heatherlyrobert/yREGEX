@@ -15,8 +15,8 @@
 
 
 /* rapidly evolving version number to aid with visual change confirmation     */
-#define YREGEX_VER_NUM   "0.3a"
-#define YREGEX_VER_TXT   "added saved pattern structure and init"
+#define YREGEX_VER_NUM   "0.3b"
+#define YREGEX_VER_TXT   "added rudimentary multiple find structure"
 
 
 
@@ -75,6 +75,8 @@ extern char      g_source    [LEN_RECD];
 extern int       g_slen;
 
 /*---(regex)----------------*/
+extern char      g_original   [LEN_RECD];
+extern int       g_olen;
 extern char      g_regex      [LEN_RECD];
 extern int       g_rlen;
 
@@ -110,8 +112,24 @@ extern  tLOCAL its;
 
 
 
+/*---(struct.re)--------+-----------+-*//*-+----------------------------------*/
+#define     MAX_FIND    5000
+typedef     struct      cFIND       tFIND;
+struct      cFIND {
+   int         beg;
+   int         end;
+   int         len;
+};
+extern      tFIND       g_finds     [MAX_FIND];
+extern      int         g_nfind;
+
+
+
 extern char        yREGEX_ver   [500];
 extern char        unit_answer  [LEN_RECD];
+
+
+
 
 
 /*---(program)--------------*/
@@ -120,6 +138,9 @@ char        yREGEX__comp_init    (cchar *a_regex);
 char        yREGEX__comp_literal (int *a_rpos);
 /*---(patterns)-------------*/
 char        yREGEX__comp_patinit (void);
+int         yREGEX__comp_patabbr (cchar  a_abbr);
+int         yREGEX__comp_patname (cchar *a_name);
+char        yREGEX__comp_pat     (int *a_rpos);
 /*---(sets)-----------------*/
 char        yREGEX__comp_setinit (void);
 char        yREGEX__comp_setabbr (cchar  a_abbr);

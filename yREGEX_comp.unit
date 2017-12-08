@@ -285,6 +285,82 @@ SCRP          v21  (comp  ) verify compiling backslashed characters           
 
 #23456789-12  123  123456789-123456789-123456789-12345  123456789-123456789-  123456789-123456789-123456789-123456789-123456789-123456789-123456789-  123456789-  123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-  -  123456789-123456789- 
 #==(verb)===  ver  ===========(description)===========  =====(function)=====  ========================(arguments)===================================  ==(test)==  ==========================(results)=================================================================  t  ========(var)======= 
+SCRP          v21  (comp  ) verify compiling patterns                           yREGEX__comp_patabbr, yREGEX__comp_patname, yREGEX__comp_pat            ((01.---))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+
+   COND       v21  initialize the testing environment                           - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.001))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+     exec     v21  start testing                        yREGEX__unitquiet                                                                             i_equal     0                                                                                                    
+     code     v21  create a position indicator          - - - - - - - - - -   int    x_rpos        = 0;                                                                                                                                                                    
+     code     v21  create a input variable              - - - - - - - - - -   char   x_check [100] = "";                                                                                                                                                                   
+
+   GROUP      v21  validate finding pattern by abbreviation                     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   - - - - -   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+
+   COND       v21  prepare patterns                                             - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.003))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+     exec     v21  call the regex initialization        yREGEX__comp_init     " "                                                                     i_equal     0                                                                                                    
+
+   COND       v21  check a successful ones                                      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.003))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+     exec     v21  call the set name finder             yREGEX__comp_patabbr  'b'                                                                     i_greater   0                                                                                                    
+     exec     v21  call the set name finder             yREGEX__comp_patabbr  'f'                                                                     i_greater   0                                                                                                    
+     exec     v21  call the set name finder             yREGEX__comp_patabbr  'i'                                                                     i_greater   0                                                                                                    
+
+   COND       v21  check a failing ones                                         - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.003))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+     exec     v21  call the set name finder             yREGEX__comp_patabbr  ' '                                                                     i_lesser    0                                                                                                    
+     exec     v21  call the set name finder             yREGEX__comp_patabbr  '-'                                                                     i_lesser    0                                                                                                    
+     exec     v21  call the set name finder             yREGEX__comp_patabbr  0                                                                       i_lesser    0                                                                                                    
+
+   GROUP      v21  validate finding pattern by name                             - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   - - - - -   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+
+   COND       v21  prepare patterns                                             - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.003))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+     exec     v21  call the regex initialization        yREGEX__comp_init     " "                                                                     i_equal     0                                                                                                    
+
+   COND       v21  check a successful ones                                      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.003))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+     exec     v21  call the set name finder             yREGEX__comp_patname  "byte"                                                                  i_greater   0                                                                                                    
+     exec     v21  call the set name finder             yREGEX__comp_patname  "float"                                                                 i_greater   0                                                                                                    
+     exec     v21  call the set name finder             yREGEX__comp_patname  "int"                                                                   i_greater   0                                                                                                    
+
+   COND       v21  check a failing ones                                         - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.003))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+     exec     v21  call the set name finder             yREGEX__comp_patname  NULL                                                                    i_lesser    0                                                                                                    
+     exec     v21  call the set name finder             yREGEX__comp_patname  ""                                                                      i_lesser    0                                                                                                    
+     exec     v21  call the set name finder             yREGEX__comp_patname  "juxta"                                                                 i_lesser    0                                                                                                    
+     exec     v21  call the set name finder             yREGEX__comp_patname  "supercalafragalistic"                                                  i_lesser    0                                                                                                    
+
+   GROUP      v21  validate pattern handler                                     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   - - - - -   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+
+   COND       v21  check a successful one                                       - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.003))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+     exec     v21  call the regex initialization        yREGEX__comp_init     "(&b)"                                                                  i_equal     0                                                                                                    
+     get      v21  get saved regex                      yREGEX__unitcomp      "regex"        , 0                                                      s_equal     yREGEX_comp regex:  6 [((&b))                                       ]                               
+     code     v21  assign the location                  - - - - - - - - - -   x_rpos = 2;                                                                                                                                                                                  
+     exec     v21  call the posix set handler           yREGEX__comp_pat      &x_rpos                                                                 i_greater   0                                                                                                    
+     echo     v21  get updated position                 - - - - - - - - - -   x_rpos                                                                  i_equal     4                                                                                                    
+
+   GROUP      v21  validate pattern run                                         - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   - - - - -   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+
+   COND       v21  check a successful one                                       - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.003))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+     exec     v21  call the regex initialization        yREGEX__comp_init     "(&i)"                                                                  i_equal     0                                                                                                    
+     get      v21  get saved regex                      yREGEX__unitcomp      "regex"        , 0                                                      s_equal     yREGEX_comp regex:  6 [((&i))                                       ]                               
+     exec     v21  call the posix set handler           yREGEX__comp_patrun                                                                           i_equal     0                                                                                                    
+     get      v21  get saved regex                      yREGEX__unitcomp      "regex"        , 0                                                      s_equal     yREGEX_comp regex: 23 [(((-)?(0|[1-9][0-9]*)))                      ]                               
+
+   GROUP      v21  validate full comp run                                       - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   - - - - -   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+
+   COND       v21  check a successful one                                       - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.003))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+     exec     v21  call the regex initialization        yREGEX_comp           "(&i)"                                                                  i_equal     0                                                                                                    
+     get      v21  get saved regex                      yREGEX__unitcomp      "regex"        , 0                                                      s_equal     yREGEX_comp regex: 23 [(((-)?(0|[1-9][0-9]*)))                      ]                               
+     get      v21  get current base                     yREGEX__unitcomp      "base"         , 0                                                      s_equal     yREGEX_comp base : 13 [(((-)(0|[[)))                                ]                               
+     get      v21  get current indx                     yREGEX__unitcomp      "indx"         , 0                                                      s_equal     yREGEX_comp indx : 13 [.12 23 3p731.                                ]                               
+     get      v21  get current indx                     yREGEX__unitcomp      "mods"         , 0                                                      s_equal     yREGEX_comp mods : 13 [--- ?m   *                                   ]                               
+     get      v21  get current mins                     yREGEX__unitcomp      "mins"         , 0                                                      s_equal     yREGEX_comp mins : 13 [111  2                                       ]                               
+     get      v21  get current maxs                     yREGEX__unitcomp      "maxs"         , 0                                                      s_equal     yREGEX_comp maxs : 13 [    1    *                                   ]                               
+     get      v21  get current jump                     yREGEX__unitcomp      "jump"         , 0                                                      s_equal     yREGEX_comp jump : 13 [ca2  2 3                                     ]                                
+
+   GROUP      v21  wrap up                                                      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   - - - - -   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+
+   COND       v21  complete testing                                             - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.011))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+     exec     v21  stop testing                         yREGEX__unitend                                                                                i_equal     0                                                                                                    
+
+
+
+#23456789-12  123  123456789-123456789-123456789-12345  123456789-123456789-  123456789-123456789-123456789-123456789-123456789-123456789-123456789-  123456789-  123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-  -  123456789-123456789- 
+#==(verb)===  ver  ===========(description)===========  =====(function)=====  ========================(arguments)===================================  ==(test)==  ==========================(results)=================================================================  t  ========(var)======= 
 SCRP          v21  (comp  ) verify compiling posix standard sets                yREGEX__comp_setname, yREGEX__comp_setstd, yREGEX_comp                  ((01.---))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
 
    COND       v21  initialize the testing environment                           - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.001))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
