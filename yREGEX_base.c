@@ -3,16 +3,9 @@
 #include    "yREGEX_priv.h"
 
 
-/*> struct cERROR {                                                                   <* 
- *>    char        id;                                                                <* 
- *>    char        desc;                                                              <* 
- *> } s_errors [MAX_ERRORS] = {                                                       <* 
- *>    {  -11, "source argument is null"                      },                      <* 
- *>    {  -12, "source argument is empty"                     },                      <* 
- *>    {  -13, "regex argument is null"                       },                      <* 
- *>    {  -14, "regex argument is empty"                      },                      <* 
- *>                                                                                   <* 
- *> }                                                                                 <*/
+
+/*---(main data structure)------------*/
+tREGEX      gre;
 
 
 
@@ -59,10 +52,8 @@ yREGEX__testloc      (cchar *a_regex, cchar *a_source)
    rc = yREGEX_exec (a_source);
    if (rc <  0)   return "yREGEX_tester    : execution failed";
    /*---(question)-----------------------*/
-   return yREGEX__unitexec ("stat", 0);
+   return FIND__unit ("match", 0);
 }
-
-
 
 
 

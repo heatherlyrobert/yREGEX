@@ -13,161 +13,162 @@
 #include    <ySTR.h>                    /* heatherly string handling           */
 
 
+typedef   unsigned char  uchar;
+
 
 /* rapidly evolving version number to aid with visual change confirmation     */
-#define YREGEX_VER_NUM   "0.3d"
-#define YREGEX_VER_TXT   "last recursion update"
+#define YREGEX_VER_NUM   "0.5a"
+#define YREGEX_VER_TXT   "rebuilt using thompsons nfa style algorithm"
 
 
-#define     S_CHAR_CHECK    'c'
-#define     S_BRANCH_CHECK  'g'
-#define     S_FULL_RECURSE  'r'
+#define     MAX_REGEX       20
 
-
-#define     MAX_PATS       250
-#define     MAX_SETS       250
-#define     MAX_CAPS        10
-#define     LEN_RECD      2000
+#define     LEN_REGEX     2000
+#define     LEN_TEXT      2000
 #define     LEN_PAT        300
+#define     LEN_DESC       100
 #define     LEN_NAME        20
 
 
+#define     TYPE_QUANS   "*+?@~!"
+#define     MAX_QUAN       255
+#define     TYPE_GROUP   "()|"
+
+#define     BACKSLASH_SETS   "entfswdlugaxWDSFG"
+
 #define     G_ANCHOR     "^$<>"
-#define     S_GROUP      "(|)"
+#define     G_GROUP      "(|)"
 #define     G_GREEDY     "*+?{"
 #define     G_LAZY       "@~!}"
 #define     G_ZERO       "*@?!"
+#define     G_MANY       "*@"
+#define     G_PREFIX     "*?!@"
 
-/*---(sets)-----------------*/
-typedef struct cSETS  tSETS;
-struct cSETS {
-   char        type;
-   char        abbr;
-   char        name        [LEN_NAME];
-   char        map         [270];
-};
-extern tSETS     g_sets [MAX_SETS];
-extern int       g_nset;
-
-
-/*---(patterns)-------------*/
-typedef struct cPATS  tPATS;
-struct cPATS {
-   char        abbr;                        /* shortcut name                  */
-   char        name        [LEN_NAME];      /* pattern name                   */
-   char        pat         [LEN_PAT ];      /* actual pattern                 */
-   int         len;                         /* length of name                 */
-   int         size;                        /* length of pattern              */
-};
-extern tPATS     g_pats [MAX_PATS];
-extern int       g_npat;
-
-
-/*---(captures)-------------*/
-typedef struct cCAPS  tCAPS;
-struct cCAPS {
-   int         beg;
-   int         end;
-   int         len;
-};
-extern tCAPS     g_caps [MAX_CAPS];
-extern int       g_ncap;
-
-
-/*---(source)---------------*/
-extern char      g_source    [LEN_RECD];
-extern int       g_slen;
-
-/*---(regex)----------------*/
-extern char      g_original   [LEN_RECD];
-extern int       g_olen;
-extern char      g_regex      [LEN_RECD];
-extern int       g_rlen;
-
-/*---(compiled)-------------*/
-extern char      g_comp      [LEN_RECD];
-extern int       g_indx      [LEN_RECD];
-extern char      g_mods      [LEN_RECD];
-extern int       g_mins      [LEN_RECD];
-extern int       g_maxs      [LEN_RECD];
-extern int       g_jump      [LEN_RECD];
-extern int       g_clen;
 
 /*---(struct.re)--------+-----------+-*//*-+----------------------------------*/
 #define     MAX_REGEX   20
 typedef     struct      cREGEX      tREGEX;
 struct      cREGEX {
-   char        orig        [LEN_RECD];     /* regex source                    */
-   int         rlen;                       /* length of source regex          */
-   char        text        [LEN_RECD];     /* text source                     */
+   /*---(source text)--------------------*/
+   uchar       text        [LEN_TEXT ];    /* text source                     */
    int         tlen;                       /* length of source text           */
+   /*---(solution scorer)----------------*/
+   char        scorer;                     /* solution scoring algorithm      */
+   /*---(original regex)-----------------*/
+   uchar       orig        [LEN_REGEX];    /* original regex                  */
+   int         olen;                       /* length of original regex        */
+   /*---(original regex)-----------------*/
+   uchar       regex       [LEN_REGEX];    /* regex source                    */
+   int         rlen;                       /* length of source regex          */
+   /*---(compiled regex)-----------------*/
+   uchar       comp        [LEN_REGEX];    /* compilied regex chars           */
+   int         indx        [LEN_REGEX];    /* compilied regex group/set index */
+   uchar       mods        [LEN_REGEX];    /* compilied regex modifier        */
+   int         jump        [LEN_REGEX];    /* compilied regex group jumps     */
+   int         clen;                       /* compliled regex length          */
 };
-extern      tREGEX      g_RE        [MAX_REGEX];
-
-
-
-typedef struct cLOCAL tLOCAL;
-struct cLOCAL {
-   /*---(overall)-----------*/
-   char        debug;
-   int         logger;
-};
-extern  tLOCAL its;
-
-
-
-
+extern      tREGEX      gre;
 
 
 extern char        yREGEX_ver   [500];
-extern char        unit_answer  [LEN_RECD];
+extern char        unit_answer  [LEN_TEXT];
 
 
-
-
-
-/*---(program)--------------*/
-char        yREGEX__comp_init    (cchar *a_regex);
-/*---(literals)-------------*/
-char        yREGEX__comp_literal (int *a_rpos);
-/*---(patterns)-------------*/
-char        yREGEX__comp_patinit (void);
-int         yREGEX__comp_patabbr (cchar  a_abbr);
-int         yREGEX__comp_patname (cchar *a_name);
-char        yREGEX__comp_pat     (int *a_rpos);
-/*---(sets)-----------------*/
-char        yREGEX__comp_setinit (void);
-char        yREGEX__comp_setabbr (cchar  a_abbr);
-char        yREGEX__comp_bslash  (int   *a_rpos);
-char        yREGEX__comp_setname (cchar *a_name);
-char        yREGEX__comp_setstd  (int   *a_rpos);
-char        yREGEX__comp_setmap  (int   *a_rpos);
-char        yREGEX__comp_dot     (int   *a_rpos);
-char        yREGEX__unitmap      (char a_type, int a_value);
-char*       yREGEX__unitcomp     (char *a_question, int a_num);
-
-
-/*---(program)--------------*/
-char        yREGEX__exec_init    (cchar *a_source);
-/*---(single)---------------*/
-char        yREGEX__exec_doer    (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_len);
-char        yREGEX__exec_next    (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_len);
-/*---(multiples)------------*/
-char        yREGEX__exec_min     (int a_begin, char a_mode, int a_rpos, int a_tpos, char a_mod, int a_min, int a_max, int *a_match, int *a_len);
-char        yREGEX__exec_lazy    (int a_begin, char a_mode, int a_rpos, int a_tpos, char a_mod, int a_min, int a_max, int *a_match, int *a_len);
-char        yREGEX__exec_greedy  (int a_begin, char a_mode, int a_rpos, int a_tpos, char a_mod, int a_min, int a_max, int *a_match, int *a_len);
-char        yREGEX__exec_fwd     (int a_begin, char a_mode, int a_rpos, int a_tpos, char a_mod, int a_min, int a_max, int *a_match, int *a_len);
-char        yREGEX__exec_rev     (int a_begin, char a_mode, int a_rpos, int a_tpos, char a_mod, int a_min, int a_max, int *a_match, int *a_len);
-char        yREGEX__exec_zero    (int a_begin, char a_mode, int a_rpos, int a_tpos, char a_mod, int a_min, int a_max, int *a_match, int *a_len);
-char        yREGEX__exec_many    (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_len);
-/*---(groups)---------------*/
-char        yREGEX__exec_branch  (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_len);
-char        yREGEX__exec_group   (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_len);
-/*---(multiple)-------------*/
-char*       yREGEX__unitexec     (char *a_question, int a_num);
-
+/*---(base)-----------------*/
+char*       yREGEX_version       (void);
 char*       yREGEX__testloc      (cchar *a_regex, cchar *a_source);
 
+
+
+
+/*===[[ COMP ]]===============================*/
+/*---(program)--------------*/
+char        COMP__init           (cchar *a_regex);
+char        COMP_error           (cchar *a_func, cint a_line, cchar *a_marker, cchar *a_message);
+/*---(structure)------------*/
+char        COMP_add             (cchar a_comp, cint a_indx);
+char        COMP_mod             (cchar a_mod);
+char        COMP__dup_one        (void);
+char        COMP__dup_group      (void);
+/*---(literal)--------------*/
+char        COMP__literal        (int *a_rpos);
+/*---(quantifiers)----------*/
+char        COMP__quan_simple    (int *a_rpos);
+char        COMP__quan_complex   (int *a_rpos);
+/*---(groups)---------------*/
+int         COMP_group_beg       (int  a_rpos);
+int         COMP_group_end       (int  a_rpos);
+
+
+
+/*===[[ EXEC ]]===============================*/
+/*---(program)--------------*/
+char        EXEC__init           (cchar *a_source);
+/*---(handlers)-------------*/
+char        EXEC__group          (int a_level, int a_rpos, int a_tpos);
+char        EXEC__anchor         (int a_level, int a_rpos, int a_tpos);
+char        EXEC__literal        (int a_level, int a_rpos, int a_tpos);
+/*---(nfa)------------------*/
+char        EXEC_push            (short a_level, short a_rpos, short a_tpos);
+char        EXEC_backpush        (short a_level, short a_rpos, short a_tpos);
+char        EXEC_launcher        (short a_level, short a_rpos, short a_tpos, char a_rc);
+char        EXEC__solution       (int a_index);
+char        EXEC_sub             (int a_index, int a_paren);
+char        EXEC__found          (int a_index);
+char        EXEC__list           (void);
+char        EXEC__prime          (void);
+char        EXEC__single         (int a_index);
+
+
+/*===[[ SETS ]]===============================*/
+/*---(program)--------------*/
+char        SETS_init            (void);
+/*---(lookup)---------------*/
+char        SETS_by_abbr         (cchar a_abbr);
+char        SETS__by_name        (cchar *a_name);
+char        SETS__by_map         (void);
+char        SETS__standard       (int *a_rpos);
+/*---(mapping)--------------*/
+char        SETS__clear          (char a_unmark);
+char        SETS__save           (void);
+char        SETS__mapper         (int *a_rpos);
+/*---(compile)--------------*/
+char        SETS_backslash       (int *a_rpos);
+char        SETS_dot             (int *a_rpos);
+char        SETS_comp            (int *a_rpos);
+/*---(execute)--------------*/
+char        SETS_break           (int a_level, int a_rpos, int a_tpos);
+char        SETS_exec            (int a_level, int a_rpos, int a_tpos);
+/*---(done)-----------------*/
+
+
+
+/*===[[ PATS ]]===============================*/
+/*---(program)--------------*/
+char        PATS__init           (void);
+/*---(lookup)---------------*/
+int         PATS__by_abbr        (cchar a_abbr);
+int         PATS__by_name        (cchar *a_name);
+/*---(workhorse)------------*/
+char        PATS__named_ref      (int *a_rpos);
+char        PATS__back_ref       (int *a_rpos);
+/*---(driver)---------------*/
+char        PATS_comp            (void);
+
+
+
+/*===[[ FIND ]]===============================*/
+/*---(program)--------------*/
+char        FIND_init            (void);
+/*---(structure)------------*/
+char        FIND_add             (cint a_ref, cint a_beg, cchar *a_text, cchar *a_quan);
+char        FIND_list            (void);
+char        FIND_text            (cint a_ref, char *a_text);
+int         FIND_count           (void);
+char*       FIND__unit           (char *a_question, int a_num);
+/*---(results)--------------*/
+char        FIND_first           (int  *a_beg, int *a_len);
+char        FIND_next            (int  *a_beg, int *a_len);
 
 
 #endif

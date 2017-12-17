@@ -1,18 +1,15 @@
-.TH ySTR 3 2017-nov "linux" "heatherly custom tools manual"
+.TH yREGEX 3 2017-nov "linux" "heatherly custom tools manual"
 
 .SH NAME
-yREGEX \- small, clean, custom regular expression library
+yREGEX \- small, fast, clean, and custom regular expression library
 
 .SH SYNOPSIS
 .nf
 .B #include  <yREGEX.h>
 .sp
 ---(regex)-------------------------------------
-.BI "char  yREGEX_comp       (cchar *" "a_re " ");"
-.BI "char  yREGEX_exec       (int    " "a_id " ", cchar *" "a_src" ");"
-.BI "char  yREGEX_match      (int    " "a_id " "         " "     " ", int* " "a_beg" ", int* " "a_len" ");"
-.BI "char  yREGEX_ref        (int    " "a_id " ", int    " "a_num" ", int* " "a_beg" ", int* " "a_len" ");"
-.BI "char  yREGEX_full       (cchar *" "a_re " ", cchar* " "a_src" ", int* " "a_beg" ", int* " "a_len" ");"
+.BI "char  yREGEX_comp       (cchar *" "a_regex" ");"
+.BI "char  yREGEX_exec       (cchar *" "a_text " ");"
 .sp
 ---(conversion)--------------------------------
 .sp
@@ -24,6 +21,22 @@ yREGEX \- small, clean, custom regular expression library
 .sp
 .B link with -L/usr/local/libs -lyREGEX or -lyREGEX_debug
 
+.SH POSSIBLE FEATURES
+.B pipelining
+maybe use the semi-colon to provide a secondard regex for evaluating the result
+of the previous regex.  this would allow me to implement rules for content, like
+a password must contain a number, lower, upper, and punctuation.
+
+.B solution prefixing
+many modern regex examples are based on a recursive algorithm to find the
+first branch of an "or" first.  but, mine does not.  so, i could use a prefix
+to indicate the solution evaluation, like greediest, laziest, etc.
+
+   @          overall laziest
+   !          leftmost, laziest
+   ?          leftmost, greediest
+   *          overall greediest
+
 .SH LANGUAGE ADDITIONS
 yREGEX uses the 14 standard extended regular expression meta-characters,
 plus a few additional ones for either ease or more functionality.  i will
@@ -34,18 +47,20 @@ documented elsewhere.
    @           lazy version of 0-many, hated *? notation
    ~           lazy version of 1-many, hated +? notation
    !           lazy version of 0-1   , hated ?? notation
-   {-...}      lazy version of {...}
+   {-...}      lazy version of {...} , common notation
    {m}         exact match, instead of {m,m}
 
 .B new grouping variations
-   (#...)      hidden group, hate (?:...) notation
+   (...)       non-capturing group (hidden)
+   (#...)      capturing group
    (>...<)     focus group, produces default results (ascii art)
 
 .B saved patterns for tried and true receipes
-   (&.....)           saved patterns for reuse by short name
+   (&.)   (&.....)    saved patterns for reuse by abbr or short name
    (&f)   (&float)    regex pattern for a float number
    (&i)   (&int)      ... signed integer
    (&b)   (&byte)     ... and a byte in integer form
+   (&1)               pattern saved from a capture group
 
 .B new anchor variations
    <           beginning of word, hated \\b
@@ -56,17 +71,7 @@ documented elsewhere.
    \\g  \\G      greek letter, same as [:greek:] below (or not)
 
 .B new posix-type class variations
-   [:greek:]   my greek lessers at the top of ascii 8bit
-
-.B new back-reference variations
-   &n          copies pattern, not result, from group n [0-9]
-
-.B new prefix/options
-   !           means the rest of the regex is literal (no meta)
-   $           super-basic microsoft explorer rules (* means .*)
-   #           bash command line replacement rules
-   !           standard posix regular expressions, nothing more
-   *           full, yREGEX mode (default)
+   [:greek:]   my greek letters at the top of ascii 8bit
 
 .SH RATIONAL LIMITS
 yREGEX is a 80% solution.  it is meant to fulfill my day-to-day needs while

@@ -2,37 +2,25 @@
 #include    "yREGEX.h"
 #include    "yREGEX_priv.h"
 
-
-/* the purpose of compilation is to make execution as simple, error free, and
- * fast as possible.
+/*
+ *   CHAR       comp  indx  mods  jump
+ *     n         n           -
  *
- * 00) reduce the number of operators to make it simplier
+ *   SET        comp  indx  mods  jump
+ *     [...]     [     .     -
  *
- * 01) everything necessary for execution is close at hand (little searching)
+ *   ANCHORS    comp  indx  mods  jump
+ *      ^        ^           ^              BOL
+ *      $        $           $              EOL
+ *      <        <     6     <              BOW
+ *      >        >     6     >              EOW
  *
- * 02) everything that can be thought-out ahead of time already is
+ *   GROUPS     comp  indx  mods  jump
+ *      (        (     .           .
+ *      |        |     .           .
+ *      )        )     .     -      
  *
- * 03) everything is arranged to require as little context data as possible
- *
- * 04) the results are human readable to aid debugging (to the extent possible)
- *
- * anchors, stay the same
- *
- * quantifiers are simplified through repetition (thanks to thompson)
- *   a        a
- *   a?       a?
- *   a*       a*
- *   a+       aa?
- *   a{2,5}   aaa?a?a?
- *   a{3}     aaa
- *   a{,3}    a?a?a?
- *   a{2,}    aaa*
- *
- *
- * a      a  -  -  -  -  -
- * a?     a  -  ?  0  1  -
- * a*     a  -  *  0  *  -
- * a+     a  -  -  -  -  -      a  -  *  0  *  -
+ *   QUAN       comp  indx  mods  jump
  *
  *
  *
@@ -41,92 +29,27 @@
 
 
 
-tPATS       g_pats [MAX_PATS] = {
-   /*      0         1            0         1         2         3         4         5         6         7         8         9         A         B         C         D         E         F                  */
-   /*1234  01234567890123456789   01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890        */
-   /*abbr  ---name-------------   ---pattern-------------------------------------------------------------------------------------------------------------------------------------------------------  ln sz */
-   { '-', "----empty----"      , ""                                                                                                                                                                 , 0, 0 },
-   { 'f', "float"              , "(-)?(0|[1-9][0-9]*)([.][0-9]+)?"                                                                                                                                  , 0, 0 },
-   { 'b', "byte"               , "(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])$"                                                                                                              , 0, 0 },
-   { 'i', "int"                , "(-)?(0|[1-9][0-9]*)"                                                                                                                                              , 0, 0 },
-   {  0 , ""                   , ""                                                                                                                                                                 , 0, 0 },
+
+/*---(group shared variables)---------*/
+static int         s_gstack    [100];
+static int         s_glevel          =    0;
+static int         s_ggroup          =    0;
+static int         s_ghidden         =   10;
+static int         s_gmulti          =  100;
+static char        s_gfocus          =  '-';
+
+
+#define    MAX_ERROR   200
+typedef    struct   cERROR   tERROR;
+struct cERROR {
+   char        func        [LEN_NAME];
+   int         line;
+   char        marker      [LEN_NAME];
+   char        message     [LEN_DESC];
 };
-int       g_npat      = 0;
+static tERROR      s_errors   [MAX_ERROR];
+static int         s_nerror   = 0;
 
-
-
-tSETS       g_sets [MAX_SETS] = {
-   /*           0         1            0               1               2               3               4               5               6               7               8               9               A               B               C               D               E               F                 */
-   /*1234 1234  01234567890123456789   0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef  */
-   /*type abbr  ---name-------------   0123456789abcdef0123456789abcde  !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~½                                 ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ  */
-   { '-', '-', "---beg---"          , "                                                                                                                                                                                                                                                                " },
-   /*---(metas)----------------*/
-   /*type type  ---name-------------   0123456789abcdef0123456789abcde  !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~½                                 ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ  */
-   { '-', 'n', "return"             , "          . ..                                                                                                                                                                        .                                                                         " },
-   { '-', 'e', "escape"             , "                       .                                                                                                                                             .                                                                                          " },
-   { '-', 't', "tab"                , "         . .                                                                                                                                                                               .                                                                    " },
-   { '-', 'f', "field"              , "                             ...                                                                                                                                      ..                                                                                        " },
-   { ':', 's', "space"              , "         .....                  .                                                                                                                                                      .                                                                        " },
-   { '-', 'w', "word"               , "                                                ..........       ..........................    . ..........................                                                                                     ................................................" },
-   /*type abbr  ---name-------------   0123456789abcdef0123456789abcde  !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~½                                 ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ  */
-   { ':', 'd', "digit"              , "                                                ..........                                                                                                                                                                                                      " },
-   { ':', 'l', "lower"              , "                                                                                                 ..........................                                                                                                                                     " },
-   { ':', 'u', "upper"              , "                                                                 ..........................                                                                                                                                                                     " },
-   { '-', 'g', "greek"              , "                                                                                                                                                                                                                 ..............................................." },
-   /*---(categories)-----------*/
-   /*type abbr  ---name-------------   0123456789abcdef0123456789abcde  !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~½                                 ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ  */
-   { '-', '-', "dotta"              , " ......... .  ........................................................................................................................................................................ ........................................................................." },
-   { ':', 'a', "alpha"              , "                                                                 ..........................      ..........................                                                                                                                                     " },
-   { ':', '-', "alnum"              , "                                                ..........       ..........................      ..........................                                                                                                                                     " },
-   { ':', '-', "punct"              , "                                 ...............          .......                          ......                          ....                                                                                                                                 " },
-   { ':', 'x', "xdigi"              , "                                                ..........       ......                          ......                                                                                                                                                         " },
-   /*type abbr  ---name-------------   0123456789abcdef0123456789abcde  !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~½                                 ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ  */
-   { ':', '-', "graph"              , "                                 ..............................................................................................                                  ..............................................................................................." },
-   { ':', '-', "print"              , "                                ...............................................................................................                                  ..............................................................................................." },
-   { ':', '-', "cntrl"              , " ...............................                                                                                               .                                                                                                                                " },
-   { ':', '-', "blank"              , "         .                      .                                                                                                                                                                                                                               " },
-   /*---(reversed)-------------*/
-   { '-', 'W', "word (not)"         , " ...............................................          .......                          .... .                          .....................................................................................                                                " },
-   { '-', 'D', "digit (not)"        , " ...............................................          ......................................................................................................................................................................................................" },
-   { '-', 'S', "space (not)"        , " ........     .................. ...................................................................................................................................................... ........................................................................" },
-   { '-', 'F', "field (not)"        , " ............................   ......................................................................................................................................  ........................................................................................" },
-   { '-', 'G', "greek (not)"        , " ...............................................................................................................................................................................................................                                                " },
-   /*---(specialty)------------*/
-   /*type abbr  ---name-------------   0123456789abcdef0123456789abcde  !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~½                                 ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ  */
-   { ' ', '-', ""                   , "                                                                                                                                                                                                                                                                " },
-   /*---(new ones)-------------*/
-   /*type abbr  ---name-------------   0123456789abcdef0123456789abcde  !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~½                                 ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ  */
-   { ' ', '-', ""                   , "                                                                                                                                                                                                                                                                " },
-   /*---(done)-----------------*/
-   {  0 , '-', ""                   , "                                                                                                                                                                                                                                                                " },
-};
-int         g_nset      = 0;
-#define     BSLASHSET   "entfswdlugaxWDSFG"
-#define     MOD_SET      "*+?@~!"
-#define     GRP_SET      "()|"
-#define     MAX_QUAN    255
-
-char        g_original  [LEN_RECD]  = "";
-int         g_olen      = -1;
-char        g_regex     [LEN_RECD]  = "";
-int         g_rlen      = -1;
-
-char        g_comp      [LEN_RECD]  = "";
-int         g_indx      [LEN_RECD];
-char        g_mods      [LEN_RECD]  = "";
-int         g_mins      [LEN_RECD];
-int         g_maxs      [LEN_RECD];
-int         g_jump      [LEN_RECD];
-int         g_clen      = -1;
-
-char        s_map       [270] = "";
-int         s_mapcount  =  0;
-
-int         s_gstack    [100];
-int         s_glevel          =  0;
-int         s_ggroup          =  0;
-int         s_ghidden         = 10;
-char        s_gfocus          = '-';
 
 
 /*====================------------------------------------====================*/
@@ -135,7 +58,7 @@ char        s_gfocus          = '-';
 static void      o___PROGRAM_________________o (void) {;}
 
 char         /*-> tbd --------------------------------[ shoot  [fe.C73.144.31]*/ /*-[01.0000.01#.Z]-*/ /*-[--.---.---.--]-*/
-yREGEX__comp_init    (cchar *a_regex)
+COMP__init           (cchar *a_regex)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -151,93 +74,138 @@ yREGEX__comp_init    (cchar *a_regex)
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   rc = snprintf (g_original, LEN_RECD, "(%s)", a_regex);
+   /*---(check scorer)-------------------*/
+   if (strchr (G_PREFIX, a_regex [0]) != NULL) {
+      gre.scorer = a_regex [0];
+      rc = snprintf (gre.orig , LEN_REGEX, "(%s)", a_regex + 1);
+   } else {
+      gre.scorer = '?';
+      rc = snprintf (gre.orig , LEN_REGEX, "(%s)", a_regex);
+   }
+   /*---(copy regex)---------------------*/
    DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
    --rce;  if (rc     <  0   ) {
       DEBUG_YREGEX  yLOG_note    ("truncated copy");
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   rc = strlcpy  (g_regex, g_original, LEN_RECD);
-   g_rlen = strllen (g_regex , LEN_RECD);
-   DEBUG_YREGEX  yLOG_value   ("g_rlen"    , g_rlen);
-   --rce;  if (g_rlen <= 0   ) {
-      DEBUG_YREGEX  yLOG_note    ("can not be empty");
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   g_olen = g_rlen;
+   DEBUG_YREGEX  yLOG_info    ("gre.orig"  , gre.orig);
+   gre.olen = strllen (gre.orig  , LEN_REGEX);
+   DEBUG_YREGEX  yLOG_value   ("gre.olen"  , gre.olen);
+   strlcpy  (gre.regex, gre.orig , LEN_REGEX);
+   gre.rlen = gre.olen;
    /*---(initialize compiled)------------*/
-   for (i = 0; i < LEN_RECD; ++i) {
-      g_comp [i] = ' ';
-      g_indx [i] =   0;
-      g_mods [i] = ' ';
-      g_mins [i] =   0;
-      g_maxs [i] =   0;
-      g_jump [i] =   0;
+   for (i = 0; i < LEN_REGEX; ++i) {
+      gre.comp [i] =   0;
+      gre.indx [i] =   0;
+      gre.mods [i] =   0;
+      gre.jump [i] =   0;
    }
-   g_comp [0] =  0;
-   g_indx [0] =  0;
-   g_mods [0] =  0;
-   g_mins [0] =  0;
-   g_maxs [0] =  0;
-   g_jump [0] =  0;
-   g_clen = 0;
+   gre.clen = 0;
    /*---(initialize grouping)------------*/
    s_glevel   =  0;
    s_ggroup   =  0;
    s_ghidden  = 10;
    s_gfocus   = '-';
    /*---(initialize sets)----------------*/
-   yREGEX__comp_setinit ();
-   yREGEX__comp_patinit ();
+   SETS_init ();
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
    return 0;
 }
 
 char         /*-> tbd --------------------------------[ leaf   [fz.632.201.00]*/ /*-[00.0000.06#.!]-*/ /*-[--.---.---.--]-*/
-yREGEX__comp_add     (cchar a_comp, cint a_indx)
+COMP_error           (cchar *a_func, cint a_line, cchar *a_marker, cchar *a_message)
+{
+   if (a_func    != NULL)  strlcpy (s_errors [s_nerror].func   , a_func   , LEN_NAME);
+   s_errors [s_nerror].line = a_line;
+   if (a_marker  != NULL)  strlcpy (s_errors [s_nerror].marker , a_marker , LEN_DESC);
+   if (a_message != NULL)  strlcpy (s_errors [s_nerror].message, a_message, LEN_DESC);
+   ++s_nerror;
+   return 0;
+}
+
+
+
+/*====================------------------------------------====================*/
+/*===----                        data structure                        ----===*/
+/*====================------------------------------------====================*/
+static void      o___STRUCTURE_______________o (void) {;}
+
+char         /*-> tbd --------------------------------[ leaf   [fz.632.201.00]*/ /*-[00.0000.06#.!]-*/ /*-[--.---.---.--]-*/
+COMP_add            (cchar a_comp, cint a_indx)
 {
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
    DEBUG_YREGEX  yLOG_schar   (a_comp);
    DEBUG_YREGEX  yLOG_sint    (a_indx);
-   DEBUG_YREGEX  yLOG_sint    (g_clen);
-   g_comp [g_clen] = a_comp;
-   g_indx [g_clen] = a_indx;
-   g_mods [g_clen] = ' ';
-   g_mins [g_clen] = 0;
-   g_maxs [g_clen] = 0;
-   g_jump [g_clen] = 0;
-   ++g_clen;
-   DEBUG_YREGEX  yLOG_sint    (g_clen);
-   g_comp [g_clen] = 0;
-   g_indx [g_clen] = 0;
-   g_mods [g_clen] = 0;
-   g_mins [g_clen] = 0;
-   g_maxs [g_clen] = 0;
-   g_jump [g_clen] = 0;
+   DEBUG_YREGEX  yLOG_sint    (gre.clen);
+   gre.comp [gre.clen] = a_comp;
+   gre.indx [gre.clen] = a_indx;
+   gre.mods [gre.clen] = ' ';
+   gre.jump [gre.clen] = 0;
+   ++gre.clen;
+   DEBUG_YREGEX  yLOG_sint    (gre.clen);
    DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
    return 0;
 }
 
 char         /*-> tbd --------------------------------[ leaf   [fz.412.301.00]*/ /*-[00.0000.02#.!]-*/ /*-[--.---.---.--]-*/
-yREGEX__comp_mod     (cchar a_mod, uint a_min, uint a_max)
+COMP_mod             (cchar a_mod)
 {
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
    DEBUG_YREGEX  yLOG_schar   (a_mod);
-   DEBUG_YREGEX  yLOG_sint    (a_min);
-   DEBUG_YREGEX  yLOG_sint    (a_max);
-   g_mods [g_clen - 1] = a_mod;
-   g_mins [g_clen - 1] = a_min;
-   g_maxs [g_clen - 1] = a_max;
-   DEBUG_YREGEX  yLOG_sint    (g_clen - 1);
+   gre.mods [gre.clen - 1] = a_mod;
+   DEBUG_YREGEX  yLOG_sint    (gre.clen - 1);
    DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
    return 0;
 }
 
+char         /*-> tbd --------------------------------[ leaf   [fz.632.201.00]*/ /*-[00.0000.06#.!]-*/ /*-[--.---.---.--]-*/
+COMP__dup_one        (void)
+{
+   /*---(header)-------------------------*/
+   DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
+   DEBUG_YREGEX  yLOG_schar   (gre.comp [gre.clen - 1]);
+   DEBUG_YREGEX  yLOG_sint    (gre.indx [gre.clen - 1]);
+   DEBUG_YREGEX  yLOG_sint    (gre.clen);
+   gre.comp [gre.clen] = gre.comp [gre.clen - 1];
+   gre.indx [gre.clen] = gre.indx [gre.clen - 1];
+   gre.mods [gre.clen] = gre.mods [gre.clen - 1];
+   gre.jump [gre.clen] = gre.jump [gre.clen - 1];
+   ++gre.clen;
+   DEBUG_YREGEX  yLOG_sint    (gre.clen);
+   DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
+   return 0;
+}
+
+char         /*-> tbd --------------------------------[ leaf   [fz.632.201.00]*/ /*-[00.0000.06#.!]-*/ /*-[--.---.---.--]-*/
+COMP__dup_group      (void)
+{
+   int         x_beg       = 0;
+   int         x_end       = 0;
+   int         i           = 0;
+   /*---(header)-------------------------*/
+   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
+   DEBUG_YREGEX  yLOG_value   ("gre.clen"  , gre.clen);
+   x_end = gre.clen - 1;
+   x_beg = COMP_group_beg (x_end);
+   DEBUG_YREGEX  yLOG_value   ("x_beg"     , x_beg);
+   DEBUG_YREGEX  yLOG_value   ("x_end"     , x_end);
+   for (i = x_beg; i <= x_end; ++i) {
+      DEBUG_YREGEX  yLOG_value   ("pos"       , i);
+      COMP_add (gre.comp [i], gre.indx [i]);
+      if (strchr ("(|)", gre.comp [i]) != NULL)  gre.indx [gre.clen - 1] = s_gmulti;
+      COMP_mod (gre.mods [i]);
+      gre.jump [gre.clen - 1] = gre.jump [i];
+   }
+   ++s_gmulti;
+   DEBUG_YREGEX  yLOG_value   ("s_gmulti"  , s_gmulti);
+   DEBUG_YREGEX  yLOG_value   ("gre.clen"  , gre.clen);
+   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+   return 0;
+}
 
 
 /*====================------------------------------------====================*/
@@ -246,7 +214,7 @@ yREGEX__comp_mod     (cchar a_mod, uint a_min, uint a_max)
 static void      o___LITERAL_________________o (void) {;}
 
 char         /*-> tbd --------------------------------[ ------ [fe.833.134.31]*/ /*-[01.0000.01#.6]-*/ /*-[--.---.---.--]-*/
-yREGEX__comp_literal (int *a_rpos)
+COMP__literal        (int *a_rpos)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -255,790 +223,15 @@ yREGEX__comp_literal (int *a_rpos)
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
-   /*---(defense)------------------------*/
-   --rce;  if (*a_rpos  <  0     ) {
-      DEBUG_YREGEX  yLOG_note    ("position before start");
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   DEBUG_YREGEX  yLOG_value   ("g_rlen"    , g_rlen);
-   --rce;  if (*a_rpos  >= g_rlen) {
-      DEBUG_YREGEX  yLOG_note    ("position after end");
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
    /*---(check)--------------------------*/
-   x_ch  = g_regex [*a_rpos];
+   x_ch  = gre.regex [*a_rpos];
    DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
-   rc = yREGEX__comp_add  (x_ch, 0);
+   rc = COMP_add  (x_ch, 0);
    DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
    --rce;  if (rc < 0) {
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   /*---(complete)-----------------------*/
-   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
-   return 1;
-}
-
-
-
-/*====================------------------------------------====================*/
-/*===----                       pattern handling                       ----===*/
-/*====================------------------------------------====================*/
-static void      o___PATTERNS________________o (void) {;}
-
-char         /*-> initialize pattern database --------[ leaf   [fz.531.021.10]*/ /*-[02.0000.01#.!]-*/ /*-[--.---.---.--]-*/
-yREGEX__comp_patinit (void)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   int         i           =    0;
-   int         j           =    0;
-   /*---(header)-------------------------*/
-   DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
-   /*---(initialize sets)----------------*/
-   g_npat = 0;
-   for (i = 0; i < MAX_PATS; ++i) {
-      if (g_pats [i].abbr == 0)  break;
-      ++g_npat;
-      g_pats [i].len  = strllen (g_pats [i].name, LEN_NAME);
-      g_pats [i].size = strllen (g_pats [i].pat , LEN_PAT );
-   }
-   /*---(complete)-----------------------*/
-   DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
-   return 0;
-}
-
-int          /*-> retrieve pattern by abbeviation ----[ leaf   [fc.632.122.40]*/ /*-[01.0000.01#.8]-*/ /*-[--.---.---.--]-*/
-yREGEX__comp_patabbr (cchar a_abbr)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   int         i           =    0;
-   /*---(header)-------------------------*/
-   DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
-   DEBUG_YREGEX  yLOG_schar   (a_abbr);
-   DEBUG_YREGEX  yLOG_sint    (g_npat);
-   /*---(walk through sets)--------------*/
-   for (i = 0; i < g_npat; ++i) {
-      if (g_pats [i].abbr == 0     )  break;
-      if (g_pats [i].abbr == '-'   )  continue;
-      if (g_pats [i].abbr != a_abbr)  continue;
-      DEBUG_YREGEX  yLOG_snote   ("found");
-      DEBUG_YREGEX  yLOG_sint    (i);
-      DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
-      return i;
-   }
-   /*---(complete)-----------------------*/
-   DEBUG_YREGEX  yLOG_snote   ("not found");
-   DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
-   return -1;
-}
-
-int          /*-> retrieve pattern by name -----------[ leaf   [fe.A53.145.A0]*/ /*-[01.0000.02#.E]-*/ /*-[--.---.---.--]-*/
-yREGEX__comp_patname (cchar *a_name)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   uchar       x_set       =   -1;
-   int         x_len       =    0;
-   int         i           =    0;
-   /*---(header)-------------------------*/
-   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
-   DEBUG_YREGEX  yLOG_point   ("a_name"    , a_name);
-   /*---(defense)------------------------*/
-   --rce;  if (a_name == NULL) {
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   DEBUG_YREGEX  yLOG_info    ("a_name"    , a_name);
-   x_len = strllen (a_name, LEN_NAME);
-   DEBUG_YREGEX  yLOG_value   ("x_len"     , x_len);
-   --rce;  if (x_len <  3) {
-      DEBUG_YREGEX  yLOG_note    ("too short");
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   /*---(walk)---------------------------*/
-   for (i = 0; i < g_npat; ++i) {
-      if (g_pats [i].abbr ==  0 )                     break;
-      if (g_pats [i].len      != x_len     )          continue;
-      if (g_pats [i].name [0] != a_name [0])          continue;
-      if (strcmp (g_pats [i].name, a_name) != 0)      continue;
-      DEBUG_YREGEX  yLOG_value   ("found"     , i);
-      DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
-      return i;
-   }
-   DEBUG_YREGEX  yLOG_note    ("not found");
-   /*---(complete)-----------------------*/
-   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
-   return -1;
-}
-
-char         /*-> compile a pattern ------------------[ ------ [fe.D54.156.65]*/ /*-[02.0000.01#.!]-*/ /*-[--.---.---.--]-*/
-yREGEX__comp_pat     (int *a_rpos)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   char        rc          =   -1;
-   int         i           =    0;
-   int         x_pat       =    0;
-   char        x_name      [LEN_NAME] = "";
-   char        x_ch        =  ' ';
-   int         x_len       =    0;
-   int         x_beg       =   -1;
-   /*---(header)-------------------------*/
-   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
-   DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
-   x_ch   = g_original [*a_rpos - 1];
-   DEBUG_YREGEX  yLOG_value   ("prev ch"   , x_ch);
-   --rce;  if (x_ch != '(') {
-      DEBUG_YREGEX  yLOG_note    ("does not start with a (");
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   x_ch   = g_original [*a_rpos];
-   DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
-   --rce;  if (x_ch != '&') {
-      DEBUG_YREGEX  yLOG_note    ("does not start with a &");
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   x_beg  = *a_rpos;
-   /*---(find name)----------------------*/
-   ++(*a_rpos);
-   --rce;  for (i = 0; i < 7; ++i) {
-      x_ch   = g_original [*a_rpos + i];
-      DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
-      if (x_ch == ')')  break;
-      x_name [i]     = x_ch;
-      x_name [i + 1] = 0;
-      DEBUG_YREGEX  yLOG_info    ("x_name"    , x_name);
-      ++x_len;
-   }
-   /*---(troubles)-----------------------*/
-   --rce;  if (x_len == 0) {
-      DEBUG_YREGEX  yLOG_note    ("could not parse name");
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   --rce;  if (x_ch  != ')') {
-      DEBUG_YREGEX  yLOG_note    ("name was too long");
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   /*---(abbreviated name)---------------*/
-   --rce;  if (x_len == 1) {
-      DEBUG_YREGEX  yLOG_note    ("using abbreviated name");
-      x_pat = yREGEX__comp_patabbr (x_name [0]);
-      if (x_pat < 0) {
-         DEBUG_YREGEX  yLOG_note    ("not a valid abbreviation");
-         DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-         return rce;
-      }
-      DEBUG_YREGEX  yLOG_value   ("x_pat"     , x_pat);
-      ++(*a_rpos);
-      strlcat (g_regex, g_pats [x_pat].pat, LEN_RECD);
-      DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
-      return 1;
-   }
-   /*---(full name)----------------------*/
-   --rce;
-   DEBUG_YREGEX  yLOG_note    ("trying abbreviated name");
-   x_pat = yREGEX__comp_patname (x_name);
-   if (x_pat < 0) {
-      DEBUG_YREGEX  yLOG_note    ("not a valid abbreviation");
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   DEBUG_YREGEX  yLOG_value   ("x_pat"     , x_pat);
-   *a_rpos += x_len;
-   /*---(full name)----------------------*/
-   strlcat (g_regex, g_pats [x_pat].pat, LEN_RECD);
-   /*---(complete)-----------------------*/
-   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
-   return 1;
-}
-
-char
-yREGEX__comp_patrun  (void)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   char        rc          =    0;
-   int         i           =    0;
-   uchar       x_ch        =  ' ';          /* curr character                 */
-   uchar       x_pch       =  ' ';          /* prev character                 */
-   int         x_prev      =    0;
-   int         x_len       =    0;
-   char        t           [LEN_RECD] = "";
-   /*---(header)-------------------------*/
-   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
-   /*---(parse)--------------------------*/
-   DEBUG_YREGEX  yLOG_info    ("g_original", g_original);
-   DEBUG_YREGEX  yLOG_value   ("g_olen"    , g_olen);
-   strlcpy (g_regex , "", LEN_RECD);
-   for (i = 0; i < g_rlen; ++i) {
-      DEBUG_YREGEX  yLOG_value   ("LOOP"      , i);
-      /*---(prepare)---------------------*/
-      x_pch  = g_regex [i - 1];
-      x_ch   = g_regex [i];
-      /*---(pattern)---------------------*/
-      if (x_pch == '(' && x_ch == '&') {
-         DEBUG_YREGEX  yLOG_note    ("found potenial pattern");
-         x_len = i - x_prev;
-         DEBUG_YREGEX  yLOG_complex ("stats"     , "beg %3d, end %3d, len %3d", x_prev, i - 1, x_len);
-         sprintf (t, "%-*.*s", x_len, x_len, g_original + x_prev);
-         DEBUG_YREGEX  yLOG_info    ("t"         , t);
-         strlcat (g_regex, t, LEN_RECD);
-         DEBUG_YREGEX  yLOG_info    ("g_regex"   , g_regex);
-         rc     = yREGEX__comp_pat (&i);
-         if (rc < 0)  break;
-         x_prev = i;
-         DEBUG_YREGEX  yLOG_value   ("x_prev"    , x_prev);
-         DEBUG_YREGEX  yLOG_info    ("g_regex"   , g_regex);
-         g_rlen = strllen (g_regex, LEN_RECD);
-      }
-   }
-   /*---(copy last)----------------------*/
-   DEBUG_YREGEX  yLOG_complex ("stats"     , "beg %3d", x_prev);
-   sprintf (t, "%s", g_original + x_prev);
-   DEBUG_YREGEX  yLOG_info    ("t"         , t);
-   strlcat (g_regex, t, LEN_RECD);
-   g_rlen = strllen (g_regex, LEN_RECD);
-   /*---(show)---------------------------*/
-   DEBUG_YREGEX  yLOG_info    ("g_regex"   , g_regex);
-   DEBUG_YREGEX  yLOG_value   ("g_rlen"    , g_rlen);
-   /*---(complete)-----------------------*/
-   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
-   return 0;
-}
-
-
-
-/*====================------------------------------------====================*/
-/*===----                         set handling                         ----===*/
-/*====================------------------------------------====================*/
-static void      o___SETS____________________o (void) {;}
-
-char         /*-> tbd --------------------------------[ leaf   [fz.531.021.10]*/ /*-[02.0000.01#.!]-*/ /*-[--.---.---.--]-*/
-yREGEX__comp_setinit (void)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   int         i           =    0;
-   int         j           =    0;
-   /*---(header)-------------------------*/
-   DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
-   /*---(initialize sets)----------------*/
-   g_nset = 0;
-   for (i = 0; i < MAX_SETS; ++i) {
-      if (g_sets [i].type != 0   && g_sets [i].type != ' ') {
-         ++g_nset;
-         continue;
-      }
-      g_sets [i].type     = 0;
-      strlcpy (g_sets [i].name, "", LEN_NAME);
-      for (j = 0; j < 256;  ++j)   g_sets [i].map [j] = ' ';
-      g_sets [i].map [256] = 0;
-   }
-   /*---(complete)-----------------------*/
-   DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
-   return 0;
-}
-
-char         /*-> tbd --------------------------------[ leaf   [fc.632.122.40]*/ /*-[01.0000.01#.8]-*/ /*-[--.---.---.--]-*/
-yREGEX__comp_setabbr (cchar a_abbr)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   uchar       x_set       =   -1;
-   int         i           =    0;
-   /*---(header)-------------------------*/
-   DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
-   DEBUG_YREGEX  yLOG_schar   (a_abbr);
-   DEBUG_YREGEX  yLOG_sint    (g_nset);
-   /*---(walk through sets)--------------*/
-   for (i = 0; i < g_nset; ++i) {
-      if (g_sets [i].type == 0     )  break;
-      if (g_sets [i].abbr == '-'   )  continue;
-      if (g_sets [i].abbr == ' '   )  continue;
-      if (g_sets [i].abbr != a_abbr)  continue;
-      DEBUG_YREGEX  yLOG_snote   ("found");
-      DEBUG_YREGEX  yLOG_sint    (i);
-      DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
-      return i;
-   }
-   /*---(complete)-----------------------*/
-   DEBUG_YREGEX  yLOG_snote   ("not found");
-   DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
-   return 0;
-}
-
-char         /*-> tbd --------------------------------[ ------ [fe.B44.145.52]*/ /*-[01.0000.01#.B]-*/ /*-[--.---.---.--]-*/
-yREGEX__comp_bslash  (int *a_rpos)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   uchar       x_set       =    0;
-   char        t           [LEN_NAME] = "";
-   uchar       x_ch        =  '-';
-   /*---(header)-------------------------*/
-   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
-   DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
-   /*---(defense)------------------------*/
-   --rce;  if (*a_rpos  <  0     ) {
-      DEBUG_YREGEX  yLOG_note    ("before the beginning of the regex");
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   DEBUG_YREGEX  yLOG_value   ("g_rlen"    , g_rlen);
-   --rce;  if (*a_rpos  >= g_rlen) {
-      DEBUG_YREGEX  yLOG_note    ("current position already past end");
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   x_ch  = g_regex [*a_rpos];
-   DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
-   --rce;  if (x_ch != '\\') {
-      DEBUG_YREGEX  yLOG_note    ("does not start with a backslash");
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   /*---(advance)------------------------*/
-   ++(*a_rpos);
-   DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
-   x_ch   = g_regex [*a_rpos];
-   DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
-   /*---(check for set)------------------*/
-   DEBUG_YREGEX  yLOG_info    ("allowed"   , BSLASHSET);
-   if (strchr (BSLASHSET, x_ch) != NULL) {
-      x_set = yREGEX__comp_setabbr (x_ch);
-   }
-   DEBUG_YREGEX  yLOG_value   ("x_set"     , x_set);
-   /*---(append set)---------------------*/
-   if (x_set > 0) {
-      yREGEX__comp_add ('[', x_set);
-      DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
-      return 1;
-   }
-   /*---(boundaries)---------------------*/
-   if (x_ch == 'b') {
-      DEBUG_YREGEX  yLOG_note    ("begin word marker");
-      yREGEX__comp_add ('<', yREGEX__comp_setabbr ('w'));
-      yREGEX__comp_mod ('<', 0, 0);
-      DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
-      return 1;
-   }
-   if (x_ch == 'B') {
-      DEBUG_YREGEX  yLOG_note    ("end word marker");
-      yREGEX__comp_add ('>', yREGEX__comp_setabbr ('w'));
-      yREGEX__comp_mod ('>', 0, 0);
-      DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
-      return 1;
-   }
-   /*---(literal)------------------------*/
-   yREGEX__comp_add (x_ch, 0);
-   /*---(complete)-----------------------*/
-   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
-   return 0;
-}
-
-char         /*-> tbd --------------------------------[ leaf   [fe.A53.145.A0]*/ /*-[01.0000.02#.E]-*/ /*-[--.---.---.--]-*/
-yREGEX__comp_setname (cchar *a_name)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   uchar       x_set       =   -1;
-   int         x_len       =    0;
-   int         i           =    0;
-   /*---(header)-------------------------*/
-   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
-   DEBUG_YREGEX  yLOG_point   ("a_name"    , a_name);
-   /*---(defense)------------------------*/
-   --rce;  if (a_name == NULL) {
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   DEBUG_YREGEX  yLOG_info    ("a_name"    , a_name);
-   x_len = strllen (a_name, LEN_NAME);
-   DEBUG_YREGEX  yLOG_value   ("x_len"     , x_len);
-   --rce;  if (x_len <= 4) {
-      DEBUG_YREGEX  yLOG_note    ("too short");
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   --rce;  if (x_len >= 6) {
-      DEBUG_YREGEX  yLOG_note    ("too long");
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   /*---(walk)---------------------------*/
-   for (i = 0; i < g_nset; ++i) {
-      if (g_sets [i].type ==  0 )                break;
-      if (g_sets [i].type == ' ')                continue;
-      if (g_sets [i].name [0] != a_name [0])     continue;
-      if (g_sets [i].name [1] != a_name [1])     continue;
-      if (g_sets [i].name [2] != a_name [2])     continue;
-      if (g_sets [i].name [3] != a_name [3])     continue;
-      if (g_sets [i].name [4] != a_name [4])     continue;
-      DEBUG_YREGEX  yLOG_value   ("found"     , i);
-      DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
-      return i;
-   }
-   DEBUG_YREGEX  yLOG_note    ("not found");
-   /*---(complete)-----------------------*/
-   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
-   return 0;
-}
-
-char         /*-> tbd --------------------------------[ leaf   [fe.833.044.30]*/ /*-[01.0000.01#.!]-*/ /*-[--.---.---.--]-*/
-yREGEX__comp_setloc  (void)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   uchar       x_set       =   -1;
-   int         x_len       =    0;
-   int         i           =    0;
-   /*---(header)-------------------------*/
-   DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
-   /*---(defense)------------------------*/
-   x_len = strllen (s_map, LEN_RECD);
-   DEBUG_YREGEX  yLOG_sint    (x_len);
-   --rce;  if (x_len <  256) {
-      DEBUG_YREGEX  yLOG_snote   ("too short");
-      DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
-      return rce;
-   }
-   --rce;  if (x_len >  256) {
-      DEBUG_YREGEX  yLOG_snote   ("too long");
-      DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
-      return rce;
-   }
-   /*---(walk)---------------------------*/
-   for (i = 0; i < g_nset; ++i) {
-      if (strcmp (g_sets [i].map, s_map) != 0)   continue;
-      DEBUG_YREGEX  yLOG_snote   ("found");
-      DEBUG_YREGEX  yLOG_sint    (i);
-      DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
-      return i;
-   }
-   DEBUG_YREGEX  yLOG_snote   ("not found");
-   /*---(complete)-----------------------*/
-   DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
-   return 0;
-}
-
-char         /*-> tbd --------------------------------[ leaf   [fe.943.034.30]*/ /*-[01.0000.01#.!]-*/ /*-[--.---.---.--]-*/
-yREGEX__comp_setnew  (void)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   uchar       x_set       =   -1;
-   int         x_len       =    0;
-   /*---(header)-------------------------*/
-   DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
-   /*---(defense)------------------------*/
-   x_len = strllen (s_map, LEN_RECD);
-   DEBUG_YREGEX  yLOG_sint    (x_len);
-   --rce;  if (x_len  <  256) {
-      DEBUG_YREGEX  yLOG_snote   ("too short");
-      DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
-      return rce;
-   }
-   --rce;  if (x_len  >  256) {
-      DEBUG_YREGEX  yLOG_snote   ("too long");
-      DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
-      return rce;
-   }
-   DEBUG_YREGEX  yLOG_sint    (g_nset);
-   --rce;  if (g_nset >= MAX_SETS) {
-      DEBUG_YREGEX  yLOG_snote   ("no room");
-      DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
-      return rce;
-   }
-   /*---(fill out)-----------------------*/
-   g_sets [g_nset].type     = ' ';
-   g_sets [g_nset].abbr     = '-';
-   g_sets [g_nset].name [0] = 0;
-   strlcpy (g_sets [g_nset].map, s_map, LEN_RECD);
-   /*---(update count)-------------------*/
-   DEBUG_YREGEX  yLOG_sint    (g_nset);
-   ++g_nset;
-   /*---(complete)-----------------------*/
-   DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
-   return g_nset - 1;
-}
-
-char         /*-> tbd --------------------------------[ leaf   [fz.321.111.00]*/ /*-[00.0000.01#.!]-*/ /*-[--.---.---.--]-*/
-yREGEX__comp_setclr  (char a_unmark)
-{
-   int         i           =    0;
-   /*---(header)-------------------------*/
-   DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
-   s_mapcount = 0;
-   for (i = 0; i < 256; ++i)   s_map [i] = a_unmark;
-   s_map [256] = 0;
-   /*---(complete)-----------------------*/
-   DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
-   return 0;
-}
-
-char         /*-> tbd --------------------------------[ ------ [fe.LA5.196.D1]*/ /*-[03.0000.01#.D]-*/ /*-[--.---.---.--]-*/
-yREGEX__comp_setmap  (int *a_rpos)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   int         i           =    0;
-   int         j           =    0;
-   char        x_bslash    =  '-';
-   char        x_range     =  '-';
-   uchar       x_sch       =    0;
-   uchar       x_ch        =    0;
-   char        x_unmark    =  ' ';
-   char        x_mark      =  '.';
-   /*---(header)-------------------------*/
-   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
-   DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
-   /*---(defense)------------------------*/
-   --rce;  if (*a_rpos <  0     ) {
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   --rce;  if (*a_rpos >= g_rlen) {
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   --rce;  if (g_nset  >= MAX_SETS) {
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   /*---(defaults)-----------------------*/
-   if (g_regex [*a_rpos] == '^') {
-      DEBUG_YREGEX  yLOG_note    ("found leading inverse sign");
-      x_unmark = '.';
-      x_mark   = ' ';
-      ++(*a_rpos);
-      DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
-   }
-   DEBUG_YREGEX  yLOG_char    ("x_mark"    , x_mark);
-   DEBUG_YREGEX  yLOG_char    ("x_unmark"  , x_unmark);
-   yREGEX__comp_setclr (x_unmark);
-   /*---(map)----------------------------*/
-   DEBUG_YREGEX  yLOG_note    ("walk through regex");
-   --rce;  for (i = *a_rpos; i < g_rlen; ++i) {
-      /*---(prepare)---------------------*/
-      x_ch  = g_regex [i];
-      DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
-      /*---(backslash)-------------------*/
-      if (x_ch == '\\') {
-         DEBUG_YREGEX  yLOG_note    ("found backslash");
-         if (x_bslash != 'y') {
-            x_bslash = 'y';
-            continue;
-         }
-      }
-      /*---(end)-------------------------*/
-      if (x_ch == ']' && x_bslash != 'y') {
-         DEBUG_YREGEX  yLOG_note    ("found right square bracket");
-         break;
-      }
-      /*---(hyphen)----------------------*/
-      if (x_ch == '-') {
-         if      (i <= *a_rpos) {
-            DEBUG_YREGEX  yLOG_note    ("found prefix hyphen, process it");
-         } else if (i >= g_rlen - 3) {
-            DEBUG_YREGEX  yLOG_note    ("found suffix hyphen, process it");
-         } else {
-            DEBUG_YREGEX  yLOG_note    ("found range hyphen");
-            x_range = 'y';
-            continue;
-         }
-      }
-      /*---(range)-----------------------*/
-      if (x_range == 'y') {
-         DEBUG_YREGEX  yLOG_note    ("update range");
-         DEBUG_YREGEX  yLOG_char    ("x_sch"     , x_sch);
-         if  (x_ch < x_sch) {
-            DEBUG_YREGEX  yLOG_note    ("backwards ranges are illegal");
-            yREGEX__comp_setclr (x_unmark);
-            DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-            return rce;
-         }
-         for (j = x_sch; j <= x_ch; ++j)  s_map [j] = x_mark;
-      }
-      /*---(single)----------------------*/
-      else {
-         DEBUG_YREGEX  yLOG_note    ("update single");
-         s_map [x_ch] = x_mark;
-      }
-      /*---(next)------------------------*/
-      DEBUG_YREGEX  yLOG_note    ("get ready for next run");
-      x_sch = x_ch;
-      x_bslash = '-';
-      x_range  = '-';
-   }
-   /*---(check for runon)----------------*/
-   --rce;  if (i == g_rlen) {
-      yREGEX__comp_setclr (x_unmark);
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   *a_rpos = i;
-   DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
-   s_mapcount  = 0;
-   for (i = 0; i < 256; ++i)   if (s_map [i] == '.')  ++s_mapcount;
-   DEBUG_YREGEX  yLOG_value   ("mapcount"  , s_mapcount);
-   /*---(complete)-----------------------*/
-   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
-   return 1;
-}
-
-char         /*-> tbd --------------------------------[ ------ [fe.D55.138.72]*/ /*-[01.0000.01#.A]-*/ /*-[--.---.---.--]-*/
-yREGEX__comp_setstd  (int *a_rpos)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   char        t           [LEN_NAME] = "";
-   uchar       x_set       =    0;
-   /*---(header)-------------------------*/
-   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
-   DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
-   /*---(defense)------------------------*/
-   --rce;  if (*a_rpos  <  1     ) {
-      DEBUG_YREGEX  yLOG_note    ("does not leave room to left for [");
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   DEBUG_YREGEX  yLOG_value   ("g_rlen"    , g_rlen);
-   --rce;  if (*a_rpos  >= g_rlen - 7) {
-      DEBUG_YREGEX  yLOG_note    ("not enough room for full name");
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   --rce;  if (g_regex [*a_rpos - 1] != '[') {
-      DEBUG_YREGEX  yLOG_note    ("does not have [ to left");
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   --rce;  if (g_regex [*a_rpos    ] != ':') {
-      DEBUG_YREGEX  yLOG_note    ("does not have : at current position");
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   --rce;  if (g_regex [*a_rpos + 6] != ':') {
-      DEBUG_YREGEX  yLOG_note    ("does not have : near end");
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   --rce;  if (g_regex [*a_rpos + 7] != ']') {
-      DEBUG_YREGEX  yLOG_note    ("does not have ] at end");
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   /*---(check for set)------------------*/
-   sprintf (t, "%-5.5s", g_regex + *a_rpos + 1);
-   DEBUG_YREGEX  yLOG_info    ("name"      , t);
-   x_set = yREGEX__comp_setname (t);
-   DEBUG_YREGEX  yLOG_value   ("x_set"     , x_set);
-   /*---(append set)---------------------*/
-   if (x_set > 0) {
-      yREGEX__comp_add ('[', x_set);
-      *a_rpos += 7;
-      DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
-      DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
-      return 1;
-   }
-   /*---(complete)-----------------------*/
-   --rce;
-   DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-   return rce;
-}
-
-char         /*-> tbd --------------------------------[ ------ [fe.D54.156.65]*/ /*-[02.0000.01#.!]-*/ /*-[--.---.---.--]-*/
-yREGEX__comp_set     (int *a_rpos)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   char        rc          =   -1;
-   uchar       x_set       =    0;
-   char        t           [LEN_NAME] = "";
-   char        x_ch        =  ' ';
-   /*---(header)-------------------------*/
-   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
-   DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
-   x_ch   = g_regex [*a_rpos];
-   DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
-   --rce;  if (x_ch != '[') {
-      DEBUG_YREGEX  yLOG_note    ("does not start with a [");
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   /*---(advance)------------------------*/
-   ++(*a_rpos);
-   DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
-   x_ch   = g_regex [*a_rpos];
-   DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
-   /*---(check standard sets)------------*/
-   if (x_ch == ':') {
-      DEBUG_YREGEX  yLOG_note    ("is colon (:) posix set indicator");
-      rc = yREGEX__comp_setstd (a_rpos);
-      DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
-      if (rc > 0) {
-         DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
-         DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
-         return 1;
-      }
-   }
-   /*---(map the set)--------------------*/
-   rc = yREGEX__comp_setmap  (a_rpos);
-   --rce;  if (rc < 0) {
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
-   /*---(try to find existing)-----------*/
-   x_set = yREGEX__comp_setloc  ();
-   DEBUG_YREGEX  yLOG_value   ("x_set"     , x_set);
-   if (x_set > 0) {
-      yREGEX__comp_add ('[', x_set);
-      DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
-      return 1;
-   }
-   /*---(add a new one)------------------*/
-   x_set = yREGEX__comp_setnew  ();
-   DEBUG_YREGEX  yLOG_value   ("x_set"     , x_set);
-   if (x_set > 0) {
-      yREGEX__comp_add ('[', x_set);
-      DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
-      return 1;
-   }
-   /*---(failed)-------------------------*/
-   --rce;
-   DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-   return rce;
-}
-
-char         /*-> tbd --------------------------------[ ------ [fe.632.152.12]*/ /*-[01.0000.01#.!]-*/ /*-[--.---.---.--]-*/
-yREGEX__comp_dot     (int *a_rpos)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   char        rc          =   -1;
-   uchar       x_set       =    0;
-   char        t           [LEN_NAME] = "";
-   char        x_ch        =  ' ';
-   /*---(header)-------------------------*/
-   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
-   DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
-   /*---(defense)------------------------*/
-   x_ch   = g_regex [*a_rpos];
-   DEBUG_YREGEX  yLOG_char    ("x_ch"      , x_ch);
-   --rce;  if (x_ch != '.') {
-      DEBUG_YREGEX  yLOG_note    ("not positioned on a dot");
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   /*---(set)----------------------------*/
-   x_set = yREGEX__comp_setname ("dotta");
-   yREGEX__comp_add ('[', x_set);
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
    return 1;
@@ -1052,31 +245,41 @@ yREGEX__comp_dot     (int *a_rpos)
 static void      o___MODS____________________o (void) {;}
 
 char         /*-> tbd --------------------------------[ ------ [fe.732.151.11]*/ /*-[01.0000.01#.!]-*/ /*-[--.---.---.--]-*/
-yREGEX__comp_smods   (int *a_rpos)
+COMP__quan_simple    (int *a_rpos)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
    char        rc          =   -1;
    uchar       x_set       =    0;
    char        t           [LEN_NAME] = "";
-   char        x_ch        =  ' ';
+   char        x_mod       =  ' ';
+   char        x_pch       =  ' ';
+   int         x_beg       =   -1;
+   int         x_end       =   -1;
+   int         x_len       =   -1;
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
-   x_ch   = g_regex [*a_rpos];
-   DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
-   switch (x_ch) {
+   x_mod  = gre.regex [*a_rpos];
+   x_pch  = gre.regex [*a_rpos - 1];
+   DEBUG_YREGEX  yLOG_value   ("x_mod"     , x_mod);
+   DEBUG_YREGEX  yLOG_value   ("x_pch"     , x_pch);
+   /*---(handle shared)------------------*/
+   switch (x_mod) {
    case '*' : case '@' :
       DEBUG_YREGEX  yLOG_note    ("any modifier * (greedy) and @ (lazy)");
-      yREGEX__comp_mod (x_ch, 0, MAX_QUAN);
-      break;
-   case '+' : case '~' :
-      DEBUG_YREGEX  yLOG_note    ("many modifier + (greedy) and ~ (lazy)");
-      yREGEX__comp_mod (x_ch, 1, MAX_QUAN);
+      COMP_mod (x_mod);
       break;
    case '?' : case '!' :
       DEBUG_YREGEX  yLOG_note    ("one modifier ? (greedy) and ! (lazy)");
-      yREGEX__comp_mod (x_ch, 0, 1       );
+      COMP_mod (x_mod);
+      break;
+   case '+' : case '~' :
+      DEBUG_YREGEX  yLOG_note    ("many modifier + (greedy) and ~ (lazy)");
+      if (x_pch == ')')  COMP__dup_group   ();
+      else               COMP__dup_one     ();
+      if (x_mod == '+')  COMP_mod   ('*');
+      else               COMP_mod   ('@');
       break;
    }
    /*---(complete)-----------------------*/
@@ -1085,7 +288,7 @@ yREGEX__comp_smods   (int *a_rpos)
 }
 
 char         /*-> tbd --------------------------------[ ------ [fe.I86.1C3.D1]*/ /*-[03.0000.01#.!]-*/ /*-[--.---.---.--]-*/
-yREGEX__comp_cmods   (int *a_rpos)
+COMP__quan_complex   (int *a_rpos)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -1093,7 +296,8 @@ yREGEX__comp_cmods   (int *a_rpos)
    uchar       x_set       =    0;
    char        t           [LEN_NAME] = "";
    uchar       x_ch        =  ' ';
-   uchar       x_sch       =  ' ';
+   uchar       x_mod       =  ' ';
+   uchar       x_pch       =  ' ';
    int         i           =    0;
    char        x_lazy      =  '-';
    int         x_min       =   -1;
@@ -1103,35 +307,36 @@ yREGEX__comp_cmods   (int *a_rpos)
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
-   x_ch   = g_regex [*a_rpos];
+   x_ch   = gre.regex [*a_rpos];
    DEBUG_YREGEX  yLOG_char    ("x_ch"      , x_ch);
    --rce;  if (x_ch != '{') {
       DEBUG_YREGEX  yLOG_note    ("does not start with a {");
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
+   x_pch  = gre.regex [*a_rpos - 1];
    /*---(check for lazy modifier)--------*/
-   x_ch   = g_regex [++(*a_rpos)];
+   x_mod  = gre.regex [++(*a_rpos)];
    DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
-   DEBUG_YREGEX  yLOG_char    ("x_ch"      , x_ch);
-   if (x_ch == '-') {
+   DEBUG_YREGEX  yLOG_char    ("x_mod"     , x_mod);
+   if (x_mod == '-') {
       DEBUG_YREGEX  yLOG_note    ("found lazy modifer");
       x_lazy = 'y';
-      x_ch   = g_regex [++(*a_rpos)];
+      x_mod   = gre.regex [++(*a_rpos)];
       DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
-      DEBUG_YREGEX  yLOG_char    ("x_ch"      , x_ch);
+      DEBUG_YREGEX  yLOG_char    ("x_mod"     , x_mod);
    }
    /*---(walk modifier)------------------*/
    while (1) {
       DEBUG_YREGEX  yLOG_value   ("x_len"     , x_len);
-      if (*a_rpos >= g_rlen) {
+      if (*a_rpos >= gre.rlen) {
          DEBUG_YREGEX  yLOG_note    ("hit end of string");
          break;
       }
-      if (x_ch == '}') {
+      if (x_mod == '}') {
          DEBUG_YREGEX  yLOG_note    ("found end of modifier");
          if (x_len > 0) {
-            sprintf (t, "%*.*s", x_len, x_len, g_regex + *a_rpos - x_len);
+            sprintf (t, "%*.*s", x_len, x_len, gre.regex + *a_rpos - x_len);
             DEBUG_YREGEX  yLOG_info    ("t"         , t);
             x_max = atoi (t);
          } else {
@@ -1140,7 +345,7 @@ yREGEX__comp_cmods   (int *a_rpos)
          DEBUG_YREGEX  yLOG_value   ("x_max"     , x_max);
          break;
       }
-      if (x_ch == ',') {
+      if (x_mod == ',') {
          DEBUG_YREGEX  yLOG_note    ("found comma separator");
          x_comma = 'y';
          if (x_len == 0) {
@@ -1148,17 +353,17 @@ yREGEX__comp_cmods   (int *a_rpos)
             x_min = 0;
          } else {
             DEBUG_YREGEX  yLOG_note    ("found real min specifier");
-            sprintf (t, "%*.*s", x_len, x_len, g_regex + *a_rpos - x_len);
+            sprintf (t, "%*.*s", x_len, x_len, gre.regex + *a_rpos - x_len);
             DEBUG_YREGEX  yLOG_info    ("t"         , t);
             x_min = atoi (t);
          }
          x_len = -1; /* don't count comma */
          DEBUG_YREGEX  yLOG_value   ("x_min"     , x_min);
       }
-      x_ch   = g_regex [++(*a_rpos)];
+      x_mod   = gre.regex [++(*a_rpos)];
       ++x_len;
       DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
-      DEBUG_YREGEX  yLOG_char    ("x_ch"      , x_ch);
+      DEBUG_YREGEX  yLOG_char    ("x_mod"     , x_mod);
    }
    /*---(check)--------------------------*/
    --rce;  if (x_max <= 0) {
@@ -1169,8 +374,41 @@ yREGEX__comp_cmods   (int *a_rpos)
    if (x_comma == '-')   x_min = x_max;
    /*---(update)-------------------------*/
    DEBUG_YREGEX  yLOG_note    ("update modifier");
-   if (x_lazy == 'y')  yREGEX__comp_mod ('}', x_min, x_max);
-   else                yREGEX__comp_mod ('{', x_min, x_max);
+   /*---(zero or more)-------------------*/
+   if (x_min == 0) {
+      if (x_max >= MAX_QUAN) {
+         if (x_lazy == 'y')  COMP_mod ('@');
+         else                COMP_mod ('*');
+         return 1;
+      }
+      if (x_lazy == 'y')  COMP_mod ('!');
+      else                COMP_mod ('?');
+      for (i = 1; i < x_max; ++i) {
+         if (x_pch == ')')  COMP__dup_group   ();
+         else               COMP__dup_one     ();
+      }
+      return 1;
+   }
+   /*---(one or more)--------------------*/
+   for (i = 1; i < x_min; ++i) {
+      if (x_pch == ')')  COMP__dup_group   ();
+      else               COMP__dup_one     ();
+   }
+   if (x_max > x_min) {
+      if (x_max >= MAX_QUAN) {
+         if (x_pch  == ')')  COMP__dup_group   ();
+         else                COMP__dup_one     ();
+         if (x_lazy == 'y')  COMP_mod ('@');
+         else                COMP_mod ('*');
+      } else {
+         for (i = x_min; i < x_max; ++i) {
+            if (x_pch  == ')')  COMP__dup_group   ();
+            else                COMP__dup_one     ();
+            if (x_lazy == 'y')  COMP_mod ('!');
+            else                COMP_mod ('?');
+         }
+      }
+   }
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
    return 1;
@@ -1183,34 +421,76 @@ yREGEX__comp_cmods   (int *a_rpos)
 /*====================------------------------------------====================*/
 static void      o___GROUPS__________________o (void) {;}
 
+int
+COMP_group_beg       (int a_rpos)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   int         x_lvl       =    0;
+   int         i           =    0;
+   /*---(prepare)------------------------*/
+   x_lvl       = gre.indx [a_rpos];
+   for (i = a_rpos - 1; i >= 0; --i) {
+      if (gre.indx [i] != x_lvl)  continue;
+      if (gre.comp [i] != '('  )  continue;
+      return i;
+   }
+   return -1;
+}
+
+int
+COMP_group_end       (int a_rpos)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   int         x_lvl       =    0;
+   int         i           =    0;
+   /*---(prepare)------------------------*/
+   if (gre.comp [a_rpos] == ')')  return a_rpos;
+   /*---(prepare)------------------------*/
+   x_lvl       = gre.indx [a_rpos];
+   for (i = a_rpos + 1; i < gre.clen; ++i) {
+      if (gre.indx [i] != x_lvl)  continue;
+      if (gre.comp [i] != ')'  )  continue;
+      return i;
+   }
+   return -1;
+}
+
 char         /*-> tbd --------------------------------[ leaf   [fc.741.141.50]*/ /*-[03.0000.01#.!]-*/ /*-[--.---.---.--]-*/
-yREGEX__comp_gfix    (cint a_grp)
+COMP__group_fix      (cint a_grp)
 {
    /*---(locals)-----------+-----+-----+-*/
    int         i           =    0;
    int         x_ch        =  ' ';
-   int         x_jump      =   -1;
+   int         x_jump      =    0;
    int         x_or        =    0;
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    DEBUG_YREGEX  yLOG_value   ("a_grp"     , a_grp);
    /*---(track backwards)----------------*/
-   for (i = g_clen; i >= 0; --i) {
-      x_ch   = g_comp [i];
-      if (g_indx [i] == a_grp) {
-         if (x_ch == '|') {
-            g_jump [i] = x_jump;
-            x_jump =  0;
-            ++x_or;
-         } else if (x_ch == '(') {
-            g_jump [i] = x_jump;
-            if (x_or > 0) g_mods [i] = 'm';
-            else          g_mods [i] = '-';
-            g_mins [i] = x_or + 1;
-            break;
-         }
+   for (i = gre.clen - 1; i >= 0; --i) {
+      /*---(filter)----------------------*/
+      if (gre.indx [i] != a_grp) {
+         ++x_jump;
+         continue;
       }
-      ++x_jump;
+      /*---(prepare)---------------------*/
+      x_ch   = gre.comp [i];
+      /*---(branch)----------------------*/
+      if (x_ch == '|') {
+         gre.jump [i] = x_jump + 1;
+         x_jump =  0;
+         ++x_or;
+         continue;
+      }
+      /*---(start)--------------------*/
+      if (x_ch == '(') {
+         gre.jump [i] = x_jump + 1;
+         if (x_or > 0) gre.mods [i] = 'm';
+         else          gre.mods [i] = '-';
+         gre.mods [i] = '0' + x_or;
+         break;
+      }
+      /*---(done)---------------------*/
    }
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
@@ -1218,7 +498,7 @@ yREGEX__comp_gfix    (cint a_grp)
 }
 
 char         /*-> tbd --------------------------------[ ------ [fe.B53.141.32]*/ /*-[02.0000.01#.!]-*/ /*-[--.---.---.--]-*/
-yREGEX__comp_group   (int *a_rpos)
+COMP__group          (int *a_rpos)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -1228,27 +508,40 @@ yREGEX__comp_group   (int *a_rpos)
    int         x_grp       =    0;
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
-   x_ch   = g_regex [*a_rpos];
-   x_nch  = g_regex [*a_rpos + 1];
+   x_ch   = gre.regex [*a_rpos];
+   x_nch  = gre.regex [*a_rpos + 1];
    DEBUG_YREGEX  yLOG_complex ("position"  , "pos %2d, ch  %c, nch %c", *a_rpos, x_ch, x_nch);
    switch (x_ch) {
    case '(' :
       ++s_glevel;
-      if (x_nch == '#') {
-         DEBUG_YREGEX  yLOG_note    ("open hidden group");
+      switch (x_nch) {
+      case '#' :
+         x_grp = ++s_ggroup;
+         if (s_ggroup > 10) {
+            DEBUG_YREGEX  yLOG_note    ("group number too high, had to hide");
+            x_grp = ++s_ghidden;
+         } else {
+            DEBUG_YREGEX  yLOG_note    ("open normal group");
+         }
          ++*a_rpos;
-         x_grp = ++s_ghidden;
-      } else if (x_nch == '>') {
+         break;
+      case '>' :
          DEBUG_YREGEX  yLOG_note    ("open primary group");
          s_gfocus = 'y';
-         ++*a_rpos;
          x_grp = 999;
-      } else {
-         DEBUG_YREGEX  yLOG_note    ("open normal group");
-         x_grp = ++s_ggroup;
-         if (s_ggroup > 10)  x_grp = ++s_ghidden;
+         ++*a_rpos;
+         break;
+      default  :
+         if (*a_rpos == 0) {
+            DEBUG_YREGEX  yLOG_note    ("open full regex container");
+            x_grp = ++s_ggroup;
+         } else {
+            DEBUG_YREGEX  yLOG_note    ("open hidden group");
+            x_grp = ++s_ghidden;
+         }
+         break;
       }
-      rc = yREGEX__comp_add  ('(', x_grp);
+      rc = COMP_add  ('(', x_grp);
       s_gstack [s_glevel] = x_grp;
       DEBUG_YREGEX  yLOG_complex ("current"   , "lvl %2d, nrm %2d, hid %2d, grp %2d", s_glevel, s_ggroup, s_ghidden, x_grp);
       break;
@@ -1260,8 +553,8 @@ yREGEX__comp_group   (int *a_rpos)
          DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
          return -1;
       }
-      rc = yREGEX__comp_add  (')', x_grp);
-      rc = yREGEX__comp_gfix (x_grp);
+      rc = COMP_add  (')', x_grp);
+      rc = COMP__group_fix  (x_grp);
       DEBUG_YREGEX  yLOG_complex ("current"   , "lvl %2d, nrm %2d, hid %2d, grp %2d", s_glevel, s_ggroup, s_ghidden, x_grp);
       --s_glevel;
       ++*a_rpos;
@@ -1269,15 +562,15 @@ yREGEX__comp_group   (int *a_rpos)
    case ')' :
       DEBUG_YREGEX  yLOG_note    ("close normal/hidden group");
       x_grp = s_gstack [s_glevel];
-      rc = yREGEX__comp_add  (x_ch, x_grp);
-      rc = yREGEX__comp_gfix (x_grp);
+      rc = COMP_add  (x_ch, x_grp);
+      rc = COMP__group_fix  (x_grp);
       DEBUG_YREGEX  yLOG_complex ("current"   , "lvl %2d, nrm %2d, hid %2d, grp %2d", s_glevel, s_ggroup, s_ghidden, x_grp);
       --s_glevel;
       break;
    case '|' :
       DEBUG_YREGEX  yLOG_note    ("divide branches");
       x_grp = s_gstack [s_glevel];
-      rc = yREGEX__comp_add  (x_ch, x_grp);
+      rc = COMP_add  (x_ch, x_grp);
       DEBUG_YREGEX  yLOG_complex ("current"   , "lvl %2d, nrm %2d, hid %2d, grp %2d", s_glevel, s_ggroup, s_ghidden, x_grp);
       break;
    }
@@ -1306,74 +599,73 @@ yREGEX_comp          (cchar *a_regex)
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    DEBUG_YREGEX  yLOG_point   ("a_regex"   , a_regex);
    /*---(prepare)------------------------*/
-   rc = yREGEX__comp_init   (a_regex);
+   rc = COMP__init (a_regex);
    DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
    if (rc < 0) {
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rc);
       return rc;
    }
    /*---(pattern run)--------------------*/
-   rc = yREGEX__comp_patrun ();
+   rc = PATS_comp ();
    DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
    if (rc < 0) {
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rc);
       return rc;
    }
    /*---(parse)--------------------------*/
-   DEBUG_YREGEX  yLOG_info    ("g_regex"   , g_regex);
-   DEBUG_YREGEX  yLOG_point   ("g_rlen"    , g_rlen);
-   for (i = 0; i < g_rlen; ++i) {
+   DEBUG_YREGEX  yLOG_info    ("gre.regex" , gre.regex);
+   DEBUG_YREGEX  yLOG_point   ("gre.rlen"  , gre.rlen);
+   for (i = 0; i < gre.rlen; ++i) {
       DEBUG_YREGEX  yLOG_value   ("LOOP"      , i);
       /*---(prepare)---------------------*/
-      x_ch   = g_regex [i];
-      x_nch  = g_regex [i + 1];
+      x_ch   = gre.regex [i];
+      x_nch  = gre.regex [i + 1];
       /*---(backslashed metas)-----------*/
       if (x_ch == G_KEY_BSLASH) {
          DEBUG_YREGEX  yLOG_note    ("handle escaped character");
-         rc = yREGEX__comp_bslash (&i);
+         rc = SETS_backslash (&i);
          continue;
       }
       /*---(dot)-------------------------*/
       if (x_ch == '.') {
          DEBUG_YREGEX  yLOG_note    ("handle dot character");
-         rc = yREGEX__comp_dot (&i);
+         rc = SETS_dot (&i);
          continue;
       }
       /*---(group handling)--------------*/
-      if (strchr (GRP_SET, x_ch) != NULL || (x_ch == '<' && x_nch == ')')) {
+      if (strchr (TYPE_GROUP, x_ch) != NULL || (x_ch == '<' && x_nch == ')')) {
          DEBUG_YREGEX  yLOG_note    ("handle grouping");
-         rc = yREGEX__comp_group (&i);
+         rc = COMP__group (&i);
          if (rc >= 0)  continue;
       }
       /*---(anchors)---------------------*/
       if (strchr (G_ANCHOR, x_ch) != NULL) {
          DEBUG_YREGEX  yLOG_note    ("handle anchors");
-         if (x_ch == '<' || x_ch == '>')  yREGEX__comp_add (x_ch, yREGEX__comp_setabbr ('w'));
-         else                             yREGEX__comp_add (x_ch, 0);
-         yREGEX__comp_mod (x_ch, 0, 0);
+         COMP_add (x_ch, SETS_by_abbr ('w'));
+         /*> COMP_mod (x_ch);                                                         <*/
          continue;
       }
       /*---(set handling)----------------*/
       if (x_ch == '[') {
          DEBUG_YREGEX  yLOG_note    ("handle character set");
-         rc = yREGEX__comp_set (&i);
+         rc = SETS_comp (&i);
          if (rc >= 0)  continue;
       }
       /*---(quick modifiers)-------------*/
-      if (strchr (MOD_SET, x_ch) != NULL) {
+      if (strchr (TYPE_QUANS, x_ch) != NULL) {
          DEBUG_YREGEX  yLOG_note    ("handle simple modifier");
-         rc = yREGEX__comp_smods (&i);
+         rc = COMP__quan_simple (&i);
          continue;
       }
       /*---(specific modifiers)----------*/
       if (x_ch == '{') {
          DEBUG_YREGEX  yLOG_note    ("handle complex modifier");
-         rc = yREGEX__comp_cmods (&i);
+         rc = COMP__quan_complex (&i);
          continue;
       }
       /*---(literals)--------------------*/
       DEBUG_YREGEX  yLOG_note    ("handle character literal");
-      rc = yREGEX__comp_literal (&i);
+      rc = COMP__literal (&i);
    }
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
@@ -1387,10 +679,10 @@ yREGEX_comp          (cchar *a_regex)
 /*====================------------------------------------====================*/
 static void      o___UNITTEST________________o (void) {;}
 
-char        unit_answer  [LEN_RECD];
+char        unit_answer  [LEN_TEXT];
 
 char         /*-> unit test accessor -----------------[ light  [us.D90.241.L0]*/ /*-[03.0000.00#.#]-*/ /*-[--.---.---.--]-*/
-yREGEX__unitmap    (char a_type, int a_value)
+COMP__unitmap      (char a_type, int a_value)
 {
    char        x_ch        = ' ';
    char       *x_range     = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ***********************************************************************";
@@ -1416,7 +708,7 @@ yREGEX__unitmap    (char a_type, int a_value)
 }
 
 char*        /*-> unit test accessor -----------------[ light  [us.D90.241.L0]*/ /*-[03.0000.00#.#]-*/ /*-[--.---.---.--]-*/
-yREGEX__unitcomp   (char *a_question, int a_num)
+COMP__unit         (char *a_question, int a_num)
 {
    /*---(locals)-----------+-----+-----+-*/
    int         i           = 0;
@@ -1426,48 +718,46 @@ yREGEX__unitcomp   (char *a_question, int a_num)
    char       *x_range3    = " .123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ**********************************************************************";
    int         c           = 0;
    /*---(initialize)---------------------*/
-   strlcpy (unit_answer, "REGEX_unitcomp, unknown request", 100);
+   strlcpy (unit_answer, "COMP__unit, unknown request", 100);
    /*---(core data)----------------------*/
    if        (strncmp (a_question, "regex"     , 20)  == 0) {
-      snprintf (unit_answer, LEN_RECD, "yREGEX_comp regex: %2d [%-45.45s]", g_rlen, g_regex);
+      if (gre.rlen < 100)  sprintf  (t, "%2d", gre.rlen);
+      else                 sprintf  (t, "%2s", "++");
+      snprintf (unit_answer, LEN_TEXT, "COMP regex       : %2s [%-45.45s]", t, gre.regex);
    }
    /*---(mapping)------------------------*/
-   else if (strncmp (a_question, "map"       , 20)  == 0) {
-      strlcpy (t, "0123456789abcdef0123456789abcdef", 100);
-      if (a_num < 0 || a_num > 15)
-         snprintf (unit_answer, LEN_RECD, "yREGEX_comp map  : %x %3d %2d [%-32.32s]", 0    , s_mapcount, 0, "unknown area");
-      else
-         for (i = 0; i < 32; ++i)  if (s_map [a_num * 32 + i] == '.') {
-            t [i] = '_';
-            ++c;
-         }
-      snprintf (unit_answer, LEN_RECD, "yREGEX_comp map  : %x %3d %2d [%-32.32s]", a_num * 2, s_mapcount, c, t);
-   }
+   /*> else if (strncmp (a_question, "map"       , 20)  == 0) {                                                                    <* 
+    *>    strlcpy (t, "0123456789abcdef0123456789abcdef", 100);                                                                    <* 
+    *>    if (a_num < 0 || a_num > 15)                                                                                             <* 
+    *>       snprintf (unit_answer, LEN_TEXT, "yREGEX_comp map  : %x %3d %2d [%-32.32s]", 0    , s_mapcount, 0, "unknown area");   <* 
+    *>    else                                                                                                                     <* 
+    *>       for (i = 0; i < 32; ++i)  if (s_map [a_num * 32 + i] == '.') {                                                        <* 
+    *>          t [i] = '_';                                                                                                       <* 
+    *>          ++c;                                                                                                               <* 
+    *>       }                                                                                                                     <* 
+    *>    snprintf (unit_answer, LEN_TEXT, "yREGEX_comp map  : %x %3d %2d [%-32.32s]", a_num * 2, s_mapcount, c, t);               <* 
+    *> }                                                                                                                           <*/
    /*---(compiled)-----------------------*/
    else if   (strncmp (a_question, "base"      , 20)  == 0) {
-      snprintf (unit_answer, LEN_RECD, "yREGEX_comp base : %2d [%-45.45s]", g_clen, g_comp);
+      snprintf (unit_answer, LEN_TEXT, "COMP base        : %2d [%-45.45s]", gre.clen, gre.comp);
    } else if (strncmp (a_question, "indx"      , 20)  == 0) {
       for (i = 0; i < 45; ++i) {
-         if (strchr ("(|)", g_comp [i]) != NULL)  t [i] = yREGEX__unitmap ('(', g_indx [i]);
-         else                                     t [i] = yREGEX__unitmap ('i', g_indx [i]);
+         if (strchr ("(|)", gre.comp [i]) != NULL)  t [i] = COMP__unitmap ('(', gre.indx [i]);
+         else                                       t [i] = COMP__unitmap ('i', gre.indx [i]);
       }
       t [45] = 0;
-      snprintf (unit_answer, LEN_RECD, "yREGEX_comp indx : %2d [%-45.45s]", g_clen, t);
+      snprintf (unit_answer, LEN_TEXT, "COMP indx        : %2d [%-45.45s]", gre.clen, t);
    } else if (strncmp (a_question, "mods"      , 20)  == 0) {
-      snprintf (unit_answer, LEN_RECD, "yREGEX_comp mods : %2d [%-45.45s]", g_clen, g_mods);
-   } else if (strncmp (a_question, "mins"      , 20)  == 0) {
-      for (i = 0; i < 45; ++i)   t [i] = yREGEX__unitmap ('m', g_mins [i]);
-      t [45] = 0;
-      snprintf (unit_answer, LEN_RECD, "yREGEX_comp mins : %2d [%-45.45s]", g_clen, t);
-   } else if (strncmp (a_question, "maxs"      , 20)  == 0) {
-      for (i = 0; i < 45; ++i)   t [i] = yREGEX__unitmap ('x', g_maxs [i]);
-      t [45] = 0;
-      snprintf (unit_answer, LEN_RECD, "yREGEX_comp maxs : %2d [%-45.45s]", g_clen, t);
+      snprintf (unit_answer, LEN_TEXT, "COMP mods        : %2d [%-45.45s]", gre.clen, gre.mods);
    } else if (strncmp (a_question, "jump"      , 20)  == 0) {
-      for (i = 0; i < 45; ++i)   t [i] = yREGEX__unitmap ('j', g_jump [i]);
+      for (i = 0; i < 45; ++i)   t [i] = COMP__unitmap ('j', gre.jump [i]);
       t [45] = 0;
-      snprintf (unit_answer, LEN_RECD, "yREGEX_comp jump : %2d [%-45.45s]", g_clen, t);
+      snprintf (unit_answer, LEN_TEXT, "COMP jump        : %2d [%-45.45s]", gre.clen, t);
    }
    /*---(complete)-----------------------*/
    return unit_answer;
 }
+
+
+
+/*===============================[[ end code ]]===============================*/
