@@ -3,6 +3,42 @@
 #include    "yREGEX_priv.h"
 
 
+/* the purpose of compilation is to make execution as simple, error free, and
+ * fast as possible.
+ *
+ * 00) reduce the number of operators to make it simplier
+ *
+ * 01) everything necessary for execution is close at hand (little searching)
+ *
+ * 02) everything that can be thought-out ahead of time already is
+ *
+ * 03) everything is arranged to require as little context data as possible
+ *
+ * 04) the results are human readable to aid debugging (to the extent possible)
+ *
+ * anchors, stay the same
+ *
+ * quantifiers are simplified through repetition (thanks to thompson)
+ *   a        a
+ *   a?       a?
+ *   a*       a*
+ *   a+       aa?
+ *   a{2,5}   aaa?a?a?
+ *   a{3}     aaa
+ *   a{,3}    a?a?a?
+ *   a{2,}    aaa*
+ *
+ *
+ * a      a  -  -  -  -  -
+ * a?     a  -  ?  0  1  -
+ * a*     a  -  *  0  *  -
+ * a+     a  -  -  -  -  -      a  -  *  0  *  -
+ *
+ *
+ *
+ *
+ */
+
 
 
 tPATS       g_pats [MAX_PATS] = {

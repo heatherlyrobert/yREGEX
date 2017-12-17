@@ -15,9 +15,13 @@
 
 
 /* rapidly evolving version number to aid with visual change confirmation     */
-#define YREGEX_VER_NUM   "0.3b"
-#define YREGEX_VER_TXT   "added rudimentary multiple find structure"
+#define YREGEX_VER_NUM   "0.3d"
+#define YREGEX_VER_TXT   "last recursion update"
 
+
+#define     S_CHAR_CHECK    'c'
+#define     S_BRANCH_CHECK  'g'
+#define     S_FULL_RECURSE  'r'
 
 
 #define     MAX_PATS       250
@@ -112,16 +116,6 @@ extern  tLOCAL its;
 
 
 
-/*---(struct.re)--------+-----------+-*//*-+----------------------------------*/
-#define     MAX_FIND    5000
-typedef     struct      cFIND       tFIND;
-struct      cFIND {
-   int         beg;
-   int         end;
-   int         len;
-};
-extern      tFIND       g_finds     [MAX_FIND];
-extern      int         g_nfind;
 
 
 
@@ -156,18 +150,19 @@ char*       yREGEX__unitcomp     (char *a_question, int a_num);
 /*---(program)--------------*/
 char        yREGEX__exec_init    (cchar *a_source);
 /*---(single)---------------*/
-char        yREGEX__exec_doer    (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_tend);
-char        yREGEX__exec_next    (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_tend);
+char        yREGEX__exec_doer    (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_len);
+char        yREGEX__exec_next    (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_len);
 /*---(multiples)------------*/
-char        yREGEX__exec_min     (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_tend, char a_mod, int a_min, int a_max, int *a_match);
-char        yREGEX__exec_max     (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_tend, char a_mod, int a_min, int a_max, int *a_match);
-char        yREGEX__exec_fwd     (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_tend, char a_mod, int a_min, int a_max, int *a_match);
-char        yREGEX__exec_rev     (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_tend, char a_mod, int a_min, int a_max, int *a_match);
-char        yREGEX__exec_zero    (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_tend, char a_mod, int a_min, int a_max, int *a_match);
-char        yREGEX__exec_many    (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_tend);
+char        yREGEX__exec_min     (int a_begin, char a_mode, int a_rpos, int a_tpos, char a_mod, int a_min, int a_max, int *a_match, int *a_len);
+char        yREGEX__exec_lazy    (int a_begin, char a_mode, int a_rpos, int a_tpos, char a_mod, int a_min, int a_max, int *a_match, int *a_len);
+char        yREGEX__exec_greedy  (int a_begin, char a_mode, int a_rpos, int a_tpos, char a_mod, int a_min, int a_max, int *a_match, int *a_len);
+char        yREGEX__exec_fwd     (int a_begin, char a_mode, int a_rpos, int a_tpos, char a_mod, int a_min, int a_max, int *a_match, int *a_len);
+char        yREGEX__exec_rev     (int a_begin, char a_mode, int a_rpos, int a_tpos, char a_mod, int a_min, int a_max, int *a_match, int *a_len);
+char        yREGEX__exec_zero    (int a_begin, char a_mode, int a_rpos, int a_tpos, char a_mod, int a_min, int a_max, int *a_match, int *a_len);
+char        yREGEX__exec_many    (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_len);
 /*---(groups)---------------*/
-char        yREGEX__exec_branch  (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_tend);
-char        yREGEX__exec_group   (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_tend);
+char        yREGEX__exec_branch  (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_len);
+char        yREGEX__exec_group   (int a_begin, char a_mode, int a_rpos, int a_tpos, int *a_len);
 /*---(multiple)-------------*/
 char*       yREGEX__unitexec     (char *a_question, int a_num);
 
