@@ -17,8 +17,8 @@ typedef   unsigned char  uchar;
 
 
 /* rapidly evolving version number to aid with visual change confirmation     */
-#define YREGEX_VER_NUM   "0.5a"
-#define YREGEX_VER_TXT   "rebuilt using thompsons nfa style algorithm"
+#define YREGEX_VER_NUM   "0.5b"
+#define YREGEX_VER_TXT   "changed patterns and backcopies to dollar sign prefix"
 
 
 #define     MAX_REGEX       20

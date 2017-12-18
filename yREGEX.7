@@ -6,7 +6,7 @@ yREGEX \- decision rationale, objectives, and overview
 .SH SUMMARY
 yREGEX is a fast, clean, tunable, and debuggable library for regular expression
 processing to provide tailored and completely uniform regex support across
-my platform -- one regex to rule them all.
+my platform -- and, one regex to rule them all ;)
 
 .SH BACKSTORY
 .B concept.  
@@ -16,14 +16,16 @@ patterns within larger blocks of text.
 
 .B theory origin.  
 in 1956, mathematician stephen cole kleene formalized the concept of a
-regular language which could be described using his regular set notation.
+regular language which could be described using his regular set notation.  all
+theory at this point.
 
 .B initial computer use.  
 ken thompson was the first to migrate this concept into computer programs,
-including the unix editor ed, using wicked fast algorithms.
+including the unix editor ed, using wicked fast, non-determinant finite
+automota algorithms.
 
 .B spread.
-they spread to vi, grep, awk, sed, emacs, databases, etc and into the posix
+regex spread to vi, grep, awk, sed, emacs, databases, etc and into the posix
 standard in 1992.  since the 1980's, tcl and perl have been advancing regex's
 far beyond their original bounds.
 
@@ -39,12 +41,12 @@ ineffecient algorithms to support crazy features.  i do not wish to shackle
 myself to one of these monsters.
 
 .B solution (S).  
-i will test myself by developing a variation on efficient thompson algorithms
-to implement the entire posix-extended language, plus a few hand-picked extras
-which will support all my tools.
+i will develop a variation based on efficient thompson algorithms to implement
+the entire posix-extended language, plus a few hand-picked extras which will
+support all my tools.
 
 .B target user (T).  
-me, just me.  i am a dog-fooder.
+me, just me.  i am a dogfooder and bootstrapper.
 
 .B regular expression concerns
    -- huge volumes of duplicate, replicated, and copied text patterns
@@ -53,29 +55,27 @@ me, just me.  i am a dog-fooder.
    -- kitchen sink additions to what should have been a focused thing
    -- reportedly slow algorithms due to increased feature load
    -- recursive algorithms with postentially exponential run-times
-   -- use of pos/neg look-aheads to target a find string
-   -- way too complex so everyone relies on faceless maintainers
+   -- use of crazy pos/neg look-aheads to target a find string
+   -- way too complex code so everyone relies on faceless maintainers
    -- summary, the mini-language, engines, and algorithms got fugly
 
 .B what i intend to do
    -- use thompsons non-determinant finite automata algorithm
    -- add a huge amount of my standard debugging and tracing logic
-   -- compile regex first to create a wicked easy execution path
-   -- base on posix extended regular expression standard (ERE)
+   -- compile each regex first to create a wicked easy execution path
+   -- support full posix extended regular expression standard (ERE)
    -- implement the 14 base metacharacters   .[]  *+?  {}  ^$  ()|  \\
    -- add short, lazy versions of *+? using the @~! symbols
-   -- make set comparison wicked fast since it is so common
+   -- make set comparisons wicked fast since it is so common
    -- (...) become non-capuring groups rather than (?:...)
    -- (#...) become capuring groups to make them stand out
    -- (>...<) for the primary focus to avoid looks (?>=...), etc
    -- add support for pre-defined patterns, like int, byte, url, etc.
-   -- (&c) support saving patterns from capture groups for reuse
-   -- \\n support back references as they are too valuable
-   -- (?...) for non-searching confirmation, foreward, backward, ...
+   -- (&n) support saving patterns from capture groups for reuse
    -- adjustable solution finding, i.e., first, last, longest, ...
 
 .B what i refuse to do
-   -- no optimization (this is amazing, but crazy stuff)
+   -- no optimization (that code is amazing, but crazy stuff)
    -- no unicode, international, or other encodings
    -- make a kitchen-sink solution with all the perl cruft
 

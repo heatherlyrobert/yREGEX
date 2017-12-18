@@ -209,7 +209,7 @@ FIND_solution        (char a_scorer, int a_pos, int  *a_beg, int *a_len)
    switch (a_scorer) {
    case '*' : case '@' : x_left  = x_right = -1; break;
    case '?' : case '!' :           x_right = -1; break;
-   case '+' : case '~' : x_left  = -1;           break;
+   case '+' : case '~' : x_left  =           -1; break;
    }
    /*> printf ("   x_left  = %3d, x_right = %3d\n", x_left, x_right);                 <*/
    /*---(set initial score)--------------*/
@@ -242,6 +242,34 @@ FIND_solution        (char a_scorer, int a_pos, int  *a_beg, int *a_len)
    if (a_len != NULL)  *a_len = s_finds [x_best].len;
    /*---(complete)-----------------------*/
    return x_best;
+}
+
+int
+yREGEX_find          (cchar a_type, cchar a_dir, int  *a_beg, int *a_len)
+{
+   char        x_scorer    = '-';
+   switch (a_type) {
+   case  YREGEX_GREEDY :
+      switch (a_dir) {
+      case YREGEX_MOST  : x_scorer = '*'; break;
+      case YREGEX_LEFT  : x_scorer = '?'; break;
+      case YREGEX_RIGHT : x_scorer = '+'; break;
+      default           : return -1;      break;
+      }
+      break;
+   case  YREGEX_LAZY   :
+      switch (a_dir) {
+      case YREGEX_MOST  : x_scorer = '@'; break;
+      case YREGEX_LEFT  : x_scorer = '!'; break;
+      case YREGEX_RIGHT : x_scorer = '~'; break;
+      default           : return -1;      break;
+      }
+      break;
+   default :
+      return -1;
+      break;
+   }
+   return FIND_solution (x_scorer, -1, a_beg, a_len);
 }
 
 

@@ -8,18 +8,35 @@ yREGEX \- small, fast, clean, and custom regular expression library
 .B #include  <yREGEX.h>
 .sp
 ---(regex)-------------------------------------
-.BI "char  yREGEX_comp       (cchar *" "a_regex" ");"
-.BI "char  yREGEX_exec       (cchar *" "a_text " ");"
+.BI "char  yREGEX_comp  (cchar *" "a_regex" ");"
+.BI "char  yREGEX_exec  (cchar *" "a_text " ");"
+.BI "char  yREGEX_find  (cchar  " "a_type " ", cchar " "a_side" ", int *" "a_beg" ", int *" "a_len" ");"
 .sp
 ---(conversion)--------------------------------
 .sp
 ---(logging/unit testing)----------------------
 .BI "char* yREGEX_version    (void);"
-.BI "char  yREGEX_testloud   (void);"
-.BI "char  yREGEX_testquiet  (void);"
-.BI "char  yREGEX_testend    (void);"
+.BI "char  yREGEX__unitquiet (void);"
+.BI "char  yREGEX__unitloud  (void);"
+.BI "char  COMP__unit        (char *" "a_question" ", int " "a_num" ");"
+.BI "char  FIND__unit        (char *" "a_question" ", int " "a_num" ");"
+.BI "char  PATS__unit        (char *" "a_question" ", int " "a_num" ");"
+.BI "char  SETS__unit        (char *" "a_question" ", int " "a_num" ");"
+.BI "char  yREGEX__unitend   (void);"
 .sp
 .B link with -L/usr/local/libs -lyREGEX or -lyREGEX_debug
+
+.SH FLAWS
+.B not re-entrant (yet).  
+
+.B no back references (yet).  
+mainly for xml, html, etc tags
+
+.B no filtering, like pos/neg look-aheads (yet).  
+
+.B finds different primary solutions that standard libraries.
+since it is not recursive (great), that means it does not give priority to
+first branches, etc like a recursive algorighm does.
 
 .SH POSSIBLE FEATURES
 .B pipelining
@@ -54,13 +71,14 @@ documented elsewhere.
    (...)       non-capturing group (hidden)
    (#...)      capturing group
    (>...<)     focus group, produces default results (ascii art)
+   &           "and", to give multiple rules for a single area
 
 .B saved patterns for tried and true receipes
-   (&.)   (&.....)    saved patterns for reuse by abbr or short name
-   (&f)   (&float)    regex pattern for a float number
-   (&i)   (&int)      ... signed integer
-   (&b)   (&byte)     ... and a byte in integer form
-   (&1)               pattern saved from a capture group
+   $.    ($.....)    saved patterns for reuse by abbr or short name
+   $f    ($float)    regex pattern for a float number
+   $i    ($int)      ... signed integer
+   $b    ($byte)     ... and a byte in integer form
+   ($1)              pattern saved from a capture group
 
 .B new anchor variations
    <           beginning of word, hated \\b
