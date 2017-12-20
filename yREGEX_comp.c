@@ -476,7 +476,7 @@ COMP__group_fix      (cint a_grp)
       /*---(prepare)---------------------*/
       x_ch   = gre.comp [i];
       /*---(branch)----------------------*/
-      if (x_ch == '|') {
+      if (x_ch == '|' || x_ch == '&') {
          gre.jump [i] = x_jump + 1;
          x_jump =  0;
          ++x_or;
@@ -485,8 +485,6 @@ COMP__group_fix      (cint a_grp)
       /*---(start)--------------------*/
       if (x_ch == '(') {
          gre.jump [i] = x_jump + 1;
-         if (x_or > 0) gre.mods [i] = 'm';
-         else          gre.mods [i] = '-';
          gre.mods [i] = '0' + x_or;
          break;
       }
@@ -528,7 +526,12 @@ COMP__group          (int *a_rpos)
       case '>' :
          DEBUG_YREGEX  yLOG_note    ("open primary group");
          s_gfocus = 'y';
-         x_grp = 999;
+         x_grp = GROUP_FOCUS;
+         ++*a_rpos;
+         break;
+      case ';' :
+         DEBUG_YREGEX  yLOG_note    ("open rule group");
+         x_grp = ++s_ghidden;
          ++*a_rpos;
          break;
       default  :
@@ -543,19 +546,17 @@ COMP__group          (int *a_rpos)
       }
       rc = COMP_add  ('(', x_grp);
       s_gstack [s_glevel] = x_grp;
-      DEBUG_YREGEX  yLOG_complex ("current"   , "lvl %2d, nrm %2d, hid %2d, grp %2d", s_glevel, s_ggroup, s_ghidden, x_grp);
       break;
    case '<' :
       DEBUG_YREGEX  yLOG_note    ("close primary group");
       x_grp = s_gstack [s_glevel];
-      if (x_grp != 999) {
+      if (x_grp != GROUP_FOCUS) {
          DEBUG_YREGEX  yLOG_note    ("primary focus parens do not match");
          DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
          return -1;
       }
       rc = COMP_add  (')', x_grp);
       rc = COMP__group_fix  (x_grp);
-      DEBUG_YREGEX  yLOG_complex ("current"   , "lvl %2d, nrm %2d, hid %2d, grp %2d", s_glevel, s_ggroup, s_ghidden, x_grp);
       --s_glevel;
       ++*a_rpos;
       break;
@@ -564,16 +565,15 @@ COMP__group          (int *a_rpos)
       x_grp = s_gstack [s_glevel];
       rc = COMP_add  (x_ch, x_grp);
       rc = COMP__group_fix  (x_grp);
-      DEBUG_YREGEX  yLOG_complex ("current"   , "lvl %2d, nrm %2d, hid %2d, grp %2d", s_glevel, s_ggroup, s_ghidden, x_grp);
       --s_glevel;
       break;
-   case '|' :
-      DEBUG_YREGEX  yLOG_note    ("divide branches");
+   case '|' : case '&' :
+      DEBUG_YREGEX  yLOG_note    ("divide branches/matches");
       x_grp = s_gstack [s_glevel];
       rc = COMP_add  (x_ch, x_grp);
-      DEBUG_YREGEX  yLOG_complex ("current"   , "lvl %2d, nrm %2d, hid %2d, grp %2d", s_glevel, s_ggroup, s_ghidden, x_grp);
       break;
    }
+   DEBUG_YREGEX  yLOG_complex ("current"   , "lvl %2d, nrm %2d, hid %2d, grp %2d", s_glevel, s_ggroup, s_ghidden, x_grp);
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
    return 1;
@@ -632,6 +632,12 @@ yREGEX_comp          (cchar *a_regex)
          rc = SETS_dot (&i);
          continue;
       }
+      /*---(rules handling)--------------*/
+      if (x_ch == '(' && x_nch == ';') {
+         DEBUG_YREGEX  yLOG_note    ("handle special rules");
+         rc = RULE_comp (&i);
+         if (rc >= 0)  continue;
+      }
       /*---(group handling)--------------*/
       if (strchr (TYPE_GROUP, x_ch) != NULL || (x_ch == '<' && x_nch == ')')) {
          DEBUG_YREGEX  yLOG_note    ("handle grouping");
@@ -642,7 +648,6 @@ yREGEX_comp          (cchar *a_regex)
       if (strchr (G_ANCHOR, x_ch) != NULL) {
          DEBUG_YREGEX  yLOG_note    ("handle anchors");
          COMP_add (x_ch, SETS_by_abbr ('w'));
-         /*> COMP_mod (x_ch);                                                         <*/
          continue;
       }
       /*---(set handling)----------------*/
@@ -690,18 +695,18 @@ COMP__unitmap      (char a_type, int a_value)
    char       *x_range3    = " .123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ**********************************************************************";
    switch (a_type) {
    case '(' :
-      if      (a_value == 999)   x_ch = '<';
-      else if (a_value >= 65 )   x_ch = '*';
-      else                       x_ch = x_range3 [a_value];
+      if      (a_value == GROUP_FOCUS)   x_ch = '<';
+      else if (a_value >= 65 )           x_ch = '*';
+      else                               x_ch = x_range3 [a_value];
       break;
    case 'i' :
-      if      (a_value >= 65 )   x_ch = '*';
-      else                       x_ch = x_range2 [a_value];
+      if      (a_value >= 65 )           x_ch = '*';
+      else                               x_ch = x_range2 [a_value];
       break;
    case 'm' : case 'x' : case 'j' :
-      if      (a_value ==  0)    x_ch = ' ';
-      else if (a_value >= 62)    x_ch = '*';
-      else                       x_ch = x_range [a_value];
+      if      (a_value ==  0)            x_ch = ' ';
+      else if (a_value >= 62)            x_ch = '*';
+      else                               x_ch = x_range [a_value];
       break;
    }
    return x_ch;
@@ -742,8 +747,8 @@ COMP__unit         (char *a_question, int a_num)
       snprintf (unit_answer, LEN_TEXT, "COMP base        : %2d [%-45.45s]", gre.clen, gre.comp);
    } else if (strncmp (a_question, "indx"      , 20)  == 0) {
       for (i = 0; i < 45; ++i) {
-         if (strchr ("(|)", gre.comp [i]) != NULL)  t [i] = COMP__unitmap ('(', gre.indx [i]);
-         else                                       t [i] = COMP__unitmap ('i', gre.indx [i]);
+         if (strchr ("(|&)", gre.comp [i]) != NULL)  t [i] = COMP__unitmap ('(', gre.indx [i]);
+         else                                        t [i] = COMP__unitmap ('i', gre.indx [i]);
       }
       t [45] = 0;
       snprintf (unit_answer, LEN_TEXT, "COMP indx        : %2d [%-45.45s]", gre.clen, t);

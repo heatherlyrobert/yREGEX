@@ -14,10 +14,10 @@ struct      cSTATE {
    short       level;                       /* processing depth               */
    short       rpos;                        /* regex position                 */
    short       tpos;                        /* text position                  */
+   short       tmax;                        /* max text position              */
    /*---(results)----------------*/
    char        ready;                       /* ready for action/complete      */
    char        rc;                          /* link to shared return codes    */
-   char        pref;                        /* identify lazy vs greedy pref   */
    /*---(connections)------------*/
    short       prev;                        /* previous state (created this)  */
    /*---(done)-------------------*/
@@ -84,6 +84,7 @@ EXEC__group          (int a_level, int a_rpos, int a_tpos)
 {
    /*---(locals)-----------+-----+-----+-*/
    int         x_ndiv      =    0;
+   uchar       x_type      =    0;
    int         x_offset    =    0;
    int         i           =    0;
    int         x_end       =    0;
@@ -100,14 +101,15 @@ EXEC__group          (int a_level, int a_rpos, int a_tpos)
    DEBUG_YREGEX  yLOG_value   ("x_ndiv"    , x_ndiv);
    /*---(launch each branch)-------------*/
    for (i = 0; i <= x_ndiv; ++i) {
-      DEBUG_YREGEX  yLOG_complex ("branch"    , "lvl %d, rpos %2d, off %2d, r+o %2d", i + 1, a_rpos, x_offset, a_rpos + x_offset + 1);
-      EXEC_push (a_level, a_rpos + x_offset + 1, a_tpos);
+      x_type  = gre.comp [a_rpos + x_offset];
+      DEBUG_YREGEX  yLOG_complex ("branch"    , "lvl %d, rpos %2d, type %c, off %2d, r+o %2d", i + 1, a_rpos, x_type, x_offset, a_rpos + x_offset + 1);
+      if (strchr ("(|", x_type) != NULL) EXEC_push (a_level, a_rpos + x_offset + 1, a_tpos, -1);
       x_offset += gre.jump [a_rpos + x_offset];
    }
    /*---(launch without)-----------------*/
    if (strchr (G_ZERO, x_mod) != NULL) {
       DEBUG_YREGEX  yLOG_note    ("always back launch for *@?! types");
-      EXEC_push (a_level, x_end + 1, a_tpos);
+      EXEC_push (a_level, x_end + 1, a_tpos, -1);
    }
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
@@ -195,13 +197,14 @@ EXEC__literal        (int a_level, int a_rpos, int a_tpos)
 static void      o___STRUCTURE_______________o (void) {;}
 
 char
-EXEC_push            (short a_level, short a_rpos, short a_tpos)
+EXEC_push            (short a_level, short a_rpos, short a_tpos, short a_tmax)
 {
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
    DEBUG_YREGEX  yLOG_sint    (a_level);
    DEBUG_YREGEX  yLOG_sint    (a_rpos);
    DEBUG_YREGEX  yLOG_sint    (a_tpos);
+   DEBUG_YREGEX  yLOG_sint    (a_tmax);
    /*---(push)---------------------------*/
    DEBUG_YREGEX  yLOG_sint    (s_nstate);
    s_states [s_nstate].begin = s_begin;
@@ -210,6 +213,10 @@ EXEC_push            (short a_level, short a_rpos, short a_tpos)
    s_states [s_nstate].tpos  = a_tpos;
    s_states [s_nstate].ready = 'y';
    s_states [s_nstate].rc    = 0;
+   /*---(handle max)---------------------*/
+   if (a_tmax < 0)        s_states [s_nstate].tmax  = s_states [s_curr].tmax;
+   else if (a_tmax == 0)  s_states [s_nstate].tmax  = LEN_TEXT;
+   else                   s_states [s_nstate].tmax  = a_tmax;
    /*---(connections)--------------------*/
    DEBUG_YREGEX  yLOG_sint    (s_curr);
    s_states [s_nstate].prev  = s_curr;
@@ -222,11 +229,11 @@ EXEC_push            (short a_level, short a_rpos, short a_tpos)
 }
 
 char
-EXEC_backpush        (short a_level, short a_rpos, short a_tpos)
+EXEC_backpush        (short a_level, short a_rpos, short a_tpos, short a_tmax)
 {
    int         x_prev      = 0;
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
-   EXEC_push (a_level, a_rpos, a_tpos);
+   EXEC_push (a_level, a_rpos, a_tpos, a_tmax);
    x_prev = s_states [s_states [s_nstate - 1].prev].prev;
    DEBUG_YREGEX  yLOG_char    ("x_prev"    , x_prev);
    s_states [s_nstate - 1].prev  = x_prev;
@@ -274,11 +281,11 @@ EXEC__list           (void)
 /*====================------------------------------------====================*/
 static void      o___RUNNER__________________o (void) {;}
 
-char  s_found   [LEN_TEXT];
-char  s_quans   [LEN_TEXT];
+char  g_found   [LEN_TEXT];
+char  g_quans   [LEN_TEXT];
 
-char  s_subf    [LEN_TEXT];
-char  s_subq    [LEN_TEXT];
+char  g_subf    [LEN_TEXT];
+char  g_subq    [LEN_TEXT];
 
 #define       S_SUB_BEFORE       0
 #define       S_SUB_INSIDE       1
@@ -302,8 +309,8 @@ EXEC_sub             (int a_index, int a_paren)
       rc = EXEC_sub (s_states [a_index].prev, a_paren);
    } else {
       /*> printf ("      wiping\n");                                                  <*/
-      strlcpy (s_subf, "", LEN_TEXT);
-      strlcpy (s_subq, "", LEN_TEXT);
+      strlcpy (g_subf, "", LEN_TEXT);
+      strlcpy (g_subq, "", LEN_TEXT);
       rc = S_SUB_BEFORE;
    }
    /*---(filter)-------------------------*/
@@ -335,18 +342,59 @@ EXEC_sub             (int a_index, int a_paren)
    /*---(handle sets)--------------------*/
    if (x_reg == '[') {
       sprintf (t, "%c", x_ch);
-      strlcat (s_subf, t, LEN_TEXT);
+      strlcat (g_subf, t, LEN_TEXT);
       sprintf (t, "%c", x_mod);
-      strlcat (s_subq, t, LEN_TEXT);
+      strlcat (g_subq, t, LEN_TEXT);
       return rc;
    }
    /*---(filter other specials)----------*/
    if (x_indx > 0)      return rc;      /* avoid grouping */
    /*---(append result)------------------*/
    sprintf (t, "%c", x_ch);
-   strlcat (s_subf, t, LEN_TEXT);
+   strlcat (g_subf, t, LEN_TEXT);
    sprintf (t, "%c", x_mod);
-   strlcat (s_subq, t, LEN_TEXT);
+   strlcat (g_subq, t, LEN_TEXT);
+   /*---(complete)-----------------------*/
+   return rc;
+}
+
+int
+EXEC__tpos           (int a_index, int a_paren, int *a_tbeg, int *a_tend)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   int         rc          =   -1;
+   int         x_tpos      =    0;
+   uchar       x_ch        =  ' ';
+   int         x_rpos      =    0;
+   uchar       x_reg       =  ' ';
+   int         x_indx      =    0;
+   uchar       x_mod       =  ' ';
+   /*---(text)---------------------------*/
+   x_tpos = s_states [a_index].tpos;
+   /*---(quantifiers)--------------------*/
+   x_rpos = s_states [a_index].rpos;
+   x_reg  = gre.comp [x_rpos];
+   x_indx = gre.indx [x_rpos];
+   x_mod  = gre.mods [x_rpos];
+   printf ("   tpos %-2d, rpos %-2d, reg %c, indx %-2d, mod %c\n", x_tpos, x_rpos, x_reg, x_indx, x_mod);
+   /*---(check for last marker)----------*/
+   if (strchr ("&", x_reg) != NULL && x_indx == a_paren) {
+      printf ("      found AND at %d\n", x_tpos);
+      *a_tend = x_tpos;
+      rc = 1;
+   }
+   /*---(check for paren)----------------*/
+   if (strchr ("(|", x_reg) != NULL && x_indx == a_paren) {
+      printf ("      found OPEN/OR at %d\n", x_tpos);
+      *a_tbeg = x_tpos;
+      rc = 2;
+   }
+   /*---(dig to origin)------------------*/
+   else if (a_index != s_states [a_index].prev) {
+      printf ("      call deeper\n");
+      rc = EXEC__tpos (s_states [a_index].prev, a_paren, a_tbeg, a_tend);
+   }
+   printf ("      done with %d\n", rc);
    /*---(complete)-----------------------*/
    return rc;
 }
@@ -366,8 +414,8 @@ EXEC__found          (int a_index)
    if (a_index != s_states [a_index].prev) {
       EXEC__found (s_states [a_index].prev);
    } else {
-      strlcpy (s_found, "", LEN_TEXT);
-      strlcpy (s_quans, "", LEN_TEXT);
+      strlcpy (g_found, "", LEN_TEXT);
+      strlcpy (g_quans, "", LEN_TEXT);
    }
    /*---(filter)-------------------------*/
    if (s_states [a_index].ready == 'W')  return 0;
@@ -384,18 +432,18 @@ EXEC__found          (int a_index)
    /*---(handle sets)--------------------*/
    if (x_reg == '[') {
       sprintf (t, "%c", x_ch);
-      strlcat (s_found, t, LEN_TEXT);
+      strlcat (g_found, t, LEN_TEXT);
       sprintf (t, "%c", x_mod);
-      strlcat (s_quans, t, LEN_TEXT);
+      strlcat (g_quans, t, LEN_TEXT);
       return 0;
    }
    /*---(filter other specials)----------*/
    if (x_indx > 0)  return 0;          /* avoid grouping */
    /*---(append result)------------------*/
    sprintf (t, "%c", x_ch);
-   strlcat (s_found, t, LEN_TEXT);
+   strlcat (g_found, t, LEN_TEXT);
    sprintf (t, "%c", x_mod);
-   strlcat (s_quans, t, LEN_TEXT);
+   strlcat (g_quans, t, LEN_TEXT);
    /*---(complete)-----------------------*/
    return 0;
 }
@@ -405,7 +453,7 @@ EXEC__prime          (void)
 {
    s_nstate = 0;
    s_curr   = -1;
-   EXEC_push (0, 0, 0);
+   EXEC_push (0, 0, 0, -1);
    return 0;
 }
 
@@ -423,16 +471,16 @@ EXEC_launcher        (short a_level, short a_rpos, short a_tpos, char a_rc)
    /*---(back launch some)---------------*/
    if (strchr (G_ZERO, x_mod) != NULL) {
       DEBUG_YREGEX  yLOG_note    ("always back launch for *@?! types");
-      EXEC_backpush (a_level, a_rpos + 1, a_tpos);
+      EXEC_backpush (a_level, a_rpos + 1, a_tpos, -1);
    }
    /*---(always launch if successful)----*/
    if (a_rc > 0) {
       if (strchr (G_MANY, x_mod) != NULL) {
          DEBUG_YREGEX  yLOG_note    ("relaunch for successful *@ types");
-         EXEC_push (a_level, a_rpos    , a_tpos + 1);
+         EXEC_push (a_level, a_rpos    , a_tpos + 1, -1);
       } else {
          DEBUG_YREGEX  yLOG_note    ("launch next for all successful steps");
-         EXEC_push (a_level, a_rpos + 1, a_tpos + 1);
+         EXEC_push (a_level, a_rpos + 1, a_tpos + 1, -1);
       }
    }
    /*---(complete)-----------------------*/
@@ -441,7 +489,7 @@ EXEC_launcher        (short a_level, short a_rpos, short a_tpos, char a_rc)
 }
 
 char
-EXEC__glauncher      (int a_level, int a_rpos, int a_tpos)
+EXEC__branch         (int a_level, int a_rpos, int a_tpos)
 {
    /*---(locals)-----------+-----+-----+-*/
    uchar       x_mod       =    0;
@@ -461,11 +509,43 @@ EXEC__glauncher      (int a_level, int a_rpos, int a_tpos)
    /*---(always launch if successful)----*/
    if (strchr (G_MANY, x_mod) != NULL) {
       DEBUG_YREGEX  yLOG_note    ("relaunch for successful *@ types");
-      EXEC_push (a_level, x_beg    , a_tpos);
+      EXEC_push (a_level, x_beg    , a_tpos, 0);
    } else {
       DEBUG_YREGEX  yLOG_note    ("launch next for all successful steps");
-      EXEC_push (a_level, x_end + 1, a_tpos);
+      EXEC_push (a_level, x_end + 1, a_tpos, 0);
    }
+   /*---(complete)-----------------------*/
+   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+   return 1;
+}
+
+char
+EXEC__and            (int a_level, int a_rpos, int a_tpos, int a_index)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rc          =    0;
+   int         x_tpos      =   -1;
+   int         x_indx      =    0;
+   /*> int         x_tmax      =   -1;                                                <*/
+   int         x_beg       =   -1;
+   int         x_end       =   -1;
+   /*---(header)-------------------------*/
+   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
+   DEBUG_YREGEX  yLOG_complex ("header"    , "level %-3d, rpos %-3d, tpos %-3d", a_level, a_rpos, a_tpos);
+   /*---(prepare)------------------------*/
+   x_indx  = gre.indx [s_states [a_index].rpos];
+   printf ("-----------\n");
+   printf ("AND, level %-3d, rpos %-3d, tpos %-3d, indx %-3d\n", a_level, a_rpos, a_tpos, x_indx);
+   rc  = EXEC__tpos (a_index, x_indx, &x_beg, &x_end);
+   printf ("AND, returned x_beg %-3d, x_end %-3d\n", x_beg, x_end);
+   DEBUG_YREGEX  yLOG_complex ("tpos"      , "indx %-3d, beg %-3d, end %-3d", x_indx, x_beg, x_end);
+   /*---(launch)-------------------------*/
+   DEBUG_YREGEX  yLOG_note    ("launch next for all successful steps");
+   /*> x_tmax  = s_states [a_index].tmax;                                             <*/
+   /*> printf ("AND, tmax %-3d\n", x_tmax);                                           <*/
+   /*> if (x_tmax == LEN_TEXT)  EXEC_push (a_level, a_rpos + 1, x_beg, a_tpos + 1);   <* 
+    *> else                     EXEC_push (a_level, a_rpos + 1, x_beg, x_tmax);       <*/
+   EXEC_push (a_level, a_rpos + 1, x_beg, x_end + 1);
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
    return 1;
@@ -474,15 +554,16 @@ EXEC__glauncher      (int a_level, int a_rpos, int a_tpos)
 char
 EXEC__single         (int a_index)
 {
-   /*---(locals)-----------+------+----+-*/
-   char        rc          =     0;
-   int         i           =     0;
-   int         x_level     =     0;
-   int         x_rpos      =     0;
-   int         x_tpos      =     0;
-   uchar       x_ch        =   ' ';
-   int         x_indx      =     0;
-   uchar       x_mod       =   ' ';
+   /*---(locals)-----------+-----+-----+-*/
+   char        rc          =    0;
+   int         i           =    0;
+   int         x_level     =    0;
+   int         x_rpos      =    0;
+   int         x_tpos      =    0;
+   uchar       x_ch        =  ' ';
+   int         x_indx      =    0;
+   uchar       x_mod       =  ' ';
+   int         x_tmax      =    0;
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    DEBUG_YREGEX  yLOG_value   ("a_index"   , a_index);
@@ -493,27 +574,34 @@ EXEC__single         (int a_index)
    x_ch    = gre.comp [s_states [a_index].rpos];
    x_indx  = gre.indx [s_states [a_index].rpos];
    x_mod   = gre.mods [s_states [a_index].rpos];
+   x_tmax  = s_states [a_index].tmax;
+   DEBUG_YREGEX  yLOG_complex ("header"    , "level %-3d, rpos %-3d, tpos %-3d, tmax %-3d", x_level, x_rpos, x_tpos, x_tmax);
    /*---(check for null)-----------------*/
    if (x_ch == 0) {
       DEBUG_YREGEX  yLOG_note    ("found null");
       s_states [a_index].ready = 'W';
       s_states [a_index].rc    =  1;
       rc = EXEC__found (a_index);
-      FIND_add    (a_index, s_states [a_index].begin, s_found, s_quans);
+      FIND_add    (a_index, s_states [a_index].begin, g_found, g_quans);
       for (i = 1; i <= 10; ++i) {
          /*> printf ("search for paren %d\n", i);                                     <*/
          rc = EXEC_sub (a_index, i);
          /*> printf ("   index %d, sub %d, rc %d\n", a_index, i, rc);                 <*/
          if (rc < S_SUB_AFTER)  continue;
-         FIND_sub (a_index, i - 1, s_subf, s_subq);
+         FIND_sub (a_index, i - 1, g_subf, g_subq);
       }
-      rc = EXEC_sub (a_index, 999);
-      if (rc > 0)  FIND_sub (a_index, 10, s_subf, s_subq);
+      rc = EXEC_sub (a_index, GROUP_FOCUS);
+      if (rc > 0)  FIND_sub (a_index, 10, g_subf, g_subq);
       DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
       return 100;
    }
+   /*---(check for overlong ANDs)--------*/
+   if (x_tpos == x_tmax) {
+      DEBUG_YREGEX  yLOG_note    ("hit a_tmax and must die");
+      rc = -1;
+   }
    /*---(get literals quick)-------------*/
-   if (x_indx == 0) {
+   else if (x_indx == 0) {
       DEBUG_YREGEX  yLOG_note    ("found literal");
       rc = EXEC__literal     (x_level + 1, x_rpos, x_tpos);
    }
@@ -526,7 +614,15 @@ EXEC__single         (int a_index)
          break;
       case ')' : case '|' :
          DEBUG_YREGEX  yLOG_note    ("close branch/group");
-         rc = EXEC__glauncher   (x_level + 1, x_rpos, x_tpos);
+         rc = EXEC__branch      (x_level + 1, x_rpos, x_tpos);
+         break;
+      case ';' :
+         DEBUG_YREGEX  yLOG_note    ("execute rule");
+         rc = RULE_exec         (x_level + 1, x_rpos, x_tpos, a_index);
+         break;
+      case '&' :
+         DEBUG_YREGEX  yLOG_note    ("change matcher");
+         rc = EXEC__and         (x_level + 1, x_rpos, x_tpos, a_index);
          break;
       case '^' : case '$' :
          DEBUG_YREGEX  yLOG_note    ("true anchor");
@@ -537,7 +633,7 @@ EXEC__single         (int a_index)
          rc = SETS_break        (x_level + 1, x_rpos, x_tpos);
          break;
       case '[' :
-         DEBUG_YREGEX  yLOG_note    ("set");
+         DEBUG_YREGEX  yLOG_note    ("found set");
          rc = SETS_exec         (x_level + 1, x_rpos, x_tpos);
          break;
       default  :
@@ -583,7 +679,7 @@ yREGEX_exec          (cchar *a_source)
    for (s_begin = 0; s_begin < gre.tlen; ++s_begin) {
       DEBUG_YREGEX  yLOG_value   ("BEGIN AT"  , s_begin);
       s_curr = s_nstate;
-      EXEC_push (0, 0, s_begin);
+      EXEC_push (0, 0, s_begin, 0);
       for (i = 0; i < s_nstate; ++i) {
          if (s_states [i].ready != 'y') continue;
          s_curr = i;

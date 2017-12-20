@@ -168,7 +168,7 @@ PATS__abbr_ref       (int *a_rpos)
    DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
    x_ch   = gre.orig [*a_rpos];
    DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
-   --rce;  if (x_ch != '$') {
+   --rce;  if (x_ch != '%') {
       COMP_error (__FUNCTION__, a_rpos, "#PAT", "does not lead with a dollar sign");
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
@@ -223,7 +223,7 @@ PATS__named_ref      (int *a_rpos)
    DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
    x_ch   = gre.orig [*a_rpos];
    DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
-   --rce;  if (x_ch != '$') {
+   --rce;  if (x_ch != '%') {
       COMP_error (__FUNCTION__, a_rpos, "#PAT", "does not lead with an ampersand");
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
@@ -445,8 +445,8 @@ PATS_comp            (void)
       if (i > 0) x_pch  = gre.orig [i - 1];
       x_ch   = gre.orig [i];
       /*---(named pattern)---------------*/
-      if (( x_ppch == '(' && x_pch == '#' && x_ch == '$')  ||
-            (x_pch == '(' && x_ch  == '$')) {
+      if (( x_ppch == '(' && x_pch == '#' && x_ch == '%')  ||
+            (x_pch == '(' && x_ch  == '%')) {
          DEBUG_YREGEX  yLOG_note    ("found named potenial pattern");
          x_len = i - x_prev;
          DEBUG_YREGEX  yLOG_complex ("stats"     , "beg %3d, end %3d, len %3d", x_prev, i - 1, x_len);
@@ -461,7 +461,7 @@ PATS_comp            (void)
          gre.rlen = strllen (gre.regex, LEN_REGEX);
       }
       /*---(named pattern)---------------*/
-      else if (x_ch == '$') {
+      else if (x_ch == '%') {
          DEBUG_YREGEX  yLOG_note    ("found abbr pattern");
          x_len = i - x_prev;
          DEBUG_YREGEX  yLOG_complex ("stats"     , "beg %3d, end %3d, len %3d", x_prev, i - 1, x_len);

@@ -17,8 +17,8 @@ typedef   unsigned char  uchar;
 
 
 /* rapidly evolving version number to aid with visual change confirmation     */
-#define YREGEX_VER_NUM   "0.5b"
-#define YREGEX_VER_TXT   "changed patterns and backcopies to dollar sign prefix"
+#define YREGEX_VER_NUM   "0.5d"
+#define YREGEX_VER_TXT   "simple rule working for comparing equality of two groups (backref)"
 
 
 #define     MAX_REGEX       20
@@ -32,7 +32,8 @@ typedef   unsigned char  uchar;
 
 #define     TYPE_QUANS   "*+?@~!"
 #define     MAX_QUAN       255
-#define     TYPE_GROUP   "()|"
+#define     TYPE_GROUP   "()|&"
+#define     GROUP_FOCUS    999
 
 #define     BACKSLASH_SETS   "entfswdlugaxWDSFG"
 
@@ -68,6 +69,12 @@ struct      cREGEX {
    int         clen;                       /* compliled regex length          */
 };
 extern      tREGEX      gre;
+
+
+extern char  g_found   [LEN_TEXT];
+extern char  g_quans   [LEN_TEXT];
+extern char  g_subf    [LEN_TEXT];
+extern char  g_subq    [LEN_TEXT];
 
 
 extern char        yREGEX_ver   [500];
@@ -109,11 +116,12 @@ char        EXEC__group          (int a_level, int a_rpos, int a_tpos);
 char        EXEC__anchor         (int a_level, int a_rpos, int a_tpos);
 char        EXEC__literal        (int a_level, int a_rpos, int a_tpos);
 /*---(nfa)------------------*/
-char        EXEC_push            (short a_level, short a_rpos, short a_tpos);
-char        EXEC_backpush        (short a_level, short a_rpos, short a_tpos);
+char        EXEC_push            (short a_level, short a_rpos, short a_tpos, short a_tmax);
+char        EXEC_backpush        (short a_level, short a_rpos, short a_tpos, short a_tmax);
 char        EXEC_launcher        (short a_level, short a_rpos, short a_tpos, char a_rc);
 char        EXEC__solution       (int a_index);
 char        EXEC_sub             (int a_index, int a_paren);
+int         EXEC__tpos           (int a_index, int a_paren, int *a_tbeg, int *a_tend);
 char        EXEC__found          (int a_index);
 char        EXEC__list           (void);
 char        EXEC__prime          (void);
@@ -169,6 +177,14 @@ char*       FIND__unit           (char *a_question, int a_num);
 /*---(results)--------------*/
 char        FIND_first           (int  *a_beg, int *a_len);
 char        FIND_next            (int  *a_beg, int *a_len);
+
+
+
+/*===[[ RULE ]]===============================*/
+/*---(driver)---------------*/
+char        RULE_comp            (int *a_rpos);
+char        RULE_exec            (short a_level, short a_rpos, short a_tpos, short a_index);
+
 
 
 #endif

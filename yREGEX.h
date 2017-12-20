@@ -23,5 +23,7 @@ char        yREGEX_comp          (cchar *a_regex);
 char        yREGEX_exec          (cchar *a_source);
 int         yREGEX_find          (cchar a_type, cchar a_start, int  *a_beg, int *a_len);
 
+
+
 #endif
 

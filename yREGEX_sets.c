@@ -752,10 +752,12 @@ SETS_exec            (int a_level, int a_rpos, int a_tpos)
    /*---(execute)------------------------*/
    if (s_sets [x_indx].map [x_txt] == '.')  rc = 1;
    DEBUG_YREGEX  yLOG_sint    (rc);
+   if (rc > 0)  DEBUG_YREGEX  yLOG_snote   ("pass");
+   else         DEBUG_YREGEX  yLOG_snote   ("FAIL");
+   DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
    /*---(prepare next)-------------------*/
    EXEC_launcher (a_level, a_rpos, a_tpos, rc);
    /*---(return)-------------------------*/
-   DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
    return rc;
 }
 

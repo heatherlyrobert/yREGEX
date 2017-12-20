@@ -19,6 +19,7 @@ struct      cFIND {
    char        text        [LEN_TEXT];      /* found text                     */
    char        quan        [LEN_TEXT];      /* quantifiers                    */
    /*---(stats)------------------*/
+   int         count;                       /* count of times requested       */
    int         lazy;                        /* count of lazy markers          */
    int         greedy;                      /* count of greedy markers        */
    int         balance;                     /* final score                    */
@@ -55,6 +56,7 @@ FIND_init            (void)
       s_finds [i].len     = -1;
       strlcpy (s_finds [i].text, "", LEN_TEXT);
       strlcpy (s_finds [i].quan, "", LEN_TEXT);
+      s_finds [i].count   = 0;
       s_finds [i].lazy    = 0;
       s_finds [i].greedy  = 0;
       s_finds [i].balance = 0;
@@ -73,20 +75,50 @@ FIND_init            (void)
 /*====================------------------------------------====================*/
 static void      o___STRUCTURE_______________o (void) {;}
 
+int
+FIND__dup            (cint a_beg, cint a_len)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   int         i           =    0;
+   /*---(check)--------------------------*/
+   for (i = 0; i < s_nfind; ++i) {
+      if (a_beg != s_finds [i].beg)   continue;
+      if (a_len != s_finds [i].len)   continue;
+      return i;
+   }
+   /*---(complete)-----------------------*/
+   return -1;
+}
+
 char
 FIND_add             (cint a_ref, cint a_beg, cchar *a_text, cchar *a_quan)
 {
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
    int         x_len       =    0;
    int         i           =    0;
    int         x_lazy      =    0;
    int         x_greedy    =    0;
-   s_finds [s_nfind].ref   = a_ref;
-   s_finds [s_nfind].beg   = a_beg;
-   if (a_text != NULL)  strlcpy (s_finds [s_nfind].text, a_text, LEN_TEXT);
-   if (a_quan != NULL)  strlcpy (s_finds [s_nfind].quan, a_quan, LEN_TEXT);
-   if (a_text != NULL)  x_len = strllen (a_text, LEN_TEXT);
-   s_finds [s_nfind].len   = x_len;
-   s_finds [s_nfind].end   = a_beg + x_len + 1;
+   int         x_ref       =   -1;
+   /*---(defense)------------------------*/
+   --rce;  if (a_text == NULL)  return rce;
+   --rce;  if (a_quan == NULL)  return rce;
+   /*---(check dups)---------------------*/
+   x_len = strllen (a_text, LEN_TEXT);
+   x_ref = FIND__dup (a_beg, x_len);
+   if (x_ref >= 0) {
+      ++(s_finds [x_ref].count);
+      return 0;
+   }
+   /*---(save)---------------------------*/
+   s_finds [s_nfind].ref    = a_ref;
+   s_finds [s_nfind].beg    = a_beg;
+   strlcpy (s_finds [s_nfind].text, a_text, LEN_TEXT);
+   strlcpy (s_finds [s_nfind].quan, a_quan, LEN_TEXT);
+   s_finds [s_nfind].len    = x_len;
+   s_finds [s_nfind].end    = a_beg + x_len + 1;
+   s_finds [s_nfind].count  = 1;
+   /*---(classify)-----------------------*/
    if (x_len > 0) {
       for (i = 0; i < x_len; ++i) {
          if (strchr (G_GREEDY, a_quan [i]) != NULL)  ++x_greedy;
@@ -96,8 +128,11 @@ FIND_add             (cint a_ref, cint a_beg, cchar *a_text, cchar *a_quan)
    s_finds [s_nfind].lazy     = x_lazy;
    s_finds [s_nfind].greedy   = x_greedy;
    s_finds [s_nfind].balance  = x_greedy + x_lazy;
+   /*---(link)---------------------------*/
    s_curr = s_nfind;
+   /*---(update)-------------------------*/
    ++s_nfind;
+   /*---(complete)-----------------------*/
    return 0;
 }
 
