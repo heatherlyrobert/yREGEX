@@ -70,15 +70,15 @@ documented elsewhere.
 .B new grouping variations
    (...)       non-capturing group (hidden)
    (#...)      capturing group
-   (>...<)     focus group, produces default results (ascii art)
-   &           "and", to give multiple rules for a single sub-match
+   (>...<)     focus group, greatly reduces need for lookaheads
 
 .B saved patterns for tried and true receipes
-   %.    (%.....)    saved patterns for reuse by abbr or short name
-   %f    (%float)    regex pattern for a float number
-   %i    (%int)      ... signed integer
-   %b    (%byte)     ... and a byte in integer form
-   (%1)              pattern saved from a capture group
+   &.    (&.....)    saved patterns for reuse by abbr or short name
+   &f    (&float)    regex pattern for a float number
+   &i    (&int)      ... signed integer
+   &b    (&byte)     ... and a byte in integer form
+   &w    (&word)     ... word plus word boundaries
+   (&1)              pattern saved from a capture group
 
 .B new anchor variations
    <           beginning of word, hated \\b
@@ -90,6 +90,10 @@ documented elsewhere.
 
 .B new posix-type class variations
    [:greek:]   my greek letters at the top of ascii 8bit
+
+.B new rules
+   (;n=m)      compares two capture groups for exact match
+   (;n...)     applies a second regex to a capture group
 
 .SH RATIONAL LIMITS
 yREGEX is a 80% solution.  it is meant to fulfill my day-to-day needs while

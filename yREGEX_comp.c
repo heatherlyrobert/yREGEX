@@ -461,33 +461,35 @@ COMP__group_fix      (cint a_grp)
    /*---(locals)-----------+-----+-----+-*/
    int         i           =    0;
    int         x_ch        =  ' ';
+   int         x_indx      =    0;
    int         x_jump      =    0;
    int         x_or        =    0;
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    DEBUG_YREGEX  yLOG_value   ("a_grp"     , a_grp);
+   DEBUG_YREGEX  yLOG_value   ("gre.clen"  , gre.clen);
    /*---(track backwards)----------------*/
    for (i = gre.clen - 1; i >= 0; --i) {
-      /*---(filter)----------------------*/
-      if (gre.indx [i] != a_grp) {
-         ++x_jump;
-         continue;
-      }
       /*---(prepare)---------------------*/
       x_ch   = gre.comp [i];
+      x_indx = gre.indx [i];
+      /*> DEBUG_YREGEX  yLOG_char    ("x_ch"      , x_ch);                            <*/
+      /*> DEBUG_YREGEX  yLOG_value   ("x_indx"    , x_indx);                          <*/
+      /*> DEBUG_YREGEX  yLOG_value   ("x_jump"    , x_jump);                          <*/
       /*---(branch)----------------------*/
-      if (x_ch == '|' || x_ch == '&') {
-         gre.jump [i] = x_jump + 1;
+      if (x_indx == a_grp && x_ch == '|') {
+         gre.jump [i] = x_jump;
          x_jump =  0;
          ++x_or;
-         continue;
       }
       /*---(start)--------------------*/
-      if (x_ch == '(') {
-         gre.jump [i] = x_jump + 1;
+      else if (x_indx == a_grp && x_ch == '(') {
+         gre.jump [i] = x_jump;
          gre.mods [i] = '0' + x_or;
          break;
       }
+      /*---(otherwise)----------------*/
+      ++x_jump;
       /*---(done)---------------------*/
    }
    /*---(complete)-----------------------*/
@@ -567,7 +569,7 @@ COMP__group          (int *a_rpos)
       rc = COMP__group_fix  (x_grp);
       --s_glevel;
       break;
-   case '|' : case '&' :
+   case '|' :
       DEBUG_YREGEX  yLOG_note    ("divide branches/matches");
       x_grp = s_gstack [s_glevel];
       rc = COMP_add  (x_ch, x_grp);
@@ -577,6 +579,72 @@ COMP__group          (int *a_rpos)
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
    return 1;
+}
+
+
+
+/*====================------------------------------------====================*/
+/*===----                       extended characters                    ----===*/
+/*====================------------------------------------====================*/
+static void      o___EXTENDED________________o (void) {;}
+
+char         /*-> tbd --------------------------------[ ------ [ge.E54.142.98]*/ /*-[02.0000.00#.#]-*/ /*-[--.---.---.--]-*/
+COMP__extended       (void)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   int         i           =    0;
+   uchar       x_ch        =  ' ';          /* current character              */
+   char        t           [LEN_REGEX] = "";
+   int         x_len       =    0;
+   /*---(translate)----------------------*/
+   for (i = 0; i <= gre.olen; ++i) {
+      x_ch = gre.orig [i];
+      switch (x_ch) {
+      case 183 :  /* space                  */
+         t [x_len++] = ' ';
+         t [x_len  ] =  0 ;
+         break;
+      case 200 :  /* begin capture group    */
+         t [x_len++] = '(';
+         t [x_len++] = '#';
+         t [x_len  ] =  0 ;
+         break;
+      case 201 :  /* end capture group      */
+         t [x_len++] = ')';
+         t [x_len  ] =  0 ;
+         break;
+      case 204 :  /* begin focus group      */
+         t [x_len++] = '(';
+         t [x_len++] = '>';
+         t [x_len  ] =  0 ;
+         break;
+      case 205 :  /* end focus group        */
+         t [x_len++] = '<';
+         t [x_len++] = ')';
+         t [x_len  ] =  0 ;
+         break;
+      case 194 :  /* begin rule group       */
+      case 202 :
+         t [x_len++] = '(';
+         t [x_len++] = ';';
+         t [x_len  ] =  0 ;
+         break;
+      case 195 :  /* end rule group         */
+      case 203 :
+         t [x_len++] = ')';
+         t [x_len  ] =  0 ;
+         break;
+      default  :
+         t [x_len++] = x_ch;
+         t [x_len  ] =  0 ;
+         break;
+      }
+   }
+   /*---(copy over)----------------------*/
+   strlcpy (gre.orig, t, LEN_REGEX);
+   gre.olen = strllen (gre.orig, LEN_REGEX);
+   /*---(complete)-----------------------*/
+   return 0;
 }
 
 
@@ -605,6 +673,10 @@ yREGEX_comp          (cchar *a_regex)
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rc);
       return rc;
    }
+   /*---(translate)----------------------*/
+   rc = COMP__extended ();
+   DEBUG_YREGEX  yLOG_info    ("tranlated" , gre.orig);
+   DEBUG_YREGEX  yLOG_point   ("gre.olen"  , gre.olen);
    /*---(pattern run)--------------------*/
    rc = PATS_comp ();
    DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
@@ -635,7 +707,8 @@ yREGEX_comp          (cchar *a_regex)
       /*---(rules handling)--------------*/
       if (x_ch == '(' && x_nch == ';') {
          DEBUG_YREGEX  yLOG_note    ("handle special rules");
-         rc = RULE_comp (&i);
+         rc = COMP__group (&i);
+         rc = RULE_comp   (&i);
          if (rc >= 0)  continue;
       }
       /*---(group handling)--------------*/

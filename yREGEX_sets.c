@@ -642,6 +642,29 @@ SETS_comp            (int *a_rpos)
    return rce;
 }
 
+char         /*-> tbd --------------------------------[ ------ [fe.D54.156.65]*/ /*-[02.0000.01#.!]-*/ /*-[--.---.---.--]-*/
+SETS_list            (void)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   int         i           =    0;
+   int         j           =    0;
+   for (i = 0; i < s_nset; ++i) {
+      if (s_sets [i].type == 0) break;
+      printf ("re  a  ---name-----  0123456789abcdef0123456789abcdef !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ \n");
+      printf ("%-2d  %c  %-12.12s  ", i, s_sets [i].abbr, s_sets [i].name);
+      for (j =   0; j < 128; ++j) {
+         printf ("%c", s_sets [i].map [j]);
+      }
+      printf ("\n");
+      printf ("                     0123456789abcdef0123456789abcdef ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ\n");
+      printf ("                     ");
+      for (j = 128; j < 256; ++j) {
+         printf ("%c", s_sets [i].map [j]);
+      }
+      printf ("\n");
+   }
+   return 0;
+}
 
 
 /*====================------------------------------------====================*/

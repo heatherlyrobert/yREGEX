@@ -185,7 +185,7 @@ FIND_count           (void)
 }
 
 char
-FIND_list            (void)
+FIND_list            (char a_detail)
 {
    int         i           =     0;
    int         j           =     0;
@@ -195,10 +195,12 @@ FIND_list            (void)
       printf ("%-4d %-4d  text %-3d[%s]\n", i, s_finds [i].ref, strlen (s_finds [i].text), s_finds [i].text);
       printf ("     b%-4d quan %-3d[%s]\n", s_finds [i].beg, strlen (s_finds [i].quan), s_finds [i].quan);
       printf ("     e%-4d l %-3d, g %-3d, b %-3d\n", s_finds [i].end, s_finds [i].lazy, s_finds [i].greedy, s_finds [i].balance);
-      for (j = 0; j < 11; ++j) {
-         if (s_finds [i].sub [j].len >= 0) {
-            printf ("     sub%2d text %-3d[%s]\n", j, s_finds [i].sub [j].len, s_finds [i].sub [j].text);
-            printf ("           quan %-3d[%s]\n",    s_finds [i].sub [j].len, s_finds [i].sub [j].quan);
+      if (a_detail == 'y') {
+         for (j = 0; j < 11; ++j) {
+            if (s_finds [i].sub [j].len >= 0) {
+               printf ("     sub%2d text %-3d[%s]\n", j, s_finds [i].sub [j].len, s_finds [i].sub [j].text);
+               printf ("           quan %-3d[%s]\n",    s_finds [i].sub [j].len, s_finds [i].sub [j].quan);
+            }
          }
       }
       printf ("\n");

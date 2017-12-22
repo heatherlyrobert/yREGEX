@@ -17,8 +17,8 @@ typedef   unsigned char  uchar;
 
 
 /* rapidly evolving version number to aid with visual change confirmation     */
-#define YREGEX_VER_NUM   "0.5d"
-#define YREGEX_VER_TXT   "simple rule working for comparing equality of two groups (backref)"
+#define YREGEX_VER_NUM   "0.5e"
+#define YREGEX_VER_TXT   "have separated rules and cleaned up"
 
 
 #define     MAX_REGEX       20
@@ -32,7 +32,7 @@ typedef   unsigned char  uchar;
 
 #define     TYPE_QUANS   "*+?@~!"
 #define     MAX_QUAN       255
-#define     TYPE_GROUP   "()|&"
+#define     TYPE_GROUP   "()|"
 #define     GROUP_FOCUS    999
 
 #define     BACKSLASH_SETS   "entfswdlugaxWDSFG"
@@ -119,9 +119,10 @@ char        EXEC__literal        (int a_level, int a_rpos, int a_tpos);
 char        EXEC_push            (short a_level, short a_rpos, short a_tpos, short a_tmax);
 char        EXEC_backpush        (short a_level, short a_rpos, short a_tpos, short a_tmax);
 char        EXEC_launcher        (short a_level, short a_rpos, short a_tpos, char a_rc);
+int         EXEC_indx            (int a_index);
 char        EXEC__solution       (int a_index);
 char        EXEC_sub             (int a_index, int a_paren);
-int         EXEC__tpos           (int a_index, int a_paren, int *a_tbeg, int *a_tend);
+int         EXEC_tpos            (int a_index, int a_paren, int *a_tbeg, int *a_tend);
 char        EXEC__found          (int a_index);
 char        EXEC__list           (void);
 char        EXEC__prime          (void);
@@ -144,6 +145,7 @@ char        SETS__mapper         (int *a_rpos);
 char        SETS_backslash       (int *a_rpos);
 char        SETS_dot             (int *a_rpos);
 char        SETS_comp            (int *a_rpos);
+char        SETS_list            (void);
 /*---(execute)--------------*/
 char        SETS_break           (int a_level, int a_rpos, int a_tpos);
 char        SETS_exec            (int a_level, int a_rpos, int a_tpos);
@@ -170,7 +172,7 @@ char        PATS_comp            (void);
 char        FIND_init            (void);
 /*---(structure)------------*/
 char        FIND_add             (cint a_ref, cint a_beg, cchar *a_text, cchar *a_quan);
-char        FIND_list            (void);
+char        FIND_list            (char a_detail);
 char        FIND_text            (cint a_ref, char *a_text);
 int         FIND_count           (void);
 char*       FIND__unit           (char *a_question, int a_num);
@@ -184,6 +186,7 @@ char        FIND_next            (int  *a_beg, int *a_len);
 /*---(driver)---------------*/
 char        RULE_comp            (int *a_rpos);
 char        RULE_exec            (short a_level, short a_rpos, short a_tpos, short a_index);
+char        RULE_regex           (short a_level, short a_rpos, short a_tpos, short a_index);
 
 
 

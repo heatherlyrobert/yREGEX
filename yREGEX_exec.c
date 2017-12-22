@@ -3,23 +3,23 @@
 #include    "yREGEX_priv.h"
 
 
-#define     MAX_LVL     1000
-#define     MAX_STATE   1000
+#define     MAX_LVL      1000
+#define     MAX_STATE   10000
 
 /*---(struct.re)--------+-----------+-*//*-+----------------------------------*/
 typedef     struct      cSTATE      tSTATE;
 struct      cSTATE {
    /*---(basics)-----------------*/
-   short       begin;                       /* starting point                 */
-   short       level;                       /* processing depth               */
-   short       rpos;                        /* regex position                 */
-   short       tpos;                        /* text position                  */
-   short       tmax;                        /* max text position              */
+   int         begin;                       /* starting point                 */
+   int         level;                       /* processing depth               */
+   int         rpos;                        /* regex position                 */
+   int         tpos;                        /* text position                  */
+   int         tmax;                        /* max text position              */
    /*---(results)----------------*/
    char        ready;                       /* ready for action/complete      */
    char        rc;                          /* link to shared return codes    */
    /*---(connections)------------*/
-   short       prev;                        /* previous state (created this)  */
+   int         prev;                        /* previous state (created this)  */
    /*---(done)-------------------*/
 };
 /*---(static.vars)------+-----------+-*//*-+----------------------------------*/
@@ -28,7 +28,7 @@ static      int         s_nstate    = 0;           /* total number of states  */
 static      int         s_curr      = 0;           /* point to current state  */
 
 
-static int         s_begin     = 0;                /* current search begin    */
+static      int         s_begin     = 0;                /* current search begin    */
 
 
 /*====================------------------------------------====================*/
@@ -274,6 +274,11 @@ EXEC__list           (void)
    return 0;
 }
 
+int
+EXEC_indx            (int a_index)
+{
+   return gre.indx [s_states [a_index].rpos];
+}
 
 
 /*====================------------------------------------====================*/
@@ -359,7 +364,7 @@ EXEC_sub             (int a_index, int a_paren)
 }
 
 int
-EXEC__tpos           (int a_index, int a_paren, int *a_tbeg, int *a_tend)
+EXEC_tpos            (int a_index, int a_paren, int *a_tbeg, int *a_tend)
 {
    /*---(locals)-----------+-----+-----+-*/
    int         rc          =   -1;
@@ -370,31 +375,32 @@ EXEC__tpos           (int a_index, int a_paren, int *a_tbeg, int *a_tend)
    int         x_indx      =    0;
    uchar       x_mod       =  ' ';
    /*---(text)---------------------------*/
+   /*> printf ("   index %-3d, paren %-2d, tbeg %-2d, tend %-2d\n", a_index, a_paren, *a_tbeg, *a_tend);   <*/
    x_tpos = s_states [a_index].tpos;
    /*---(quantifiers)--------------------*/
    x_rpos = s_states [a_index].rpos;
    x_reg  = gre.comp [x_rpos];
    x_indx = gre.indx [x_rpos];
    x_mod  = gre.mods [x_rpos];
-   printf ("   tpos %-2d, rpos %-2d, reg %c, indx %-2d, mod %c\n", x_tpos, x_rpos, x_reg, x_indx, x_mod);
+   /*> printf ("   tpos %-2d, rpos %-2d, reg %c, indx %-2d, mod %c\n", x_tpos, x_rpos, x_reg, x_indx, x_mod);   <*/
    /*---(check for last marker)----------*/
-   if (strchr ("&", x_reg) != NULL && x_indx == a_paren) {
-      printf ("      found AND at %d\n", x_tpos);
+   if (strchr ("|)", x_reg) != NULL && x_indx == a_paren) {
+      /*> printf ("      found CLOSE at %d\n", x_tpos);                               <*/
       *a_tend = x_tpos;
       rc = 1;
    }
    /*---(check for paren)----------------*/
-   if (strchr ("(|", x_reg) != NULL && x_indx == a_paren) {
-      printf ("      found OPEN/OR at %d\n", x_tpos);
+   if (strchr ("(", x_reg) != NULL && x_indx == a_paren) {
+      /*> printf ("      found OPEN/OR at %d\n", x_tpos);                             <*/
       *a_tbeg = x_tpos;
       rc = 2;
    }
    /*---(dig to origin)------------------*/
    else if (a_index != s_states [a_index].prev) {
-      printf ("      call deeper\n");
-      rc = EXEC__tpos (s_states [a_index].prev, a_paren, a_tbeg, a_tend);
+      /*> printf ("      call deeper\n");                                             <*/
+      rc = EXEC_tpos (s_states [a_index].prev, a_paren, a_tbeg, a_tend);
    }
-   printf ("      done with %d\n", rc);
+   /*> printf ("      done with %d\n", rc);                                           <*/
    /*---(complete)-----------------------*/
    return rc;
 }
@@ -403,6 +409,7 @@ char
 EXEC__found          (int a_index)
 {
    /*---(locals)-----------+-----+-----+-*/
+   char        rc          =    0;
    char        t           [5] = "";
    int         x_rpos      =    0;
    int         x_tpos      =    0;
@@ -412,13 +419,14 @@ EXEC__found          (int a_index)
    int         x_indx      =    0;
    /*---(dig to origin)------------------*/
    if (a_index != s_states [a_index].prev) {
-      EXEC__found (s_states [a_index].prev);
+      rc = EXEC__found (s_states [a_index].prev);
    } else {
       strlcpy (g_found, "", LEN_TEXT);
       strlcpy (g_quans, "", LEN_TEXT);
    }
    /*---(filter)-------------------------*/
-   if (s_states [a_index].ready == 'W')  return 0;
+   if (rc > 0)                           return rc;
+   if (s_states [a_index].ready == 'W')  return 1;
    /*---(mark)---------------------------*/
    s_states [a_index].ready = '+';
    /*---(text)---------------------------*/
@@ -429,6 +437,10 @@ EXEC__found          (int a_index)
    x_reg  = gre.comp [x_rpos];
    x_indx = gre.indx [x_rpos];
    x_mod  = gre.mods [x_rpos];
+   /*---(find start of rules)------------*/
+   if (x_reg == ';' && x_indx > 0) {
+      return 1;
+   }
    /*---(handle sets)--------------------*/
    if (x_reg == '[') {
       sprintf (t, "%c", x_ch);
@@ -536,7 +548,7 @@ EXEC__and            (int a_level, int a_rpos, int a_tpos, int a_index)
    x_indx  = gre.indx [s_states [a_index].rpos];
    printf ("-----------\n");
    printf ("AND, level %-3d, rpos %-3d, tpos %-3d, indx %-3d\n", a_level, a_rpos, a_tpos, x_indx);
-   rc  = EXEC__tpos (a_index, x_indx, &x_beg, &x_end);
+   rc  = EXEC_tpos (a_index, x_indx, &x_beg, &x_end);
    printf ("AND, returned x_beg %-3d, x_end %-3d\n", x_beg, x_end);
    DEBUG_YREGEX  yLOG_complex ("tpos"      , "indx %-3d, beg %-3d, end %-3d", x_indx, x_beg, x_end);
    /*---(launch)-------------------------*/
@@ -620,10 +632,10 @@ EXEC__single         (int a_index)
          DEBUG_YREGEX  yLOG_note    ("execute rule");
          rc = RULE_exec         (x_level + 1, x_rpos, x_tpos, a_index);
          break;
-      case '&' :
-         DEBUG_YREGEX  yLOG_note    ("change matcher");
-         rc = EXEC__and         (x_level + 1, x_rpos, x_tpos, a_index);
-         break;
+      /*> case '&' :                                                                  <* 
+       *>    DEBUG_YREGEX  yLOG_note    ("change matcher");                           <* 
+       *>    rc = EXEC__and         (x_level + 1, x_rpos, x_tpos, a_index);           <* 
+       *>    break;                                                                   <*/
       case '^' : case '$' :
          DEBUG_YREGEX  yLOG_note    ("true anchor");
          rc = EXEC__anchor      (x_level + 1, x_rpos, x_tpos);
@@ -689,8 +701,9 @@ yREGEX_exec          (cchar *a_source)
       /*> if (rc >= 1) break;                                                         <*/
       /*> break;                                                                      <*/
    }
-   /*> EXEC__list  ();                                                                <*/
-   /*> FIND_list   ();                                                                <*/
+   EXEC__list  ();
+   FIND_list   ('-');
+   /*> SETS_list ();                                                                  <*/
    rc = FIND_count ();
    if (rc > 100) rc == 100;
    /*---(complete)-----------------------*/
