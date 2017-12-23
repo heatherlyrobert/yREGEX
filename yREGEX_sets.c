@@ -780,8 +780,29 @@ SETS_exec            (int a_level, int a_rpos, int a_tpos)
    DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
    /*---(prepare next)-------------------*/
    EXEC_launcher (a_level, a_rpos, a_tpos, rc);
-   /*---(return)-------------------------*/
+   /*---(complete)-----------------------*/
    return rc;
+}
+
+char
+SETS_rule            (char *a_text, int a_set)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   int         x_len       =    0;
+   uchar       x_txt       =    0;
+   uchar       x_mark      =    0;
+   int         i           =    0;
+   /*---(prepare)------------------------*/
+   --rce;  if (a_text == NULL    )  return rce;
+   x_len = strllen (a_text, LEN_TEXT);
+   for (i = 0; i <= x_len; ++i) {
+      x_txt  = a_text [i];
+      x_mark = s_sets [a_set].map [x_txt];
+      if (x_mark == '.')   return 1;
+   }
+   /*---(complete)-----------------------*/
+   return 0;
 }
 
 

@@ -253,22 +253,21 @@ EXEC__list           (void)
    for (i = 0; i < s_nstate; ++i) {
       if (s_states [i].prev == i)  c = 0;
       if ((c %  5) == 0)   printf ("\n");
-      if ((c % 45) == 0)   printf ("refn  begn  lvl-  rpos  tpos  rdy  retn  --  reg  ind  mod  jmp  txt  --  prev\n\n");
-      if (gre.comp [s_states [i].rpos] >= 32)  sprintf (x_reg, " %c ", gre.comp [s_states [i].rpos]);
+      if ((c % 45) == 0)   printf ("prev  refn  beg  lvl  --  rps  reg  ind  mod  jmp  --  tps  txt  --  rdy  retn  --  found\n\n");
+      if (gre.comp [s_states [i].rpos] >= 32)  sprintf (x_reg, "  %c", gre.comp [s_states [i].rpos]);
       else                                     strlcpy (x_reg, "nul", 5);
-      if (gre.mods [s_states [i].rpos] >= 32)  sprintf (x_mod, " %c ", gre.mods [s_states [i].rpos]);
+      if (gre.mods [s_states [i].rpos] >= 32)  sprintf (x_mod, "  %c", gre.mods [s_states [i].rpos]);
       else                                     strlcpy (x_mod, "nul", 5);
-      if (gre.text [s_states [i].tpos] >= 32)  sprintf (x_txt, " %c ", gre.text [s_states [i].tpos]);
+      if (gre.text [s_states [i].tpos] >= 32)  sprintf (x_txt, "  %c", gre.text [s_states [i].tpos]);
       else                                     strlcpy (x_txt, "nul", 5);
       FIND_text (i, t);
-      printf ("%-4d  %-4d  %-4d  %-4d  %-4d   %c   %-4d  --  %-3.3s  %-3d  %-3.3s  %-3d  %-3.3s  --  %-4d  %s\n",
-            i,
-            s_states [i].begin ,s_states [i].level,
-            s_states [i].rpos, s_states [i].tpos,
+      printf ("%4d  %4d  %3d  %3d  --  %3d  %s  %3d  %s  %3d  --  %3d  %s  --    %c   %3d  --  %s\n",
+            s_states [i].prev, i, s_states [i].begin ,s_states [i].level,
+            s_states [i].rpos, x_reg,
+            gre.indx [s_states [i].rpos], x_mod, gre.jump [s_states [i].rpos],
+            s_states [i].tpos, x_txt,
             s_states [i].ready, s_states [i].rc,
-            x_reg, gre.indx [s_states [i].rpos],
-            x_mod, gre.jump [s_states [i].rpos],
-            x_txt, s_states [i].prev, t);
+            t);
       ++c;
    }
    return 0;
@@ -701,8 +700,8 @@ yREGEX_exec          (cchar *a_source)
       /*> if (rc >= 1) break;                                                         <*/
       /*> break;                                                                      <*/
    }
-   EXEC__list  ();
-   FIND_list   ('-');
+   /*> EXEC__list  ();                                                                <*/
+   /*> FIND_list   ('-');                                                             <*/
    /*> SETS_list ();                                                                  <*/
    rc = FIND_count ();
    if (rc > 100) rc == 100;

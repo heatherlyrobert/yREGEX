@@ -68,6 +68,18 @@ RULE_comp            (int *a_rpos)
       }
       ++(*a_rpos);
    }
+   /*---(check simple backslash set)-----*/
+   if (x_len == 2 && x_ch2 == '\\') {
+      DEBUG_YREGEX  yLOG_note    ("includes backslash set rule");
+      ++(*a_rpos);
+      x_ch2  = gre.regex [*a_rpos];
+      DEBUG_YREGEX  yLOG_char    ("x_ch2"     , x_ch2);
+      if (strchr ("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", x_ch2) != NULL) {
+         COMP_add (';', x_ch);
+         COMP_mod ('\\');
+      }
+      ++(*a_rpos);
+   }
    /*---(now regex)----------------------*/
    else {
       DEBUG_YREGEX  yLOG_note    ("additional group filtering");
@@ -94,6 +106,7 @@ RULE_exec            (short a_level, short a_rpos, short a_tpos, short a_index)
    int         x_indx      =    0;
    int         x_beg       =   -1;
    int         x_end       =   -1;
+   int         x_len       =    0;
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    DEBUG_YREGEX  yLOG_complex ("header"    , "level %-3d, rpos %-3d, tpos %-3d, index %-3d", a_level, a_rpos, a_tpos, a_index);
@@ -126,7 +139,18 @@ RULE_exec            (short a_level, short a_rpos, short a_tpos, short a_index)
       EXEC_launcher (a_level, a_rpos, a_tpos, rc);
    }
    /*---(execute)------------------------*/
+   else if (x_mod == '[') {
+      rc = EXEC_sub (a_index, x_one);
+      strlcpy (s1, g_subf, LEN_TEXT);
+      DEBUG_YREGEX  yLOG_info    ("s1"        , s1);
+      x_indx  = gre.indx [a_rpos + 1];
+      rc = SETS_rule (s1, x_indx);
+   }
+   /*---(execute)------------------------*/
    else if (x_mod == '&') {
+      rc = EXEC_sub (a_index, x_one);
+      strlcpy (s1, g_subf, LEN_TEXT);
+      DEBUG_YREGEX  yLOG_info    ("s1"        , s1);
       x_indx  = EXEC_indx (a_index);
       /*> printf ("-----------\n");                                                   <*/
       /*> printf ("AND, level %-3d, rpos %-3d, tpos %-3d, indx %-3d\n", a_level, a_rpos, a_tpos, x_indx);   <*/

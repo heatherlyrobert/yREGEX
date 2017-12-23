@@ -17,8 +17,8 @@ typedef   unsigned char  uchar;
 
 
 /* rapidly evolving version number to aid with visual change confirmation     */
-#define YREGEX_VER_NUM   "0.5e"
-#define YREGEX_VER_TXT   "have separated rules and cleaned up"
+#define YREGEX_VER_NUM   "0.5f"
+#define YREGEX_VER_TXT   "rules for freeform regex checking are working"
 
 
 #define     MAX_REGEX       20
@@ -149,6 +149,7 @@ char        SETS_list            (void);
 /*---(execute)--------------*/
 char        SETS_break           (int a_level, int a_rpos, int a_tpos);
 char        SETS_exec            (int a_level, int a_rpos, int a_tpos);
+char        SETS_rule            (char *a_text, int a_set);
 /*---(done)-----------------*/
 
 
