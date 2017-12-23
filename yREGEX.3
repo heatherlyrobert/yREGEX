@@ -68,9 +68,9 @@ documented elsewhere.
    {m}         exact match, instead of {m,m}
 
 .B new grouping variations
-   (...)       non-capturing group (hidden)
-   (#...)      capturing group
-   (>...<)     focus group, greatly reduces need for lookaheads
+   (...)      (...)     normal, non-capturing group
+   È...É      (#...)    capturing group
+   Í...Ì      (>...<)   focus group
 
 .B saved patterns for tried and true receipes
    &.    (&.....)    saved patterns for reuse by abbr or short name
@@ -91,9 +91,14 @@ documented elsewhere.
 .B new posix-type class variations
    [:greek:]   my greek letters at the top of ascii 8bit
 
-.B new rules
-   (;n=m)      compares two capture groups for exact match
-   (;n...)     contains an additional regex matching sequence
+.B new general purpose, sub-match rule
+   Ên...Ë     (;n...)   "regex" is an additional regex sequence
+
+.B new fast-evaluation, sub-match rules
+   Ên=mË      (;n=m)    "matches" two capture groups
+   Ên\\uË      (;n\\u)    "has a" finds standard set in capture group
+   Ên[...]Ë   (;n[...]) "has a" finds custom set in capture group
+   Ên~...Ë    (;n~...)  "contains" finds substring in capture group
 
 .SH RATIONAL LIMITS
 yREGEX is a 80% solution.  it is meant to fulfill my day-to-day needs while

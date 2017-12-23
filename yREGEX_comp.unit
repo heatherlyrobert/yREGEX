@@ -449,6 +449,15 @@ SCRP          v21  (comp  ) verify compiling rules                            
      get      v21  get current indx                     COMP__unit            "mods"         , 0                                                      s_equal     COMP mods        : 16 [00    *0 *  0=                               ]                                
      get      v21  get current jump                     COMP__unit            "jump"         , 0                                                      s_equal     COMP jump        : 16 [f4     4    23                               ]                                
 
+   GROUP      v21  backref style exact-match rule                               - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   - - - - -   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+
+   COND       v21  add a rule to check for digit                                - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.003))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+     exec     v21  compile the regex                    yREGEX_comp           "(#&w)(;1\\d)"                                                          i_equal     0                                                                                                    
+     get      v21  get current base                     COMP__unit            "base"         , 0                                                      s_equal     COMP base        : 10 [((<[>)(;))                                   ]                                
+     get      v21  get current indx                     COMP__unit            "indx"         , 0                                                      s_equal     COMP indx        : 10 [.16661a2a.                                   ]                                
+     get      v21  get current indx                     COMP__unit            "mods"         , 0                                                      s_equal     COMP mods        : 10 [00 *  0[                                     ]                                
+     get      v21  get current jump                     COMP__unit            "jump"         , 0                                                      s_equal     COMP jump        : 10 [94    27                                     ]                                
+
    GROUP      v21  freeform regex style rule                                    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   - - - - -   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
 
    COND       v21  add a literal rule to fileter the first group                - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.003))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  

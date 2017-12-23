@@ -14,6 +14,7 @@ RULE_comp            (int *a_rpos)
    int         x_ch2       =  ' ';
    int         x_len       =    0;
    char        t           [LEN_NAME] = "";
+   int         x_set       =    0;
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
@@ -69,15 +70,15 @@ RULE_comp            (int *a_rpos)
       ++(*a_rpos);
    }
    /*---(check simple backslash set)-----*/
-   if (x_len == 2 && x_ch2 == '\\') {
+   else if (x_len == 2 && x_ch2 == '\\') {
       DEBUG_YREGEX  yLOG_note    ("includes backslash set rule");
       ++(*a_rpos);
       x_ch2  = gre.regex [*a_rpos];
       DEBUG_YREGEX  yLOG_char    ("x_ch2"     , x_ch2);
-      if (strchr ("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", x_ch2) != NULL) {
-         COMP_add (';', x_ch);
-         COMP_mod ('\\');
-      }
+      x_set = SETS_by_abbr (x_ch2);
+      COMP_add (';', x_ch);
+      COMP_mod ('[');
+      gre.jump [gre.clen - 1] = x_set;
       ++(*a_rpos);
    }
    /*---(now regex)----------------------*/
