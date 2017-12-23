@@ -295,6 +295,7 @@ char  g_subq    [LEN_TEXT];
 #define       S_SUB_INSIDE       1
 #define       S_SUB_AFTER        2
 #define       S_SUB_DONE         3
+
 char    
 EXEC_sub             (int a_index, int a_paren)
 {
@@ -330,12 +331,12 @@ EXEC_sub             (int a_index, int a_paren)
    x_mod  = gre.mods [x_rpos];
    /*> printf ("   rpos %-2d, reg %c, indx %-2d, mod %c, rc %-2d\n", x_rpos, x_reg, x_indx, x_mod, rc);   <*/
    /*---(check for close)----------------*/
-   if (x_reg == ')' && x_indx == a_paren) {
+   if (strchr ("|)", x_reg) != NULL  && x_indx == a_paren) {
       /*> printf ("      close paren\n");                                             <*/
       return S_SUB_AFTER;
    }
    /*---(check for open)-----------------*/
-   if (x_reg == '(' && x_indx == a_paren) {
+   if (strchr ("(" , x_reg) != NULL  && x_indx == a_paren) {
       /*> printf ("      open paren\n");                                              <*/
       return S_SUB_INSIDE;
    }
@@ -472,21 +473,23 @@ char
 EXEC_launcher        (short a_level, short a_rpos, short a_tpos, char a_rc)
 {
    /*---(locals)-----------+-----+-----+-*/
+   uchar       x_reg       =  ' ';
    uchar       x_mod       =  ' ';
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    DEBUG_YREGEX  yLOG_complex ("header"    , "level %-3d, rpos %-3d, tpos %-3d, rc %-3d", a_level, a_rpos, a_tpos, a_rc);
    /*---(prepare)------------------------*/
+   x_reg       = gre.comp [a_rpos];
    x_mod       = gre.mods [a_rpos];
    DEBUG_YREGEX  yLOG_char    ("x_mod"     , x_mod);
    /*---(back launch some)---------------*/
-   if (strchr (G_ZERO, x_mod) != NULL) {
+   if (x_reg != ';' && strchr (G_ZERO, x_mod) != NULL) {
       DEBUG_YREGEX  yLOG_note    ("always back launch for *@?! types");
       EXEC_backpush (a_level, a_rpos + 1, a_tpos, -1);
    }
    /*---(always launch if successful)----*/
    if (a_rc > 0) {
-      if (strchr (G_MANY, x_mod) != NULL) {
+      if (x_reg != ';' && strchr (G_MANY, x_mod) != NULL) {
          DEBUG_YREGEX  yLOG_note    ("relaunch for successful *@ types");
          EXEC_push (a_level, a_rpos    , a_tpos + 1, -1);
       } else {

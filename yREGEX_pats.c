@@ -41,12 +41,14 @@ PATS__init           (void)
    /*---(locals)-----------+-----+-----+-*/
    int         i           =    0;
    int         j           =    0;
+   char       *x_valid     = "-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    /*---(initialize sets)----------------*/
    s_npat = 0;
    for (i = 0; i < MAX_PATS; ++i) {
       if (s_pats [i].abbr == 0)  break;
+      if (strchr (x_valid, s_pats [i].abbr) == NULL)  break;
       ++s_npat;
       s_pats [i].len  = strllen (s_pats [i].name, LEN_NAME);
       s_pats [i].size = strllen (s_pats [i].pat , LEN_PAT );

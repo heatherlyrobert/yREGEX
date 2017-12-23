@@ -120,6 +120,21 @@ RULE_comp            (int *a_rpos)
       }
       ++(*a_rpos);
    }
+   /*---(check simple rules)-------------*/
+   else if (x_len == 2 && x_ch2 == '!') {
+      DEBUG_YREGEX  yLOG_note    ("group not-equality/backref style rule");
+      ++(*a_rpos);
+      x_ch2  = gre.regex [*a_rpos];
+      DEBUG_YREGEX  yLOG_char    ("x_ch2"     , x_ch2);
+      if (strchr ("0123456789>", x_ch2) != NULL) {
+         if (x_ch2 == '>')  x_ch2 = GROUP_FOCUS;
+         else               x_ch2 = x_ch2 - '0' + 1;
+         COMP_add (';', x_ch);
+         COMP_mod ('!');
+         gre.jump [gre.clen - 1] = x_ch2;
+      }
+      ++(*a_rpos);
+   }
    /*---(check simple backslash set)-----*/
    else if (x_len == 2 && x_ch2 == '\\') {
       DEBUG_YREGEX  yLOG_note    ("includes backslash set rule");
@@ -202,6 +217,28 @@ RULE_exec            (short a_level, short a_rpos, short a_tpos, short a_index)
       } else {
          DEBUG_YREGEX  yLOG_note    ("FAIL");
          rc = 0;
+      }
+      /*---(complete)-----------------------*/
+      DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
+      DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+      /*---(prepare next)-------------------*/
+      EXEC_launcher (a_level, a_rpos, a_tpos, rc);
+   }
+   /*---(not-match)----------------------*/
+   else if (x_mod == '!') {
+      DEBUG_YREGEX  yLOG_note    ("executing a not-equal/match");
+      rc = EXEC_sub (a_index, x_one);
+      strlcpy (s1, g_subf, LEN_TEXT);
+      DEBUG_YREGEX  yLOG_info    ("s1"        , s1);
+      rc = EXEC_sub (a_index, x_two);
+      strlcpy (s2, g_subf, LEN_TEXT);
+      DEBUG_YREGEX  yLOG_info    ("s2"        , s2);
+      if (strcmp  (s1, s2) == 0) {
+         DEBUG_YREGEX  yLOG_note    ("FAIL");
+         rc = 0;
+      } else {
+         DEBUG_YREGEX  yLOG_note    ("pass");
+         rc = 1;
       }
       /*---(complete)-----------------------*/
       DEBUG_YREGEX  yLOG_value   ("rc"        , rc);

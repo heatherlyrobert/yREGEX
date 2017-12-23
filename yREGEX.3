@@ -68,9 +68,10 @@ documented elsewhere.
    {m}         exact match, instead of {m,m}
 
 .B new grouping variations
-   (...)      (...)     normal, non-capturing group
-   È...É      (#...)    capturing group
-   Í...Ì      (>...<)   focus group
+   (...)     (...)      normal, non-capturing group, [a-zA-Z]
+   (#...)    È...É      capturing group              [1-9]
+   (>...<)   Í...Ì      focus group                  [>]
+   ** after 9, capturing groups are just added to non-capturing
 
 .B saved patterns for tried and true receipes
    &.    (&.....)    saved patterns for reuse by abbr or short name
@@ -78,7 +79,7 @@ documented elsewhere.
    &i    (&int)      ... signed integer
    &b    (&byte)     ... and a byte in integer form
    &w    (&word)     ... word plus word boundaries
-   (&1)              pattern saved from a capture group
+   (&1)              pattern saved from 1st capture group
 
 .B new anchor variations
    <           beginning of word, hated \\b
@@ -92,13 +93,14 @@ documented elsewhere.
    [:greek:]   my greek letters at the top of ascii 8bit
 
 .B new general purpose, sub-match rule
-   Ên...Ë     (;n...)   "regex" is an additional regex sequence
+   (;n...)   Ên...Ë     "regex" is an additional regex sequence
 
 .B new fast-evaluation, sub-match rules
-   Ên=mË      (;n=m)    "matches" two capture groups
-   Ên\\uË      (;n\\u)    "has a" finds standard set in capture group
-   Ên[...]Ë   (;n[...]) "has a" finds custom set in capture group
-   Ên:...Ë    (;n:...)  "contains" finds substring in capture group
+   (;n=m)    Ên=mË      "matche" two capture groups
+   (;n!m)    Ên!mË      "not match" two capture groups
+   (;n\\u)    Ên\\uË      "has a" finds standard set in capture group
+   (;n[...]) Ên[...]Ë   "has a" finds custom set in capture group
+   (;n:...)  Ên:...Ë    "contains" finds substring in capture group
 
 .SH RATIONAL LIMITS
 yREGEX is a 80% solution.  it is meant to fulfill my day-to-day needs while

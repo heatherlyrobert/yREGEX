@@ -17,8 +17,8 @@ typedef   unsigned char  uchar;
 
 
 /* rapidly evolving version number to aid with visual change confirmation     */
-#define YREGEX_VER_NUM   "0.5h"
-#define YREGEX_VER_TXT   "rule for fast-evaluation, substring match working"
+#define YREGEX_VER_NUM   "0.5i"
+#define YREGEX_VER_TXT   "rule for fast-evaluation, substring not-match working"
 
 
 #define     MAX_REGEX       20
