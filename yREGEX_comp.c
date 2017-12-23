@@ -109,6 +109,7 @@ COMP__init           (cchar *a_regex)
    s_gfocus   = '-';
    /*---(initialize sets)----------------*/
    SETS_init ();
+   RULE_init ();
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
    return 0;
