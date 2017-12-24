@@ -55,6 +55,103 @@ RULE__add_str        (int *a_rpos)
    return s_nstr - 1;
 }
 
+#define     RULE_EQUAL    61
+#define     RULE_NEQUAL   181
+#define     RULE_LEQUAL   173
+#define     RULE_GEQUAL   174
+#define     RULE_LESSER   60
+#define     RULE_GREATER  62
+
+int
+RULE__operator       (int *a_rpos)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   uchar       x_comp1     =    0;
+   uchar       x_comp2     =    0;
+   int         x_oper      =    0;
+   /*---(header)-------------------------*/
+   DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
+   DEBUG_YREGEX  yLOG_sint    (*a_rpos);
+   /*---(check first)--------------------*/
+   x_comp1  = gre.regex [*a_rpos];
+   --rce;  if (x_comp1 <= 30 || x_comp1 > 126) {
+      DEBUG_YREGEX  yLOG_snote   ("illegal character");
+      DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
+      return rce;
+   }
+   DEBUG_YREGEX  yLOG_schar   (x_comp1);
+   --rce;  if (strchr ("=!<>", x_comp1) == NULL) {
+      DEBUG_YREGEX  yLOG_snote   ("not an operator");
+      DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
+      return rce;
+   }
+   ++(*a_rpos);
+   /*---(check second)-------------------*/
+   x_comp2  = gre.regex [*a_rpos];
+   DEBUG_YREGEX  yLOG_schar   (x_comp2);
+   if (x_comp2 == '=')  ++(*a_rpos);
+   /*---(assign)-------------------------*/
+   if (x_comp2 == '=') {
+      switch (x_comp1) {
+      case '=' :  x_oper = RULE_EQUAL;     break;
+      case '!' :  x_oper = RULE_NEQUAL;     break;
+      case '<' :  x_oper = RULE_LEQUAL;     break;
+      case '>' :  x_oper = RULE_GEQUAL;     break;
+      }
+   }
+   else {
+      switch (x_comp1) {
+      case '<' :  x_oper = RULE_LESSER;     break;
+      case '>' :  x_oper = RULE_GREATER;     break;
+      }
+   }
+   /*---(check results)------------------*/
+   --rce;  if (x_oper <= 0) {
+      --(*a_rpos);
+      DEBUG_YREGEX  yLOG_snote   ("operator not understood");
+      DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(readout)------------------------*/
+   DEBUG_YREGEX  yLOG_sint    (*a_rpos);
+   DEBUG_YREGEX  yLOG_sint    (x_oper);
+   /*---(complete)-----------------------*/
+   DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
+   return x_oper;
+}
+
+int
+RULE__group          (int *a_rpos)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   char        x_ch        =    0;
+   int         x_grp       =    0;
+   /*---(header)-------------------------*/
+   DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
+   DEBUG_YREGEX  yLOG_sint    (*a_rpos);
+   /*---(review)-------------------------*/
+   x_ch   = gre.regex [*a_rpos];
+   DEBUG_YREGEX  yLOG_schar   (x_ch);
+   --rce;  if (strchr ("0123456789>", x_ch) == NULL) {
+      DEBUG_YREGEX  yLOG_snote   ("not a capture group ref");
+      DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(adjust)-------------------------*/
+   DEBUG_YREGEX  yLOG_snote   ("good");
+   if (x_ch  == '>')  x_grp  = GROUP_FOCUS;
+   else               x_grp  = x_ch  - '0' + 1;
+   DEBUG_YREGEX  yLOG_sint    (x_grp);
+   /*---(move)---------------------------*/
+   ++(*a_rpos);
+   DEBUG_YREGEX  yLOG_sint    (*a_rpos);
+   /*---(complete)-----------------------*/
+   DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
+   return x_grp;
+}
+
 char         /*-> tbd --------------------------------[ ------ [fe.D54.156.65]*/ /*-[02.0000.01#.!]-*/ /*-[--.---.---.--]-*/
 RULE_comp            (int *a_rpos)
 {
@@ -66,6 +163,9 @@ RULE_comp            (int *a_rpos)
    int         x_ch2       =  ' ';
    int         x_len       =    0;
    char        t           [LEN_NAME] = "";
+   int         x_one       =    0;
+   int         x_two       =    0;
+   int         x_oper      =    0;
    int         x_set       =    0;
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
@@ -78,22 +178,14 @@ RULE_comp            (int *a_rpos)
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
+   ++(*a_rpos);
    /*---(check capture group id)---------*/
-   ++(*a_rpos);
-   DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
-   x_ch   = gre.regex [*a_rpos];
-   DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
-   --rce;  if (strchr ("0123456789>", gre.regex [*a_rpos]) == NULL) {
-      DEBUG_YREGEX  yLOG_note    ("does not have the capture group ref");
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
+   x_one = RULE__group (a_rpos);
+   if (x_one < 0) {
+      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, x_one);
+      return x_one;
    }
-   if (x_ch  == '>')  x_ch  = GROUP_FOCUS;
-   else               x_ch  = x_ch  - '0' + 1;
    /*---(check length)-------------------*/
-   ++(*a_rpos);
-   x_ch2  = gre.regex [*a_rpos];
-   DEBUG_YREGEX  yLOG_char    ("x_ch2"     , x_ch2);
    for (i = 0; i < 100; i ++) {
       if (gre.regex [*a_rpos + i] == 0  ) break;
       if (gre.regex [*a_rpos + i] == ')') break;
@@ -105,77 +197,69 @@ RULE_comp            (int *a_rpos)
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
+   /*---(prepare)------------------------*/
+   x_ch  = gre.regex [*a_rpos];
+   DEBUG_YREGEX  yLOG_char    ("x_ch"      , x_ch);
    /*---(check simple rules)-------------*/
-   if (x_len == 2 && x_ch2 == '=') {
-      DEBUG_YREGEX  yLOG_note    ("group equality/backref style rule");
-      ++(*a_rpos);
-      x_ch2  = gre.regex [*a_rpos];
-      DEBUG_YREGEX  yLOG_char    ("x_ch2"     , x_ch2);
-      if (strchr ("0123456789>", x_ch2) != NULL) {
-         if (x_ch2 == '>')  x_ch2 = GROUP_FOCUS;
-         else               x_ch2 = x_ch2 - '0' + 1;
-         COMP_add (';', x_ch);
-         COMP_mod ('=');
-         gre.jump [gre.clen - 1] = x_ch2;
+   if (strchr ("=!<>", x_ch) != NULL) {
+      DEBUG_YREGEX  yLOG_note    ("group comparison rules");
+      x_oper = RULE__operator (a_rpos);
+      if (x_oper < 0) {
+         DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, x_oper);
+         return x_oper;
       }
-      ++(*a_rpos);
-   }
-   /*---(check simple rules)-------------*/
-   else if (x_len == 2 && x_ch2 == '!') {
-      DEBUG_YREGEX  yLOG_note    ("group not-equality/backref style rule");
-      ++(*a_rpos);
-      x_ch2  = gre.regex [*a_rpos];
-      DEBUG_YREGEX  yLOG_char    ("x_ch2"     , x_ch2);
-      if (strchr ("0123456789>", x_ch2) != NULL) {
-         if (x_ch2 == '>')  x_ch2 = GROUP_FOCUS;
-         else               x_ch2 = x_ch2 - '0' + 1;
-         COMP_add (';', x_ch);
-         COMP_mod ('!');
-         gre.jump [gre.clen - 1] = x_ch2;
+      x_two  = RULE__group    (a_rpos);
+      if (x_two  < 0) {
+         DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, x_two);
+         return x_two;
       }
-      ++(*a_rpos);
+      COMP_add (';', x_one);
+      COMP_mod (x_oper);
+      gre.jump [gre.clen - 1] = x_two;
+      rc = 0;
+      --(*a_rpos);
    }
    /*---(check simple backslash set)-----*/
-   else if (x_len == 2 && x_ch2 == '\\') {
+   else if (x_len == 2 && x_ch == '\\') {
       DEBUG_YREGEX  yLOG_note    ("includes backslash set rule");
       ++(*a_rpos);
       x_ch2  = gre.regex [*a_rpos];
       DEBUG_YREGEX  yLOG_char    ("x_ch2"     , x_ch2);
       x_set = SETS_by_abbr (x_ch2);
-      COMP_add (';', x_ch);
+      COMP_add (';', x_one);
       COMP_mod ('[');
       gre.jump [gre.clen - 1] = x_set;
       ++(*a_rpos);
    }
    /*---(check custom set)---------------*/
-   else if (x_len >  2 && x_ch2 == '[') {
+   else if (x_len >  2 && x_ch == '[') {
       DEBUG_YREGEX  yLOG_note    ("includes custom set rule");
       rc = SETS_comp (a_rpos);
       gre.comp [gre.clen - 1] = ';';
       gre.mods [gre.clen - 1] = '[';
       gre.jump [gre.clen - 1] = gre.indx [gre.clen - 1];
-      gre.indx [gre.clen - 1] = x_ch;
+      gre.indx [gre.clen - 1] = x_one;
    }
    /*---(check substring)----------------*/
-   else if (x_len >= 2 && x_ch2 == ':') {
+   else if (x_len >= 2 && x_ch == ':') {
       DEBUG_YREGEX  yLOG_note    ("includes substring rule");
       ++(*a_rpos);
       x_set = RULE__add_str (a_rpos);
-      COMP_add (';', x_ch);
+      COMP_add (';', x_one);
       COMP_mod (':');
       gre.jump [gre.clen - 1] = x_set + 1;
    }
    /*---(now regex)----------------------*/
    else {
       DEBUG_YREGEX  yLOG_note    ("additional group filtering");
-      COMP_add (';', x_ch);
+      COMP_add (';', x_one);
       COMP_mod ('&');
       --(*a_rpos);
    }
-   /*---(failed)-------------------------*/
-   --rce;
-   DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-   return rce;
+   /*---(complete)-----------------------*/
+   DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
+   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+   return rc;
 }
 
 char
@@ -192,6 +276,7 @@ RULE_exec            (short a_level, short a_rpos, short a_tpos, short a_index)
    int         x_beg       =   -1;
    int         x_end       =   -1;
    int         x_len       =    0;
+   int         x_cmp       =   -1;
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    DEBUG_YREGEX  yLOG_complex ("header"    , "level %-3d, rpos %-3d, tpos %-3d, index %-3d", a_level, a_rpos, a_tpos, a_index);
@@ -203,7 +288,7 @@ RULE_exec            (short a_level, short a_rpos, short a_tpos, short a_index)
    x_mod       = gre.mods [a_rpos];
    DEBUG_YREGEX  yLOG_char    ("x_mod"     , x_mod);
    /*---(match)--------------------------*/
-   if (x_mod == '=') {
+   if (strchr ("=µ<>­®", x_mod) != NULL) {
       DEBUG_YREGEX  yLOG_note    ("executing a equal/match");
       rc = EXEC_sub (a_index, x_one);
       strlcpy (s1, g_subf, LEN_TEXT);
@@ -211,13 +296,18 @@ RULE_exec            (short a_level, short a_rpos, short a_tpos, short a_index)
       rc = EXEC_sub (a_index, x_two);
       strlcpy (s2, g_subf, LEN_TEXT);
       DEBUG_YREGEX  yLOG_info    ("s2"        , s2);
-      if (strcmp  (s1, s2) == 0) {
-         DEBUG_YREGEX  yLOG_note    ("pass");
-         rc = 1;
-      } else {
-         DEBUG_YREGEX  yLOG_note    ("FAIL");
-         rc = 0;
+      x_cmp = strcmp  (s1, s2);
+      rc = 0;
+      switch (x_mod) {
+      case '=' : if (x_cmp == 0)  rc = 1; break;
+      case 'µ' : if (x_cmp != 0)  rc = 1; break;
+      case '<' : if (x_cmp <  0)  rc = 1; break;
+      case '>' : if (x_cmp >  0)  rc = 1; break;
+      case '­' : if (x_cmp <= 0)  rc = 1; break;
+      case '®' : if (x_cmp >= 0)  rc = 1; break;
       }
+      if (rc == 1)  DEBUG_YREGEX  yLOG_note    ("pass");
+      else          DEBUG_YREGEX  yLOG_note    ("FAIL");
       /*---(complete)-----------------------*/
       DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
       DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);

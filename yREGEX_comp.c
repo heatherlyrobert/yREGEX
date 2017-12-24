@@ -601,6 +601,21 @@ COMP__extended       (void)
    for (i = 0; i <= gre.olen; ++i) {
       x_ch = gre.orig [i];
       switch (x_ch) {
+      case 182 :  /* not equal              */
+         t [x_len++] = '!';
+         t [x_len++] = '=';
+         t [x_len  ] =  0 ;
+         break;
+      case 173 :  /* less than or equal     */
+         t [x_len++] = '<';
+         t [x_len++] = '=';
+         t [x_len  ] =  0 ;
+         break;
+      case 174 :  /* greater than or equal  */
+         t [x_len++] = '>';
+         t [x_len++] = '=';
+         t [x_len  ] =  0 ;
+         break;
       case 183 :  /* space                  */
          t [x_len++] = ' ';
          t [x_len  ] =  0 ;

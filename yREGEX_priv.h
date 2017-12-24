@@ -17,8 +17,8 @@ typedef   unsigned char  uchar;
 
 
 /* rapidly evolving version number to aid with visual change confirmation     */
-#define YREGEX_VER_NUM   "0.5i"
-#define YREGEX_VER_TXT   "rule for fast-evaluation, substring not-match working"
+#define YREGEX_VER_NUM   "0.5j"
+#define YREGEX_VER_TXT   "all six substring matches working, with extended chars, and unit tested"
 
 
 #define     MAX_REGEX       20
@@ -184,6 +184,8 @@ char        FIND_next            (int  *a_beg, int *a_len);
 
 
 /*===[[ RULE ]]===============================*/
+int         RULE__group          (int *a_rpos);
+int         RULE__operator       (int *a_rpos);
 /*---(driver)---------------*/
 char        RULE_init            (void);
 char        RULE_comp            (int *a_rpos);
