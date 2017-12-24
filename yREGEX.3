@@ -96,10 +96,10 @@ documented elsewhere.
    (;n...)   Ên...Ë     "regex" is an additional regex sequence
 
 .B new fast-evaluation, sub-match rules
-   (;n==m)   Ên==mË     compare two capture group (==,!=,<,>,<=,>=)
-   (;n\\u)    Ên\\uË      "has a" finds standard set in capture group
-   (;n[...]) Ên[...]Ë   "has a" finds custom set in capture group
-   (;n:...)  Ên:...Ë    "contains" finds substring in capture group
+   (;n==m)   Ên==mË     compare two capture groups (==,!=,<,>,<=,>=)
+   (;n\\u)    Ên\\uË      capture group has a char in standard set
+   (;n[...]) Ên[...]Ë   capture group has a char in custom set
+   (;n:...)  Ên:...Ë    capture group contains substring
 
 .SH RATIONAL LIMITS
 yREGEX is a 80% solution.  it is meant to fulfill my day-to-day needs while

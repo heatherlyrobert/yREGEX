@@ -704,6 +704,8 @@ yREGEX_comp          (cchar *a_regex)
    DEBUG_YREGEX  yLOG_info    ("gre.regex" , gre.regex);
    DEBUG_YREGEX  yLOG_point   ("gre.rlen"  , gre.rlen);
    for (i = 0; i < gre.rlen; ++i) {
+      /*---(check last run)--------------*/
+      if (rc < 0) break;
       DEBUG_YREGEX  yLOG_value   ("LOOP"      , i);
       /*---(prepare)---------------------*/
       x_ch   = gre.regex [i];
@@ -725,7 +727,8 @@ yREGEX_comp          (cchar *a_regex)
          DEBUG_YREGEX  yLOG_note    ("handle special rules");
          rc = COMP__group (&i);
          rc = RULE_comp   (&i);
-         if (rc >= 0)  continue;
+         /*> if (rc >= 0)  continue;                                                  <*/
+         continue;
       }
       /*---(group handling)--------------*/
       if (strchr (TYPE_GROUP, x_ch) != NULL || (x_ch == '<' && x_nch == ')')) {
@@ -760,6 +763,12 @@ yREGEX_comp          (cchar *a_regex)
       /*---(literals)--------------------*/
       DEBUG_YREGEX  yLOG_note    ("handle character literal");
       rc = COMP__literal (&i);
+   }
+   /*---(check for failure)--------------*/
+   if (rc < 0) {
+      DEBUG_YREGEX  yLOG_note    ("compilation failed");
+      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rc);
+      return rc;
    }
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);

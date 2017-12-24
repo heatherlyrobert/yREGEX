@@ -201,6 +201,7 @@ RULE_comp            (int *a_rpos)
    x_ch  = gre.regex [*a_rpos];
    DEBUG_YREGEX  yLOG_char    ("x_ch"      , x_ch);
    /*---(check simple rules)-------------*/
+   -rce;
    if (strchr ("=!<>", x_ch) != NULL) {
       DEBUG_YREGEX  yLOG_note    ("group comparison rules");
       x_oper = RULE__operator (a_rpos);
@@ -212,6 +213,11 @@ RULE_comp            (int *a_rpos)
       if (x_two  < 0) {
          DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, x_two);
          return x_two;
+      }
+      if (gre.regex [*a_rpos] != ')') {
+         DEBUG_YREGEX  yLOG_note    ("does not end with paren");
+         DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
+         return rce;
       }
       COMP_add (';', x_one);
       COMP_mod (x_oper);
