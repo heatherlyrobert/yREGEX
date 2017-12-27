@@ -82,12 +82,12 @@ documented elsewhere.
    (&1)              pattern saved from 1st capture group
 
 .B new anchor variations
-   <           beginning of word, hated \\b
-   >           end of word      , hated \\B
+   <           beginning of word, hated ·b
+   >           end of word      , hated ·B
 
 .B new escape variations
-   \\f  \\F      field and group separators in my files (or not)
-   \\g  \\G      greek letter, same as [:greek:] below (or not)
+   ·f  ·F      field and group separators in my files (or not)
+   ·g  ·G      greek letter, same as [:greek:] below (or not)
 
 .B new posix-type class variations
    [:greek:]   my greek letters at the top of ascii 8bit
@@ -96,10 +96,17 @@ documented elsewhere.
    (;n...)   Ên...Ë     "regex" is an additional regex sequence
 
 .B new fast-evaluation, sub-match rules
-   (;n==m)   Ên==mË     compare two capture groups (==,!=,<,>,<=,>=)
-   (;n\\u)    Ên\\uË      capture group has a char in standard set
-   (;n[...]) Ên[...]Ë   capture group has a char in custom set
-   (;n:...)  Ên:...Ë    capture group contains substring
+   (;n==m)     Ên==mË     two capture groups must match exactly
+   (;n!=m)     Ên!=mË     two groups must be different
+   (;n<m)      Ên<mË      first group must sort earlier
+   (;n>m)      Ên>mË      first group must sort later
+   (;n<=m)     Ên<=mË     first group must sort same or earlier
+   (;n>=m)     Ên>=mË     first group must sort same or later
+   (;n+...)    Ên+...Ë    capture group contains the substring
+   (;n-...)    Ên-...Ë    capture group does not contain substring
+   (;n·u)      Ên·uË      capture group has a char in standard set
+   (;n[...])   Ên[...]Ë   capture group has a char in custom set
+   (;n[^...])  Ên[^...]Ë  capture group does not have any char in set
 
 .SH RATIONAL LIMITS
 yREGEX is a 80% solution.  it is meant to fulfill my day-to-day needs while

@@ -89,9 +89,15 @@ COMP__init           (cchar *a_regex)
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
+   /*---(translate extended chars)-------*/
+   DEBUG_YREGEX  yLOG_info    ("before"    , gre.orig);
+   gre.olen = strllen (gre.orig  , LEN_REGEX);
+   DEBUG_YREGEX  yLOG_value   ("gre.olen"  , gre.olen);
+   COMP__extended ();
    DEBUG_YREGEX  yLOG_info    ("gre.orig"  , gre.orig);
    gre.olen = strllen (gre.orig  , LEN_REGEX);
    DEBUG_YREGEX  yLOG_value   ("gre.olen"  , gre.olen);
+   /*---(copy regex)---------------------*/
    strlcpy  (gre.regex, gre.orig , LEN_REGEX);
    gre.rlen = gre.olen;
    /*---(initialize compiled)------------*/
@@ -110,6 +116,7 @@ COMP__init           (cchar *a_regex)
    /*---(initialize sets)----------------*/
    SETS_init ();
    RULE_init ();
+   gre.ready = '-';
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
    return 0;
@@ -601,22 +608,31 @@ COMP__extended       (void)
    for (i = 0; i <= gre.olen; ++i) {
       x_ch = gre.orig [i];
       switch (x_ch) {
-      case 182 :  /* not equal              */
+
+      case G_CHAR_DBSLASH :  /* delayed backslash      */
+         t [x_len++] = '\\';
+         t [x_len  ] =  0 ;
+         break;
+      case G_CHAR_DDQUOTE :  /* delayed double quote   */
+         t [x_len++] = '\\';
+         t [x_len  ] =  0 ;
+         break;
+      case G_CHAR_NE :  /* not equal              */
          t [x_len++] = '!';
          t [x_len++] = '=';
          t [x_len  ] =  0 ;
          break;
-      case 173 :  /* less than or equal     */
+      case G_CHAR_LE :  /* less than or equal     */
          t [x_len++] = '<';
          t [x_len++] = '=';
          t [x_len  ] =  0 ;
          break;
-      case 174 :  /* greater than or equal  */
+      case G_CHAR_GE :  /* greater than or equal  */
          t [x_len++] = '>';
          t [x_len++] = '=';
          t [x_len  ] =  0 ;
          break;
-      case 183 :  /* space                  */
+      case G_CHAR_SPACE :  /* space                  */
          t [x_len++] = ' ';
          t [x_len  ] =  0 ;
          break;
@@ -690,7 +706,6 @@ yREGEX_comp          (cchar *a_regex)
       return rc;
    }
    /*---(translate)----------------------*/
-   rc = COMP__extended ();
    DEBUG_YREGEX  yLOG_info    ("tranlated" , gre.orig);
    DEBUG_YREGEX  yLOG_point   ("gre.olen"  , gre.olen);
    /*---(pattern run)--------------------*/
@@ -739,8 +754,8 @@ yREGEX_comp          (cchar *a_regex)
       /*---(anchors)---------------------*/
       if (strchr (G_ANCHOR, x_ch) != NULL) {
          DEBUG_YREGEX  yLOG_note    ("handle anchors");
-         COMP_add (x_ch, SETS_by_abbr ('w'));
-         continue;
+         rc = COMP_add (x_ch, SETS_by_abbr ('w'));
+         if (rc >= 0)  continue;
       }
       /*---(set handling)----------------*/
       if (x_ch == '[') {
@@ -768,8 +783,10 @@ yREGEX_comp          (cchar *a_regex)
    if (rc < 0) {
       DEBUG_YREGEX  yLOG_note    ("compilation failed");
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rc);
+      gre.ready = 'n';
       return rc;
    }
+   gre.ready = 'y';
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
    return 0;

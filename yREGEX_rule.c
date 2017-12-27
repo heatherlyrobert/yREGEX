@@ -55,13 +55,6 @@ RULE__add_str        (int *a_rpos)
    return s_nstr - 1;
 }
 
-#define     RULE_EQUAL    61
-#define     RULE_NEQUAL   181
-#define     RULE_LEQUAL   173
-#define     RULE_GEQUAL   174
-#define     RULE_LESSER   60
-#define     RULE_GREATER  62
-
 int
 RULE__operator       (int *a_rpos)
 {
@@ -94,16 +87,16 @@ RULE__operator       (int *a_rpos)
    /*---(assign)-------------------------*/
    if (x_comp2 == '=') {
       switch (x_comp1) {
-      case '=' :  x_oper = RULE_EQUAL;     break;
-      case '!' :  x_oper = RULE_NEQUAL;     break;
-      case '<' :  x_oper = RULE_LEQUAL;     break;
-      case '>' :  x_oper = RULE_GEQUAL;     break;
+      case '=' :  x_oper = G_CHAR_EQ;     break;
+      case '!' :  x_oper = G_CHAR_NE;     break;
+      case '<' :  x_oper = G_CHAR_LE;     break;
+      case '>' :  x_oper = G_CHAR_GE;     break;
       }
    }
    else {
       switch (x_comp1) {
-      case '<' :  x_oper = RULE_LESSER;     break;
-      case '>' :  x_oper = RULE_GREATER;     break;
+      case '<' :  x_oper = G_CHAR_LT;     break;
+      case '>' :  x_oper = G_CHAR_GT;     break;
       }
    }
    /*---(check results)------------------*/
@@ -232,28 +225,41 @@ RULE_comp            (int *a_rpos)
       x_ch2  = gre.regex [*a_rpos];
       DEBUG_YREGEX  yLOG_char    ("x_ch2"     , x_ch2);
       x_set = SETS_by_abbr (x_ch2);
+      if (x_set <= 0) {
+         DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, x_set);
+         return rce;
+      }
       COMP_add (';', x_one);
       COMP_mod ('[');
       gre.jump [gre.clen - 1] = x_set;
-      ++(*a_rpos);
+      rc = 0;
+      /*> ++(*a_rpos);                                                                <*/
    }
    /*---(check custom set)---------------*/
    else if (x_len >  2 && x_ch == '[') {
-      DEBUG_YREGEX  yLOG_note    ("includes custom set rule");
+      DEBUG_YREGEX  yLOG_note    ("includes posix/custom set rule");
+      if (gre.regex [*a_rpos + 1] == '^')   x_ch = ']';
       rc = SETS_comp (a_rpos);
+      if (rc < 0) {
+         DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rc);
+         return rc;
+      }
       gre.comp [gre.clen - 1] = ';';
-      gre.mods [gre.clen - 1] = '[';
+      gre.mods [gre.clen - 1] = x_ch;
       gre.jump [gre.clen - 1] = gre.indx [gre.clen - 1];
       gre.indx [gre.clen - 1] = x_one;
+      rc = 0;
    }
    /*---(check substring)----------------*/
-   else if (x_len >= 2 && x_ch == ':') {
+   else if (strchr ("+-", x_ch) != NULL) {
       DEBUG_YREGEX  yLOG_note    ("includes substring rule");
       ++(*a_rpos);
       x_set = RULE__add_str (a_rpos);
       COMP_add (';', x_one);
-      COMP_mod (':');
+      COMP_mod (x_ch);
       gre.jump [gre.clen - 1] = x_set + 1;
+      --(*a_rpos);
+      rc = 0;
    }
    /*---(now regex)----------------------*/
    else {
@@ -261,6 +267,7 @@ RULE_comp            (int *a_rpos)
       COMP_add (';', x_one);
       COMP_mod ('&');
       --(*a_rpos);
+      rc = 0;
    }
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
@@ -293,108 +300,62 @@ RULE_exec            (short a_level, short a_rpos, short a_tpos, short a_index)
    DEBUG_YREGEX  yLOG_value   ("x_two"     , x_two);
    x_mod       = gre.mods [a_rpos];
    DEBUG_YREGEX  yLOG_char    ("x_mod"     , x_mod);
-   /*---(match)--------------------------*/
-   if (strchr ("=╡<>но", x_mod) != NULL) {
-      DEBUG_YREGEX  yLOG_note    ("executing a equal/match");
-      rc = EXEC_sub (a_index, x_one);
-      strlcpy (s1, g_subf, LEN_TEXT);
-      DEBUG_YREGEX  yLOG_info    ("s1"        , s1);
+   rc = EXEC_sub (a_index, x_one);
+   strlcpy (s1, g_subf, LEN_TEXT);
+   DEBUG_YREGEX  yLOG_info    ("s1"        , s1);
+   /*---(capture group match-------------*/
+   if (strchr ("=п<>но", x_mod) != NULL) {
+      DEBUG_YREGEX  yLOG_note    ("executing a capture group match");
       rc = EXEC_sub (a_index, x_two);
       strlcpy (s2, g_subf, LEN_TEXT);
       DEBUG_YREGEX  yLOG_info    ("s2"        , s2);
       x_cmp = strcmp  (s1, s2);
       rc = 0;
       switch (x_mod) {
-      case '=' : if (x_cmp == 0)  rc = 1; break;
-      case '╡' : if (x_cmp != 0)  rc = 1; break;
-      case '<' : if (x_cmp <  0)  rc = 1; break;
-      case '>' : if (x_cmp >  0)  rc = 1; break;
-      case 'н' : if (x_cmp <= 0)  rc = 1; break;
-      case 'о' : if (x_cmp >= 0)  rc = 1; break;
+      case G_CHAR_EQ : if (x_cmp == 0)  rc = 1; break;
+      case G_CHAR_NE : if (x_cmp != 0)  rc = 1; break;
+      case G_CHAR_LT : if (x_cmp <  0)  rc = 1; break;
+      case G_CHAR_GT : if (x_cmp >  0)  rc = 1; break;
+      case G_CHAR_LE : if (x_cmp <= 0)  rc = 1; break;
+      case G_CHAR_GE : if (x_cmp >= 0)  rc = 1; break;
       }
-      if (rc == 1)  DEBUG_YREGEX  yLOG_note    ("pass");
-      else          DEBUG_YREGEX  yLOG_note    ("FAIL");
-      /*---(complete)-----------------------*/
-      DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
-      DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
-      /*---(prepare next)-------------------*/
-      EXEC_launcher (a_level, a_rpos, a_tpos, rc);
-   }
-   /*---(not-match)----------------------*/
-   else if (x_mod == '!') {
-      DEBUG_YREGEX  yLOG_note    ("executing a not-equal/match");
-      rc = EXEC_sub (a_index, x_one);
-      strlcpy (s1, g_subf, LEN_TEXT);
-      DEBUG_YREGEX  yLOG_info    ("s1"        , s1);
-      rc = EXEC_sub (a_index, x_two);
-      strlcpy (s2, g_subf, LEN_TEXT);
-      DEBUG_YREGEX  yLOG_info    ("s2"        , s2);
-      if (strcmp  (s1, s2) == 0) {
-         DEBUG_YREGEX  yLOG_note    ("FAIL");
-         rc = 0;
-      } else {
-         DEBUG_YREGEX  yLOG_note    ("pass");
-         rc = 1;
-      }
-      /*---(complete)-----------------------*/
-      DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
-      DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
-      /*---(prepare next)-------------------*/
-      EXEC_launcher (a_level, a_rpos, a_tpos, rc);
    }
    /*---(has a set)----------------------*/
-   else if (x_mod == '[') {
+   else if (strchr ("[]", x_mod) != NULL) {
       DEBUG_YREGEX  yLOG_note    ("executing a has-a match");
-      rc = EXEC_sub (a_index, x_one);
-      strlcpy (s1, g_subf, LEN_TEXT);
-      DEBUG_YREGEX  yLOG_info    ("s1"        , s1);
-      rc = SETS_rule (s1, x_two);
-      /*---(complete)-----------------------*/
-      DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
-      DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
-      /*---(prepare next)-------------------*/
-      EXEC_launcher (a_level, a_rpos, a_tpos, rc);
+      switch (x_mod) {
+      case '[' :  rc = SETS_rule     (s1, x_two);   break;
+      case ']' :  rc = SETS_rule_rev (s1, x_two);   break;
+      }
    }
    /*---(substring)----------------------*/
-   else if (x_mod == ':') {
+   else if (strchr ("+-", x_mod) != NULL) {
       DEBUG_YREGEX  yLOG_note    ("executing a substring match");
-      rc = EXEC_sub (a_index, x_one);
-      strlcpy (s1, g_subf, LEN_TEXT);
-      DEBUG_YREGEX  yLOG_info    ("s1"        , s1);
       strlcpy (s2, s_strs [x_two - 1].str, LEN_TEXT);
       DEBUG_YREGEX  yLOG_info    ("s2"        , s2);
-      if (strstr  (s1, s2) != NULL) {
-         DEBUG_YREGEX  yLOG_note    ("pass");
-         rc = 1;
-      } else {
-         DEBUG_YREGEX  yLOG_note    ("FAIL");
-         rc = 0;
+      x_cmp = strstr  (s1, s2);
+      rc = 0;
+      switch (x_mod) {
+      case '+'       : if (x_cmp != 0)  rc = 1; break;
+      case '-'       : if (x_cmp == 0)  rc = 1; break;
       }
-      /*---(complete)-----------------------*/
-      DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
-      DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
-      /*---(prepare next)-------------------*/
-      EXEC_launcher (a_level, a_rpos, a_tpos, rc);
    }
    /*---(execute)------------------------*/
    else if (x_mod == '&') {
       DEBUG_YREGEX  yLOG_note    ("executing a freeform match");
-      rc = EXEC_sub (a_index, x_one);
-      strlcpy (s1, g_subf, LEN_TEXT);
-      DEBUG_YREGEX  yLOG_info    ("s1"        , s1);
       x_indx  = EXEC_indx (a_index);
-      /*> printf ("-----------\n");                                                   <*/
-      /*> printf ("AND, level %-3d, rpos %-3d, tpos %-3d, indx %-3d\n", a_level, a_rpos, a_tpos, x_indx);   <*/
       rc  = EXEC_tpos (a_index, x_indx, &x_beg, &x_end);
-      /*> printf ("AND, returned x_beg %-3d, x_end %-3d\n", x_beg, x_end);            <*/
       DEBUG_YREGEX  yLOG_complex ("tpos"      , "indx %-3d, beg %-3d, end %-3d", x_indx, x_beg, x_end);
-      DEBUG_YREGEX  yLOG_note    ("launch next for all successful steps");
-      /*---(complete)-----------------------*/
-      DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
-      EXEC_push (a_level, a_rpos + 1, x_beg, x_end + 1);
-      DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
    }
-   /*---(return)-------------------------*/
+   /*---(report)-------------------------*/
+   if (rc == 1)  DEBUG_YREGEX  yLOG_note    ("pass");
+   else          DEBUG_YREGEX  yLOG_note    ("FAIL");
+   DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
+   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+   /*---(prepare next)-------------------*/
+   if (x_mod == '&')  EXEC_push     (a_level, a_rpos + 1, x_beg, x_end + 1);
+   else               EXEC_launcher (a_level, a_rpos, a_tpos, rc);
+   /*---(complete)-----------------------*/
    return rc;
 }
 

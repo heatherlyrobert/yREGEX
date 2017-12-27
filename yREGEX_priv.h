@@ -17,8 +17,8 @@ typedef   unsigned char  uchar;
 
 
 /* rapidly evolving version number to aid with visual change confirmation     */
-#define YREGEX_VER_NUM   "0.5k"
-#define YREGEX_VER_TXT   "made existing rule evaluation catch more errors"
+#define YREGEX_VER_NUM   "0.5l"
+#define YREGEX_VER_TXT   "all unit tests pass again after better comp error checking"
 
 
 #define     MAX_REGEX       20
@@ -62,6 +62,7 @@ struct      cREGEX {
    uchar       regex       [LEN_REGEX];    /* regex source                    */
    int         rlen;                       /* length of source regex          */
    /*---(compiled regex)-----------------*/
+   char        ready;                      /* compilied correctly and ready   */
    uchar       comp        [LEN_REGEX];    /* compilied regex chars           */
    int         indx        [LEN_REGEX];    /* compilied regex group/set index */
    uchar       mods        [LEN_REGEX];    /* compilied regex modifier        */
@@ -105,6 +106,7 @@ char        COMP__quan_complex   (int *a_rpos);
 /*---(groups)---------------*/
 int         COMP_group_beg       (int  a_rpos);
 int         COMP_group_end       (int  a_rpos);
+char        COMP__extended       (void);
 
 
 
@@ -150,6 +152,7 @@ char        SETS_list            (void);
 char        SETS_break           (int a_level, int a_rpos, int a_tpos);
 char        SETS_exec            (int a_level, int a_rpos, int a_tpos);
 char        SETS_rule            (char *a_text, int a_set);
+char        SETS_rule_rev        (char *a_text, int a_set);
 /*---(done)-----------------*/
 
 
