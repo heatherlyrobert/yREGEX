@@ -2,6 +2,14 @@
 #include    "yREGEX.h"
 #include    "yREGEX_priv.h"
 
+/*
+ *
+ * metis  mw4··  additional unit testing and debugging on find algorithm
+ * metis  mw4··  external function to return primary focus group pos/len
+ * metis  ml1··  investigate switching to malloc for find results
+ *
+ *
+ */
 
 
 #define     MAX_FIND    1000

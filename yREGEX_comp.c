@@ -608,13 +608,20 @@ COMP__extended       (void)
    for (i = 0; i <= gre.olen; ++i) {
       x_ch = gre.orig [i];
       switch (x_ch) {
-
+      case G_CHAR_STORAGE : case G_CHAR_BIGDOT  : case G_CHAR_HUGE    : 
+      case G_CHAR_HALT    : case G_CHAR_MASK    :  /* just a spacer, not used  */
+         break;
       case G_CHAR_DBSLASH :  /* delayed backslash      */
          t [x_len++] = '\\';
          t [x_len  ] =  0 ;
          break;
       case G_CHAR_DDQUOTE :  /* delayed double quote   */
-         t [x_len++] = '\\';
+         t [x_len++] = '\"';
+         t [x_len  ] =  0 ;
+         break;
+      case G_CHAR_EQUIV :  /* equal                  */
+         t [x_len++] = '=';
+         t [x_len++] = '=';
          t [x_len  ] =  0 ;
          break;
       case G_CHAR_NE :  /* not equal              */
@@ -636,33 +643,31 @@ COMP__extended       (void)
          t [x_len++] = ' ';
          t [x_len  ] =  0 ;
          break;
-      case 200 :  /* begin capture group    */
+      case G_CHAR_SLPAREN :  /* begin capture group    */
          t [x_len++] = '(';
          t [x_len++] = '#';
          t [x_len  ] =  0 ;
          break;
-      case 201 :  /* end capture group      */
+      case G_CHAR_SRPAREN :  /* end capture group      */
          t [x_len++] = ')';
          t [x_len  ] =  0 ;
          break;
-      case 204 :  /* begin focus group      */
+      case G_CHAR_SLCHEV :  /* begin focus group      */
          t [x_len++] = '(';
          t [x_len++] = '>';
          t [x_len  ] =  0 ;
          break;
-      case 205 :  /* end focus group        */
+      case G_CHAR_SRCHEV :  /* end focus group        */
          t [x_len++] = '<';
          t [x_len++] = ')';
          t [x_len  ] =  0 ;
          break;
-      case 194 :  /* begin rule group       */
-      case 202 :
+      case G_CHAR_SLBRACK :  /* begin rule group       */
          t [x_len++] = '(';
          t [x_len++] = ';';
          t [x_len  ] =  0 ;
          break;
-      case 195 :  /* end rule group         */
-      case 203 :
+      case G_CHAR_SRBRACK :  /* end rule group         */
          t [x_len++] = ')';
          t [x_len  ] =  0 ;
          break;

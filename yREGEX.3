@@ -1,7 +1,18 @@
 .TH yREGEX 3 2017-nov "linux" "heatherly custom tools manual"
+.na
 
 .SH NAME
 yREGEX \- small, fast, clean, and custom regular expression library
+
+.SH SUMMARY
+yREGEX is a small, fast, day-to-day library for regular expression processing
+that provides tailored and uniform regex support across my platform and into
+every application and tool.
+
+.SH CAVEAT
+i wanted to understand, learn, and never need to migrate, so i built it.  if you
+want cutting-edge coverage, data warehousing speeds, runtime optimization,
+and perfect results, buy a commercial library ;)
 
 .SH SYNOPSIS
 .nf
@@ -12,38 +23,79 @@ yREGEX \- small, fast, clean, and custom regular expression library
 .BI "char  yREGEX_exec  (cchar *" "a_text " ");"
 .BI "char  yREGEX_find  (cchar  " "a_type " ", cchar " "a_side" ", int *" "a_beg" ", int *" "a_len" ");"
 .sp
----(conversion)--------------------------------
-.sp
----(logging/unit testing)----------------------
-.BI "char* yREGEX_version    (void);"
-.BI "char  yREGEX__unitquiet (void);"
-.BI "char  yREGEX__unitloud  (void);"
-.BI "char  COMP__unit        (char *" "a_question" ", int " "a_num" ");"
-.BI "char  FIND__unit        (char *" "a_question" ", int " "a_num" ");"
-.BI "char  PATS__unit        (char *" "a_question" ", int " "a_num" ");"
-.BI "char  SETS__unit        (char *" "a_question" ", int " "a_num" ");"
-.BI "char  yREGEX__unitend   (void);"
-.sp
 .B link with -L/usr/local/libs -lyREGEX or -lyREGEX_debug
 
+.SH LANGUAGE DEFINITION
+yREGEX uses the 14 posix standard regular expression meta-characters, plus a
+few additional ones (and my extended ascii) for ease and more functionality.
+this will not explain regular expressions in detail.
+
+.B characters ------------------------------------------- posix
+   .               any character
+   µ.              explicitly a period
+   µw µs µd µp     :word:, :space:, :digit:, :punct:
+   µa µl µu µg µx  :alpha:, :lower:, :upper:, :greek:, :xdigi:
+   µf µt µe µn µc  field, tab, escape, return, control
+   µW µD µS µF µG  reverse of those above
+
+.B quanfifiers ------------------------------------------ posix
+   ?      !        one or none, greedy and lazy        (not ??)
+   +      ~        one or more, greedy and lazy        (not +?)
+   *      @        zero or more, greedy and lazy       (not *?)
+   {m}             exactly m times
+   {m,n}  {-m,n}   m to n times, greedy and lazy
+   {n}             up to n times
+
+.B logic and grouping ----------------------------------- posix too
+   |               alternation (either-or)
+   (...)           default, non-capturing group        (...)
+   ∏...π           capturing group (1 - 9) explicit    (#...)
+   º...Ω           focus group for final positioning   (>...<)
+
+.B classes ---------------------------------------------- posix
+   [...]           any one of the characters included
+   [^...]          not any of the characters included
+   m-n             any character between m and n (inclusive) 
+
+.B anchors ---------------------------------------------- posix
+   ^     $         begin and end of string
+   <     >         begin and end of word               (not µb µB)
+
+.B saved patterns --------------------------------------- posix
+   &.    (&.....)    saved patterns for reuse by abbr or short name
+   &f    (&float)    ... float number
+   &i    (&int)      ... signed integer
+   &b    (&byte)     ... and a byte in integer form
+   &w    (&word)     ... word plus word boundaries
+   (&1)              pattern saved from 1st capture group
+
+.B sub-match rules -------------------------------------- posix too
+   ∫nÂmª      two capture groups must match            (;n==m)
+   ∫nﬂmª      two groups must be different             (;n!=m)
+   ∫n<mª      first group must sort earlier            (;n<m)
+   ∫n>mª      first group must sort later              (;n>m)
+   ∫n›mª      first group must sort same or earlier    (;n<=m)
+   ∫nﬁmª      first group must sort same or later      (;n>=m)
+   ∫n+...ª    contains the substring                   (;n+...)
+   ∫n-...ª    does not contain substring               (;n-...)
+   ∫nµuª      has a char in standard set               (;nµu)
+   ∫n[...]ª   has a char in custom set                 (;n[...])
+   ∫n[^...]ª  does not have any char in set            (;n[^...])
+   ∫n...ª     freeform regex sequence for matching     (;n...)
+
+.B spacers (for readability) ---------------------------- new
+   ≤ ¥ ≥ ± ¨      used in any combination or number
+   ≤≤≤∫...ª       sometimes this before the rule section can help
+   ∫...ª¥∫...ª    the medium dot is nice between rules for clarity
+
 .SH FLAWS
-.B not re-entrant (yet).  
+.B not re-entrant.  
+can not be used on two regex patterns simultaneously.
 
-.B no back references (yet).  
-mainly for xml, html, etc tags
-
-.B no filtering, like pos/neg look-aheads (yet).  
-
-.B finds different primary solutions that standard libraries.
-since it is not recursive (great), that means it does not give priority to
-first branches, etc like a recursive algorighm does.
+.B not recursive,
+so different solution orders that standard libraries.
 
 .SH POSSIBLE FEATURES
-.B pipelining
-maybe use the semi-colon to provide a secondard regex for evaluating the result
-of the previous regex.  this would allow me to implement rules for content, like
-a password must contain a number, lower, upper, and punctuation.
-
 .B solution prefixing
 many modern regex examples are based on a recursive algorithm to find the
 first branch of an "or" first.  but, mine does not.  so, i could use a prefix
@@ -53,65 +105,6 @@ to indicate the solution evaluation, like greediest, laziest, etc.
    !          leftmost, laziest
    ?          leftmost, greediest
    *          overall greediest
-
-.SH LANGUAGE ADDITIONS
-yREGEX uses the 14 standard extended regular expression meta-characters,
-plus a few additional ones for either ease or more functionality.  i will
-not explain regular expressions or the standard characters, that is well
-documented elsewhere.
-
-.B new quantifier variations
-   @           lazy version of 0-many, hated *? notation
-   ~           lazy version of 1-many, hated +? notation
-   !           lazy version of 0-1   , hated ?? notation
-   {-...}      lazy version of {...} , common notation
-   {m}         exact match, instead of {m,m}
-
-.B new grouping variations
-   (...)     (...)      normal, non-capturing group, [a-zA-Z]
-   (#...)    »...…      capturing group              [1-9]
-   (>...<)   Õ...Ã      focus group                  [>]
-   ** after 9, capturing groups are just added to non-capturing
-
-.B saved patterns for tried and true receipes
-   &.    (&.....)    saved patterns for reuse by abbr or short name
-   &f    (&float)    regex pattern for a float number
-   &i    (&int)      ... signed integer
-   &b    (&byte)     ... and a byte in integer form
-   &w    (&word)     ... word plus word boundaries
-   (&1)              pattern saved from 1st capture group
-
-.B new anchor variations
-   <           beginning of word, hated ∑b
-   >           end of word      , hated ∑B
-
-.B new escape variations
-   ∑f  ∑F      field and group separators in my files (or not)
-   ∑g  ∑G      greek letter, same as [:greek:] below (or not)
-
-.B new posix-type class variations
-   [:greek:]   my greek letters at the top of ascii 8bit
-
-.B new general purpose, sub-match rule
-   (;n...)    n...À     "regex" is an additional regex sequence
-
-.B new fast-evaluation, sub-match rules
-   (;n==m)      n==mÀ     two capture groups must match exactly
-   (;n!=m)      n!=mÀ     two groups must be different
-   (;n<m)       n<mÀ      first group must sort earlier
-   (;n>m)       n>mÀ      first group must sort later
-   (;n<=m)      n<=mÀ     first group must sort same or earlier
-   (;n>=m)      n>=mÀ     first group must sort same or later
-   (;n+...)     n+...À    capture group contains the substring
-   (;n-...)     n-...À    capture group does not contain substring
-   (;n∑u)       n∑uÀ      capture group has a char in standard set
-   (;n[...])    n[...]À   capture group has a char in custom set
-   (;n[^...])   n[^...]À  capture group does not have any char in set
-
-.SH RATIONAL LIMITS
-yREGEX is a 80% solution.  it is meant to fulfill my day-to-day needs while
-being maintainable, flexible, and tailored.  if i need serious regex crunching,
-i will use a professional, optimizing library ;)
 
 .SH SEE ALSO
 this documentation is layered to provide easier navigation.

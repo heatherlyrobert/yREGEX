@@ -1,4 +1,40 @@
 /*===============================[[ beg code ]]===============================*/
+
+
+/*===[[ BEG_HEADER ]]=========================================================*/
+
+/*===[[ ONE_LINERS ]]=========================================================*/
+/*345678901-12345678901-12345678901-12345678901-12345678901-12345678901-12345678901-12345678901-*/
+
+#define     P_FOCUS     "RS (run-time supprt)"
+#define     P_NICHE     "re (regex matching)"
+#define     P_PURPOSE   "provide fullsome regular expression text pattern matching"
+
+#define     P_NAMESAKE  "ken thompson, pioneer of computer science and unix designer"
+#define     P_HERITAGE  ""
+#define     P_IMAGERY   ""
+
+#define     P_SYSTEM    "gnu/linux   (powerful, ubiquitous, technical, and hackable)"
+#define     P_LANGUAGE  "ansi-c      (wicked, limitless, universal, and everlasting)"
+#define     P_CODESIZE  "small       (less than 2,000 lines of code)"
+
+#define     P_AUTHOR    "heatherlyrobert"
+#define     P_CREATED   "2014-10"
+#define     P_DEPENDS   "none"
+
+#define     P_VERMAJOR  "0.--, preparing for serious use"
+#define     P_VERMINOR  "0.5-, stable and removing bugs"
+#define     P_VERNUM    "0.5m"
+#define     P_VERTXT    "updated for character set upgrades and improved man file"
+
+#define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
+#define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
+#define     P_REMINDER  "there are many better options, but i *own* every byte of this one"
+
+/*===[[ REASONING ]]==========================================================*/
+/*345678901-12345678901-12345678901-12345678901-12345678901-12345678901-12345678901-12345678901-*/
+
+
 /*===[[ HEADER GUARD ]]=======================================================*/
 #ifndef YREGEX_priv_hguard
 #define YREGEX_priv_hguard loaded
@@ -15,10 +51,6 @@
 
 typedef   unsigned char  uchar;
 
-
-/* rapidly evolving version number to aid with visual change confirmation     */
-#define YREGEX_VER_NUM   "0.5l"
-#define YREGEX_VER_TXT   "all unit tests pass again after better comp error checking"
 
 
 #define     MAX_REGEX       20

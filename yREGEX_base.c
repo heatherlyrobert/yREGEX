@@ -29,7 +29,7 @@ yREGEX_version       (void)
 #else
    strlcpy (t, "[unknown    ]", 15);
 #endif
-   snprintf (yREGEX_ver, 100, "%s   %s : %s", t, YREGEX_VER_NUM, YREGEX_VER_TXT);
+   snprintf (yREGEX_ver, 100, "%s   %s : %s", t, P_VERNUM, P_VERTXT);
    return yREGEX_ver;
 }
 
@@ -84,7 +84,7 @@ yREGEX__unitloud      (void)
 char         /*-> stop testing -----------------------[ light  [uz.211.001.00]*/ /*-[00.0000.00#.!]-*/ /*-[--.---.---.--]-*/
 yREGEX__unitend       (void)
 {
-   yLOG_end     ();
+   yLOGS_end     ();
    return 0;
 }
 

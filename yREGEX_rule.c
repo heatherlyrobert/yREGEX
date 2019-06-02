@@ -87,7 +87,7 @@ RULE__operator       (int *a_rpos)
    /*---(assign)-------------------------*/
    if (x_comp2 == '=') {
       switch (x_comp1) {
-      case '=' :  x_oper = G_CHAR_EQ;     break;
+      case '=' :  x_oper = G_KEY_EQ;      break;
       case '!' :  x_oper = G_CHAR_NE;     break;
       case '<' :  x_oper = G_CHAR_LE;     break;
       case '>' :  x_oper = G_CHAR_GE;     break;
@@ -95,8 +95,8 @@ RULE__operator       (int *a_rpos)
    }
    else {
       switch (x_comp1) {
-      case '<' :  x_oper = G_CHAR_LT;     break;
-      case '>' :  x_oper = G_CHAR_GT;     break;
+      case '<' :  x_oper = G_KEY_LT;      break;
+      case '>' :  x_oper = G_KEY_GT;      break;
       }
    }
    /*---(check results)------------------*/
@@ -304,7 +304,7 @@ RULE_exec            (short a_level, short a_rpos, short a_tpos, short a_index)
    strlcpy (s1, g_subf, LEN_TEXT);
    DEBUG_YREGEX  yLOG_info    ("s1"        , s1);
    /*---(capture group match-------------*/
-   if (strchr ("=¯<>­®", x_mod) != NULL) {
+   if (strchr ("=ß<>ÝÞ", x_mod) != NULL) {
       DEBUG_YREGEX  yLOG_note    ("executing a capture group match");
       rc = EXEC_sub (a_index, x_two);
       strlcpy (s2, g_subf, LEN_TEXT);
@@ -312,10 +312,10 @@ RULE_exec            (short a_level, short a_rpos, short a_tpos, short a_index)
       x_cmp = strcmp  (s1, s2);
       rc = 0;
       switch (x_mod) {
-      case G_CHAR_EQ : if (x_cmp == 0)  rc = 1; break;
+      case G_KEY_EQ  : if (x_cmp == 0)  rc = 1; break;
       case G_CHAR_NE : if (x_cmp != 0)  rc = 1; break;
-      case G_CHAR_LT : if (x_cmp <  0)  rc = 1; break;
-      case G_CHAR_GT : if (x_cmp >  0)  rc = 1; break;
+      case G_KEY_LT  : if (x_cmp <  0)  rc = 1; break;
+      case G_KEY_GT  : if (x_cmp >  0)  rc = 1; break;
       case G_CHAR_LE : if (x_cmp <= 0)  rc = 1; break;
       case G_CHAR_GE : if (x_cmp >= 0)  rc = 1; break;
       }
