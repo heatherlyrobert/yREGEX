@@ -25,7 +25,7 @@ char        yREGEX_comp          (cchar *a_regex);
 char        yREGEX_exec          (cchar *a_source);  /* count all matches      */
 char        yREGEX_fast          (cchar *a_source);  /* stop after first match */
 
-int         yREGEX_find          (cchar a_type, cchar a_start, int  *a_beg, int *a_len);
+int         yREGEX_best          (cchar a_type, cchar a_start, int  *a_beg, int *a_len);
 
 char        yREGEX_method        (char a_method);    /* greedy vs lazy        */
 int         yREGEX_cursor        (char a_dir, int *a_beg, int *a_len);

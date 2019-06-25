@@ -5,24 +5,33 @@
 yREGEX \- transparent and flexible regular expression library
 
 .SH SUMMARY
-yREGEX is a tight and useful library for day-to-day regular expression matching
+yREGEX is a clean and useful library for day-to-day regular expression matching
 based on ken thompsons wicked fast finite automata algorithm (not recursion)
-plus i added back references and sub-match rules.
+plus added back references and sub-match rules.
 
 .SH CAVEAT (deeper learning, bootstrapping, and dogfooding)
-i wanted to understand, learn, and never need to migrate, so i built it.
-if you want cutting-edge coverage, data warehousing speeds, and runtime
-optimization, buy a commercial library ;)
+i wanted to understand, learn, and never migrate, so i built it.  yREGEX is
+optimized for transparency, debugging, and tracing, AND it also runs at
+reasonable (not world-class, but decent) production speed.  when speed becomes
+an issue, i'll dig in and tune harder.  if you want cutting-edge coverage,
+data warehousing speeds, and runtime optimization, buy a commercial library ;)
 
 .SH SYNOPSIS
 .nf
+---(header)------------------------------------
 .B #include  <yREGEX.h>
 .sp
 ---(regex)-------------------------------------
-.BI "char  yREGEX_comp  (cchar *" "a_regex" ");"
-.BI "char  yREGEX_exec  (cchar *" "a_text " ");"
-.BI "char  yREGEX_find  (cchar  " "a_type " ", cchar " "a_side" ", int *" "a_beg" ", int *" "a_len" ");"
+.BI "char  yREGEX_comp   (cchar *" "a_regex" ");"
+.BI "char  yREGEX_exec   (cchar *" "a_text " ");"
+.BI "char  yREGEX_fast   (cchar *" "a_text " ");"
 .sp
+---(matches)-----------------------------------
+.BI "char  yREGEX_best   (cchar  " "a_type " ", cchar " "a_side" ", int *" "a_beg" ", int *" "a_len" ");"
+.BI "char  yREGEX_method (cchar  " "a_type " ");"
+.BI "char  yREGEX_cursor (cchar  " "a_dir  " ", int *" "a_beg" ", int *" "a_len" ");"
+.sp
+---(linking)-----------------------------------
 .B link with -L/usr/local/libs -lyREGEX or -lyREGEX_debug
 
 .SH LANGUAGE DEFINITION
@@ -39,7 +48,7 @@ this will NOT explain regular expressions in detail.
    \\W \\D \\S \\F \\G  reverse of those above
 
 .B quanfifiers ------------------------------------------ posix
-   ?      !        one or none, greedy and lazy        (not ??)
+   ?      !        zero or one, greedy and lazy        (not ??)
    +      ~        one or more, greedy and lazy        (not +?)
    *      @        zero or more, greedy and lazy       (not *?)
    {m}             exactly m times
@@ -83,10 +92,85 @@ this will NOT explain regular expressions in detail.
    ºn[^...]»  does not have any char in set            (;n[^...])
    ºn...»     freeform regex sequence for matching     (;n...)
 
+.B regex prefix ----------------------------------------- new
+   this feature will be used only inside programs to short-cut
+   later requests for a solution <type> and <start>. all of these
+   prefixes are meta-characters and would be illegal if used first.
+   $          best solution based on regex operator (*?+@!~)
+   *          greediest overall
+   ?          leftmost greedy
+   +          rightmost greedy
+   @          laziest overall
+   !          leftmost lazy
+   ~          rightmost lazy
+
 .B spacers (for readability) ---------------------------- new
    ² ´ ³ ± ¬      used in any combination or number
    ²²²º...»       sometimes this before the rule section can help
    º...»´º...»    the medium dot is nice between rules for clarity
+
+.SH REGEX FUNCTIONS
+yREGEX is pretty standard stuff from an interface standpoint, but
+a little simplier, just because it is not re-entrant yet so it does
+not require pointers to maintain context.
+
+.B yREGEX_comp (<regex>)
+takes one argument, a plain-text c-string containing the regular expression.
+it then verify and precompile its contents for execution.  a negative return
+value means the regex was not correct.
+
+.B yREGEX_exec (<text>)
+takes one argument, a plain-text c-string containing the text to be searched.
+the compiled regex is used to find matches and the number of matches found
+is returned.
+
+.B yREGEX_fast (<text>)
+same as yREGEX_exec, but returns once a single match is found.  this is useful
+when just filtering or counting matching lines.
+
+.SH SOLUTION FUNCTIONS
+yREGEX is a little different here as it does not return match arrays for the
+source program to iterate over.  yREGEX_exec returns the number of matches
+(100 means >= 100).  yREGEX then provides two levels of solution access.
+
+.B yREGEX_best (<type>, <start>, <beg>, <len>)
+this returns what is determined to be the best match based on the first two
+arguments.
+
+.RS 3
+.B <type>
+   YREGEX_GREEDY   biggest match,
+   YREGEX_LAZY     smallest match, or
+   YREGEX_BEST     scored using regex (always YREGEX_MOST).
+
+.B <start>
+   YREGEX_LEFT     leftomst match,
+   YREGEX_RIGHT    rightmost match, or
+   YREGEX_MOST     most greedy or lazy match based on <type>.
+
+.B <beg>
+returns the start position of the selected match.
+
+.B <len>
+returns the length of the selected match.
+.RE
+
+.B yREGEX_method (<type>)
+prepares the match cursor for one of the three types of matches as shown
+above (yREGEX_best).
+
+.B yREGEX_cursor (<dir>, <beg>, <len>)
+walks through the finds for the type set with yREGEX_method.  a move past
+the beginning or end will return negative <beg> and <len> but not adjust
+the position.
+
+.RS 3
+.B <dir>
+[ head > next . curr < prev ] last.
+
+.B <beg> and <len>
+same as yREGEX_best.
+.RE
 
 .SH FLAWS
 .B not re-entrant,
@@ -97,17 +181,6 @@ so different solution orders that standard libraries.
 
 .B named patterns
 are internally compiled, and so not as flexible
-
-.SH POSSIBLE FEATURES
-.B solution prefixing
-many modern regex examples are based on a recursive algorithm to find the
-first branch of an "or" first.  but, mine does not.  so, i could use a prefix
-to indicate the solution evaluation, like greediest, laziest, etc.
-
-   @          overall laziest
-   !          leftmost, laziest
-   ?          leftmost, greediest
-   *          overall greediest
 
 .SH SEE ALSO
 this documentation is layered to provide easier navigation.

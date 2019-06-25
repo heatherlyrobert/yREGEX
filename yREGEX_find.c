@@ -334,7 +334,7 @@ FIND_solution        (char a_scorer, int a_pos, int  *a_beg, int *a_len)
 }
 
 int
-yREGEX_find          (cchar a_type, cchar a_dir, int  *a_beg, int *a_len)
+yREGEX_best          (cchar a_type, cchar a_dir, int  *a_beg, int *a_len)
 {
    char        x_scorer    = '-';
    switch (a_type) {
@@ -562,13 +562,16 @@ FIND__unit           (char *a_question, int a_num)
    strlcpy (unit_answer, "FIND__unit, unknown request", 100);
    /*---(mapping)------------------------*/
    if (strncmp (a_question, "match"     , 20)  == 0) {
-      snprintf (unit_answer, LEN_TEXT, "FIND match  (%2d) : %3d %3d[%-.40s]", a_num, s_finds [a_num].beg, s_finds [a_num].len, s_finds [a_num].text);
+      if (a_num >= s_nfind)  snprintf (unit_answer, LEN_TEXT, "FIND match  (%2d) : %3d %3d[%-.40s]", a_num, -1, -1, "");
+      else                   snprintf (unit_answer, LEN_TEXT, "FIND match  (%2d) : %3d %3d[%-.40s]", a_num, s_finds [a_num].beg, s_finds [a_num].len, s_finds [a_num].text);
    }
    else if (strncmp (a_question, "quans"     , 20)  == 0) {
-      snprintf (unit_answer, LEN_TEXT, "FIND quans  (%2d) :     %3d[%-.40s]", a_num, s_finds [a_num].len, s_finds [a_num].quan);
+      if (a_num >= s_nfind)  snprintf (unit_answer, LEN_TEXT, "FIND quans  (%2d) :     %3d[%-.40s]", a_num, -1, "");
+      else                   snprintf (unit_answer, LEN_TEXT, "FIND quans  (%2d) :     %3d[%-.40s]", a_num, s_finds [a_num].len, s_finds [a_num].quan);
    }
    else if (strncmp (a_question, "score"     , 20)  == 0) {
-      snprintf (unit_answer, LEN_TEXT, "FIND score  (%2d) : %3dg, %3dl, %3db, %3ds", a_num, s_finds [a_num].greedy, s_finds [a_num].lazy, s_finds [a_num].balance, s_finds [a_num].score);
+      if (a_num >= s_nfind)  snprintf (unit_answer, LEN_TEXT, "FIND score  (%2d) : %3dg, %3dl, %3db, %3ds", a_num, 0, 0, 0, 0);
+      else                   snprintf (unit_answer, LEN_TEXT, "FIND score  (%2d) : %3dg, %3dl, %3db, %3ds", a_num, s_finds [a_num].greedy, s_finds [a_num].lazy, s_finds [a_num].balance, s_finds [a_num].score);
    }
    else if (strncmp (a_question, "scorer"    , 20)  == 0) {
       x_find = FIND_solution (a_num, -1, NULL, NULL);
