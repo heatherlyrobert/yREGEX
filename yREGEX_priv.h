@@ -24,8 +24,8 @@
 
 #define     P_VERMAJOR  "0.--, preparing for serious use"
 #define     P_VERMINOR  "0.5-, stable and removing bugs"
-#define     P_VERNUM    "0.5o"
-#define     P_VERTXT    "updated man files to be better and clearer"
+#define     P_VERNUM    "0.5p"
+#define     P_VERTXT    "focus group working and yREGEX_best and yREGEX_cursor return these values"
 
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -211,6 +211,7 @@ char        PATS_comp            (void);
 char        FIND_init            (void);
 /*---(structure)------------*/
 char        FIND_add             (cint a_ref, cint a_beg, cchar *a_text, cchar *a_quan);
+char        FIND_sub             (cint a_ref, cint a_num, short a_beg, cchar *a_text, cchar *a_quan);
 char        FIND_list            (char a_detail);
 char        FIND_text            (cint a_ref, char *a_text);
 int         FIND_count           (void);

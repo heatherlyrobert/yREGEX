@@ -27,14 +27,15 @@ struct      cFIND {
    char        text        [LEN_TEXT];      /* found text                     */
    char        quan        [LEN_TEXT];      /* quantifiers                    */
    /*---(stats)------------------*/
-   int         count;                       /* count of times requested       */
-   int         lazy;                        /* count of lazy markers          */
-   int         greedy;                      /* count of greedy markers        */
-   int         balance;                     /* greedy/lazy balance            */
-   int         score;                       /* calculated score               */
+   short       count;                       /* count of times requested       */
+   short       lazy;                        /* count of lazy markers          */
+   short       greedy;                      /* count of greedy markers        */
+   short       balance;                     /* greedy/lazy balance            */
+   short       score;                       /* calculated score               */
    /*---(subs)-------------------*/
    struct cSUB {
-      int         len;
+      short       beg;
+      short       len;
       char        text        [LEN_TEXT];
       char        quan        [LEN_TEXT];
    }           sub         [MAX_SUB];
@@ -152,7 +153,7 @@ FIND_add             (cint a_ref, cint a_beg, cchar *a_text, cchar *a_quan)
 }
 
 char
-FIND_sub             (cint a_ref, cint a_num, cchar *a_text, cchar *a_quan)
+FIND_sub             (cint a_ref, cint a_num, short a_beg, cchar *a_text, cchar *a_quan)
 {
    /*---(locals)-----------+-----+-----+-*/
    int         i           =    0;
@@ -171,6 +172,7 @@ FIND_sub             (cint a_ref, cint a_num, cchar *a_text, cchar *a_quan)
    }
    if (a_ref != x_ref)  return -1;
    /*---(update)-------------------------*/
+   s_finds [x_curr].sub [a_num].beg  = a_beg;
    if (a_text != NULL)  strlcpy (s_finds [x_curr].sub [a_num].text, a_text, LEN_TEXT);
    if (a_quan != NULL)  strlcpy (s_finds [x_curr].sub [a_num].quan, a_quan, LEN_TEXT);
    if (a_text != NULL)  x_len = strllen (a_text, LEN_TEXT);
@@ -213,8 +215,8 @@ FIND_list            (char a_detail)
       if (a_detail == 'y') {
          for (j = 0; j < 11; ++j) {
             if (s_finds [i].sub [j].len >= 0) {
-               printf ("     sub%2d text %-3d[%s]\n", j, s_finds [i].sub [j].len, s_finds [i].sub [j].text);
-               printf ("           quan %-3d[%s]\n",    s_finds [i].sub [j].len, s_finds [i].sub [j].quan);
+               printf ("     sub%2d b%-4d text %-3d[%s]\n", j, s_finds [i].sub [j].beg, s_finds [i].sub [j].len, s_finds [i].sub [j].text);
+               printf ("                 quan %-3d[%s]\n",    s_finds [i].sub [j].len, s_finds [i].sub [j].quan);
             }
          }
       }
@@ -223,10 +225,10 @@ FIND_list            (char a_detail)
    return 0;
 }
 
-char yREGEX_finds (void) { return FIND_list ('n'); }
+char yREGEX_finds (void) { return FIND_list ('y'); }
 
 int
-FIND_solution        (char a_scorer, int a_pos, int  *a_beg, int *a_len)
+FIND_solution        (char a_scorer, int a_pos, int  *a_beg, int *a_len, int *a_fbeg, int *a_flen)
 {
    /*---(locals)-----------+------+----+-*/
    char        rce         =   -10;
@@ -239,6 +241,11 @@ FIND_solution        (char a_scorer, int a_pos, int  *a_beg, int *a_len)
    int         x_right     = -100000;
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
+   /*---(default)------------------------*/
+   if (a_beg  != NULL)  *a_beg  = -1;
+   if (a_len  != NULL)  *a_len  = -1;
+   if (a_fbeg != NULL)  *a_fbeg = -1;
+   if (a_flen != NULL)  *a_flen =  0;
    /*---(defense)------------------------*/
    DEBUG_YREGEX  yLOG_value   ("a_scorer"  , a_scorer);
    --rce;  if (a_scorer == 0 || strchr ("$*?+@!~", a_scorer) == NULL) {
@@ -326,16 +333,19 @@ FIND_solution        (char a_scorer, int a_pos, int  *a_beg, int *a_len)
    }
    /*---(return)-------------------------*/
    DEBUG_YREGEX  yLOG_note    ("set return variables");
-   if (a_beg != NULL)  *a_beg = s_finds [x_best].beg;
-   if (a_len != NULL)  *a_len = s_finds [x_best].len;
+   if (a_beg  != NULL)  *a_beg  = s_finds [x_best].beg;
+   if (a_len  != NULL)  *a_len  = s_finds [x_best].len;
+   if (a_fbeg != NULL)  *a_fbeg = s_finds [x_best].sub [10].beg;
+   if (a_flen != NULL)  *a_flen = s_finds [x_best].sub [10].len;
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
    return x_best;
 }
 
-int
-yREGEX_best          (cchar a_type, cchar a_dir, int  *a_beg, int *a_len)
+char
+yREGEX_best          (cchar a_type, cchar a_dir, int  *a_beg, int *a_len, int *a_fbeg, int *a_flen)
 {
+   int         rc          =   0;
    char        x_scorer    = '-';
    switch (a_type) {
    case  YREGEX_BEST   :
@@ -361,7 +371,9 @@ yREGEX_best          (cchar a_type, cchar a_dir, int  *a_beg, int *a_len)
       return -1;
       break;
    }
-   return FIND_solution (x_scorer, -1, a_beg, a_len);
+   rc = FIND_solution (x_scorer, -1, a_beg, a_len, a_fbeg, a_flen);
+   if (rc < 0)  return -1;
+   return 0;
 }
 
 static char   s_method   = YREGEX_GREEDY;
@@ -485,8 +497,8 @@ yREGEX_method           (char a_type)
    return 0;
 }
 
-int
-yREGEX_cursor           (char a_dir, int *a_beg, int *a_len)
+char
+yREGEX_cursor           (char a_dir, int *a_beg, int *a_len, int *a_fbeg, int *a_flen)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -497,8 +509,10 @@ yREGEX_cursor           (char a_dir, int *a_beg, int *a_len)
    DEBUG_YREGEX  yLOG_char    ("s_method"  , s_method);
    DEBUG_YREGEX  yLOG_value   ("s_index"   , s_index);
    /*---(default)------------------------*/
-   if (a_beg != NULL)  *a_beg = -1;
-   if (a_len != NULL)  *a_len = -1;
+   if (a_beg  != NULL)  *a_beg  = -1;
+   if (a_len  != NULL)  *a_len  = -1;
+   if (a_fbeg != NULL)  *a_fbeg = -1;
+   if (a_flen != NULL)  *a_flen =  0;
    /*---(defense)------------------------*/
    DEBUG_YREGEX  yLOG_value   ("a_dir"     , a_dir);
    --rce;  if (a_dir == 0 || strchr ("[>.<]", a_dir) == NULL) {
@@ -513,8 +527,10 @@ yREGEX_cursor           (char a_dir, int *a_beg, int *a_len)
    /*---(current)------------------------*/
    --rce;  if (a_dir == '.') {
       DEBUG_YREGEX  yLOG_note    ("seeking current value (.)");
-      if (a_beg != NULL)  *a_beg = s_finds [s_index].beg;
-      if (a_len != NULL)  *a_len = s_finds [s_index].len;
+      if (a_beg  != NULL)  *a_beg  = s_finds [s_index].beg;
+      if (a_len  != NULL)  *a_len  = s_finds [s_index].len;
+      if (a_fbeg != NULL)  *a_fbeg = s_finds [s_index].sub [10].beg;
+      if (a_flen != NULL)  *a_flen = s_finds [s_index].sub [10].len;
       DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
       return 0;
    }
@@ -539,8 +555,10 @@ yREGEX_cursor           (char a_dir, int *a_beg, int *a_len)
    /*---(update)-------------------------*/
    s_index = x_best;
    s_pos   = x_pos;
-   if (a_beg != NULL)  *a_beg = s_finds [s_index].beg;
-   if (a_len != NULL)  *a_len = s_finds [s_index].len;
+   if (a_beg  != NULL)  *a_beg  = s_finds [s_index].beg;
+   if (a_len  != NULL)  *a_len  = s_finds [s_index].len;
+   if (a_fbeg != NULL)  *a_fbeg = s_finds [s_index].sub [10].beg;
+   if (a_flen != NULL)  *a_flen = s_finds [s_index].sub [10].len;
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
    return 0;
@@ -574,7 +592,7 @@ FIND__unit           (char *a_question, int a_num)
       else                   snprintf (unit_answer, LEN_TEXT, "FIND score  (%2d) : %3dg, %3dl, %3db, %3ds", a_num, s_finds [a_num].greedy, s_finds [a_num].lazy, s_finds [a_num].balance, s_finds [a_num].score);
    }
    else if (strncmp (a_question, "scorer"    , 20)  == 0) {
-      x_find = FIND_solution (a_num, -1, NULL, NULL);
+      x_find = FIND_solution (a_num, -1, NULL, NULL, NULL, NULL);
       if (x_find < 0) {
          snprintf (unit_answer, LEN_TEXT, "FIND scorer (%2d) : %c unknown solution", x_find, a_num);
       } else {

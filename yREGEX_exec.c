@@ -320,6 +320,7 @@ static void      o___RUNNER__________________o (void) {;}
 char  g_found   [LEN_TEXT];
 char  g_quans   [LEN_TEXT];
 
+short g_subb    = -1;
 char  g_subf    [LEN_TEXT];
 char  g_subq    [LEN_TEXT];
 
@@ -348,6 +349,7 @@ EXEC_sub             (int a_index, int a_paren)
       /*> printf ("      wiping\n");                                                  <*/
       /*> strlcpy (g_subf, "", LEN_TEXT);                                             <* 
        *> strlcpy (g_subq, "", LEN_TEXT);                                             <*/
+      g_subb     = -1;
       g_subf [0] = '\0';
       g_subq [0] = '\0';
       rc = S_SUB_BEFORE;
@@ -372,6 +374,7 @@ EXEC_sub             (int a_index, int a_paren)
    /*---(check for open)-----------------*/
    if (strchr ("(" , x_reg) != NULL  && x_indx == a_paren) {
       /*> printf ("      open paren\n");                                              <*/
+      if (g_subb == -1)  g_subb = x_tpos;
       return S_SUB_INSIDE;
    }
    if (rc <= S_SUB_BEFORE) {
@@ -605,11 +608,12 @@ EXEC__single         (int a_index)
          /*> printf ("search for paren %d\n", i);                                     <*/
          rc = EXEC_sub (a_index, i);
          /*> printf ("   index %d, sub %d, rc %d\n", a_index, i, rc);                 <*/
-         if (rc < S_SUB_AFTER)  continue;
-         FIND_sub (a_index, i - 1, g_subf, g_subq);
+         if (rc < S_SUB_AFTER)  FIND_sub (a_index, i - 1, -1    , ""    , ""    );
+         else                   FIND_sub (a_index, i - 1, g_subb, g_subf, g_subq);
       }
       rc = EXEC_sub (a_index, GROUP_FOCUS);
-      if (rc > 0)  FIND_sub (a_index, 10, g_subf, g_subq);
+      if (rc <= 0)  FIND_sub (a_index, 10, -1    , ""    , ""    );
+      if (rc >  0)  FIND_sub (a_index, 10, g_subb, g_subf, g_subq);
       DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
       return 100;
    }

@@ -12,7 +12,7 @@ plus added back references and sub-match rules.
 .SH CAVEAT (deeper learning, bootstrapping, and dogfooding)
 i wanted to understand, learn, and never migrate, so i built it.  yREGEX is
 optimized for transparency, debugging, and tracing, AND it also runs at
-reasonable (not world-class, but decent) production speed.  when speed becomes
+reasonable (not blazing, but decent) production speed.  when speed becomes
 an issue, i'll dig in and tune harder.  if you want cutting-edge coverage,
 data warehousing speeds, and runtime optimization, buy a commercial library ;)
 
@@ -92,7 +92,7 @@ this will NOT explain regular expressions in detail.
    ºn[^...]»  does not have any char in set            (;n[^...])
    ºn...»     freeform regex sequence for matching     (;n...)
 
-.B regex prefix ----------------------------------------- new
+.B regex prefix ----------------------------------------- maybe
    this feature will be used only inside programs to short-cut
    later requests for a solution <type> and <start>. all of these
    prefixes are meta-characters and would be illegal if used first.

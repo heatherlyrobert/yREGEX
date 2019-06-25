@@ -94,6 +94,8 @@ main          (int a_argc, char *a_argv[])
          if (rc == 0)  ++c;
          break;
       }
+      yREGEX_dump  ();
+      yREGEX_finds ();
       /*> if (a % 100  == 0)  printf ("%06d (%06d)\n", a, c);                         <*/
    }
    if (s_run == 'c') regfree (&regex_comp);
