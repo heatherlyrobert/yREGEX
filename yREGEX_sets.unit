@@ -19,7 +19,7 @@ PREP          v21  include the prototype headers                              
 SCRP          v21  (sets  ) verify set abbreviations and backslashes            SETS_by_abbr, SETS__backslash, SETS_exec                                ((01.---))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
 
    COND       v21  initialize the testing environment                           - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.001))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
-     exec     v21  start testing                        yREGEX__unitquiet                                                                             i_equal     0                                                                                                    
+     exec     v21  start testing                        yregex__unit_quiet                                                                            i_equal     0                                                                                                    
      exec     v21  prepare sets                         SETS_init                                                                                     i_equal     0                                                                                                    
      code     v21  create a position indicator          - - - - - - - - - -   int    x_rpos        = 0;                                                                                                                                                                    
 
@@ -195,7 +195,7 @@ SCRP          v21  (sets  ) verify set abbreviations and backslashes          
    GROUP      v21  wrap up                                                      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   - - - - -   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
 
    COND       v21  complete testing                                             - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.024))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
-     exec     v21  stop testing                         yREGEX__unitend                                                                               i_equal     0                                                                                                    
+     exec     v21  stop testing                         yregex__unit_end                                                                              i_equal     0                                                                                                    
 
 
 
@@ -204,7 +204,7 @@ SCRP          v21  (sets  ) verify set abbreviations and backslashes          
 SCRP          v21  (sets  ) verify set names                                    SETS_by_name, SETS_comp                                                 ((02.---))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
 
    COND       v21  initialize the testing environment                           - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((02.001))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
-     exec     v21  start testing                        yREGEX__unitquiet                                                                             i_equal     0                                                                                                    
+     exec     v21  start testing                        yregex__unit_quiet                                                                            i_equal     0                                                                                                    
      exec     v21  prepare sets                         SETS_init                                                                                     i_equal     0                                                                                                    
 
    GROUP      v21  validate finding set by name                                 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   - - - - -   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
@@ -355,7 +355,7 @@ SCRP          v21  (sets  ) verify set names                                  
    GROUP      v21  wrap up                                                      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   - - - - -   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
 
    COND       v21  complete testing                                             - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((02.021))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
-     exec     v21  stop testing                         yREGEX__unitend                                                                               i_equal     0                                                                                                    
+     exec     v21  stop testing                         yregex__unit_end                                                                              i_equal     0                                                                                                    
 
 
 
@@ -364,7 +364,7 @@ SCRP          v21  (sets  ) verify set names                                  
 SCRP          v21  (comp  ) verify compiling a free-form set                    COMP__mapper                                                            ((03.---))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
 
    COND       v21  initialize the testing environment                           - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((03.001))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
-     exec     v21  start testing                        yREGEX__unitquiet                                                                             i_equal     0                                                                                                    
+     exec     v21  start testing                        yregex__unit_quiet                                                                            i_equal     0                                                                                                    
      code     v21  create a position indicator          - - - - - - - - - -   int    x_rpos        = 0;                                                                                                                                                                    
      code     v21  create a input variable              - - - - - - - - - -   char   x_check [100] = "";                                                                                                                                                                   
 
@@ -619,7 +619,7 @@ SCRP          v21  (comp  ) verify compiling a free-form set                  
    GROUP      v21  wrap up                                                      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   - - - - -   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
 
    COND       v21  complete testing                                             - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((03.019))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
-     exec     v21  stop testing                         yREGEX__unitend                                                                               i_equal     0                                                                                                    
+     exec     v21  stop testing                         yregex__unit_end                                                                              i_equal     0                                                                                                    
 
 
 
@@ -628,7 +628,7 @@ SCRP          v21  (comp  ) verify compiling a free-form set                  
 SCRP          v21  (comp  ) checking for text has element from set              SETS_rule                                                               ((03.---))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
 
    COND       v21  initialize the testing environment                           - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((03.001))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
-     exec     v21  start testing                        yREGEX__unitquiet                                                                             i_equal     0                                                                                                    
+     exec     v21  start testing                        yregex__unit_quiet                                                                            i_equal     0                                                                                                    
 
    COND       v21  check for upper case                                         - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((03.002))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
      exec     v21  call set checker                     SETS_rule             "Password"                       ,  9                                   i_equal     1                                                                                                    
@@ -652,7 +652,7 @@ SCRP          v21  (comp  ) checking for text has element from set            
      exec     v21  call set checker                     SETS_rule             "pa854ord"                       ,  7                                   i_equal     1                                                                                                    
 
    COND       v21  complete testing                                             - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((03.019))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
-     exec     v21  stop testing                         yREGEX__unitend                                                                               i_equal     0                                                                                                    
+     exec     v21  stop testing                         yregex__unit_end                                                                              i_equal     0                                                                                                    
 
 
 

@@ -19,7 +19,7 @@ PREP          v21  include the prototype headers                              
 SCRP          v21  (rule  ) verify group number extraction                      RULE__group, RULE_comp, RULE_exec                                       ((01.---))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
 
    COND       v21  initialize the testing environment                           - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.001))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
-     exec     v21  start testing                        yREGEX__unitquiet                                                                             i_equal     0                                                                                                    
+     exec     v21  start testing                        yregex__unit_quiet                                                                            i_equal     0                                                                                                    
      code     v21  create a position indicator          - - - - - - - - - -   int    x_rpos        = 0;                                                                                                                                                                    
 
    GROUP      v21  check using direct interface                                 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   - - - - -   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
@@ -134,7 +134,7 @@ SCRP          v21  (rule  ) verify group number extraction                    
    GROUP      v21  complete                                                     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   - - - - -   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
 
    COND       v21  complete testing                                             - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.024))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
-     exec     v21  stop testing                         yREGEX__unitend                                                                               i_equal     0                                                                                                    
+     exec     v21  stop testing                         yregex__unit_end                                                                              i_equal     0                                                                                                    
 
 
 
@@ -143,7 +143,7 @@ SCRP          v21  (rule  ) verify group number extraction                    
 SCRP          v21  (rule  ) verify comparision operator extraction              RULE__operator, RULE_comp, RULE_exec                                    ((01.---))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
 
    COND       v21  initialize the testing environment                           - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.001))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
-     exec     v21  start testing                        yREGEX__unitquiet                                                                             i_equal     0                                                                                                    
+     exec     v21  start testing                        yregex__unit_quiet                                                                            i_equal     0                                                                                                    
      code     v21  create a position indicator          - - - - - - - - - -   int    x_rpos        = 0;                                                                                                                                                                    
      code     v21  hold a common source string          - - - - - - - - - -   char   x_test        [LEN_HUND] = "red blue green brown red brown blue red";                                                                                                                  
 
@@ -409,7 +409,7 @@ SCRP          v21  (rule  ) verify comparision operator extraction            
    GROUP      v21  complete                                                     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   - - - - -   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
 
    COND       v21  complete testing                                             - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.011))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
-     exec     v21  stop testing                         yREGEX__unitend                                                                                i_equal     0                                                                                                    
+     exec     v21  stop testing                         yregex__unit_end                                                                               i_equal     0                                                                                                    
 
 
 
@@ -418,7 +418,7 @@ SCRP          v21  (rule  ) verify comparision operator extraction            
 SCRP          v21  (rule  ) verify set matches                                  RULE_comp, RULE_exec                                                    ((01.---))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
 
    COND       v21  initialize the testing environment                           - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.001))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
-     exec     v21  start testing                        yREGEX__unitquiet                                                                             i_equal     0                                                                                                    
+     exec     v21  start testing                        yregex__unit_quiet                                                                            i_equal     0                                                                                                    
      code     v21  create a position indicator          - - - - - - - - - -   int    x_rpos        = 0;                                                                                                                                                                    
      code     v21  hold a common source string          - - - - - - - - - -   char   x_test        [LEN_HUND] = "black brown blub blued blue redd4y red redish green gr#e1n gre2n";                                                                                         
 
@@ -581,7 +581,7 @@ SCRP          v21  (rule  ) verify set matches                                
    GROUP      v21  complete                                                     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   - - - - -   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
 
    COND       v21  complete testing                                             - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.011))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
-     exec     v21  stop testing                         yREGEX__unitend                                                                                i_equal     0                                                                                                    
+     exec     v21  stop testing                         yregex__unit_end                                                                               i_equal     0                                                                                                    
 
 
 
@@ -590,7 +590,7 @@ SCRP          v21  (rule  ) verify set matches                                
 SCRP          v21  (rule  ) verify substring matches                            RULE_comp, RULE_exec                                                    ((01.---))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
 
    COND       v21  initialize the testing environment                           - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.001))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
-     exec     v21  start testing                        yREGEX__unitquiet                                                                             i_equal     0                                                                                                    
+     exec     v21  start testing                        yregex__unit_quiet                                                                            i_equal     0                                                                                                    
      code     v21  create a position indicator          - - - - - - - - - -   int    x_rpos        = 0;                                                                                                                                                                    
      code     v21  hold a common source string          - - - - - - - - - -   char   x_test        [LEN_HUND] = "black brown blub blued blue redd4y red redish green gr#e1n gre2n";                                                                                         
 
@@ -642,7 +642,7 @@ SCRP          v21  (rule  ) verify substring matches                          
    GROUP      v21  complete                                                     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   - - - - -   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
 
    COND       v21  complete testing                                             - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.011))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
-     exec     v21  stop testing                         yREGEX__unitend                                                                                i_equal     0                                                                                                    
+     exec     v21  stop testing                         yregex__unit_end                                                                               i_equal     0                                                                                                    
 
 
 

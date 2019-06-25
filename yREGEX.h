@@ -11,6 +11,7 @@ typedef   const int      cint;
 
 
 
+#define   YREGEX_BEST    '-'
 #define   YREGEX_GREEDY  'G'
 #define   YREGEX_LAZY    'L'
 #define   YREGEX_MOST    'a'
@@ -20,8 +21,17 @@ typedef   const int      cint;
 
 
 char        yREGEX_comp          (cchar *a_regex);
-char        yREGEX_exec          (cchar *a_source);
+
+char        yREGEX_exec          (cchar *a_source);  /* count all matches      */
+char        yREGEX_fast          (cchar *a_source);  /* stop after first match */
+
 int         yREGEX_find          (cchar a_type, cchar a_start, int  *a_beg, int *a_len);
+
+char        yREGEX_method        (char a_method);    /* greedy vs lazy        */
+int         yREGEX_cursor        (char a_dir, int *a_beg, int *a_len);
+
+char        yREGEX_dump          (void);
+char        yREGEX_finds         (void);
 
 
 

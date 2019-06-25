@@ -18,9 +18,9 @@ INST_DIR   =
 # extra include directories required
 INC_MINE   = 
 # utilities generated, separate from main program
-NAME_UTIL  = 
+NAME_UTIL  = regex
 # libraries only for the utilities
-LIB_UTIL   = 
+LIB_UTIL   = -lySTR_debug
 
 
 

@@ -14,7 +14,7 @@ PREP          v21  include the prototype headers                              
 SCRP          v21  (comp  ) verify compiling literal matches                    COMP__literal                                                           ((01.---))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
 
    COND       v21  initialize the testing environment                           - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.001))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
-     exec     v21  start testing                        yREGEX__unitquiet                                                                             i_equal     0                                                                                                    
+     exec     v21  start testing                        yregex__unit_quiet                                                                            i_equal     0                                                                                                    
      code     v21  create a position indicator          - - - - - - - - - -   int    x_rpos        = 0;                                                                                                                                                                    
 
    GROUP      v21  use direct access to function                                - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   - - - - -   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
@@ -117,7 +117,7 @@ SCRP          v21  (comp  ) verify compiling literal matches                  
 GROUP      v21  wrap up                                                      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   - - - - -   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
 
    COND       v21  complete testing                                             - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.011))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
-     exec     v21  stop testing                         yREGEX__unitend                                                                                i_equal     0                                                                                                    
+     exec     v21  stop testing                         yregex__unit_end                                                                               i_equal     0                                                                                                    
 
 
 
@@ -126,7 +126,7 @@ GROUP      v21  wrap up                                                      
 SCRP          v21  (comp  ) verify compiling grouping symbols                   yREGEX_comp                                                             ((01.---))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
 
    COND       v21  initialize the testing environment                           - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.001))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
-     exec     v21  start testing                        yREGEX__unitquiet                                                                             i_equal     0                                                                                                    
+     exec     v21  start testing                        yregex__unit_quiet                                                                            i_equal     0                                                                                                    
      code     v21  create a position indicator          - - - - - - - - - -   int    x_rpos        = 0;                                                                                                                                                                    
 
    GROUP      v21  combinations of grouping                                     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   - - - - -   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
@@ -315,7 +315,7 @@ SCRP          v21  (comp  ) verify compiling grouping symbols                 
    GROUP      v21  wrap up                                                      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   - - - - -   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
 
    COND       v21  complete testing                                             - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.011))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
-     exec     v21  stop testing                         yREGEX__unitend                                                                                i_equal     0                                                                                                    
+     exec     v21  stop testing                         yregex__unit_end                                                                               i_equal     0                                                                                                    
 
 
 
@@ -324,7 +324,7 @@ SCRP          v21  (comp  ) verify compiling grouping symbols                 
 SCRP          v21  (comp  ) verify compiling anchors                            yREGEX_comp                                                             ((01.---))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
 
    COND       v21  initialize the testing environment                           - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.001))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
-     exec     v21  start testing                        yREGEX__unitquiet                                                                             i_equal     0                                                                                                    
+     exec     v21  start testing                        yregex__unit_quiet                                                                            i_equal     0                                                                                                    
 
    COND       v21  check a bol anchor                                           - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.003))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
      exec     v21  call regex compilation               yREGEX_comp           "^a"                                                                    i_equal     0                                                                                                    
@@ -355,7 +355,7 @@ SCRP          v21  (comp  ) verify compiling anchors                          
      get      v21  get current jump                     COMP__unit            "jump"         , 0                                                      s_equal     COMP jump        :  3 [2                                            ]                                
 
    COND       v21  complete testing                                             - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.011))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
-     exec     v21  stop testing                         yREGEX__unitend                                                                                i_equal     0                                                                                                    
+     exec     v21  stop testing                         yregex__unit_end                                                                               i_equal     0                                                                                                    
 
 
 
@@ -364,7 +364,7 @@ SCRP          v21  (comp  ) verify compiling anchors                          
 SCRP          v21  (comp  ) verify compiling extended characters                COMP_extended                                                           ((01.---))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
 
    COND       v21  initialize the testing environment                           - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.001))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
-     exec     v21  start testing                        yREGEX__unitquiet                                                                             i_equal     0                                                                                                    
+     exec     v21  start testing                        yregex__unit_quiet                                                                            i_equal     0                                                                                                    
      code     v21  hold a common source string          - - - - - - - - - -   char   x_test        [LEN_HUND] = "red blue green brown red brown blue red";                                                                                                                  
 
    GROUP      v21  backref style exact-match rule                               - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   - - - - -   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
@@ -412,7 +412,7 @@ SCRP          v21  (comp  ) verify compiling extended characters              
      get      v21  get current jump                     COMP__unit            "jump"         , 0                                                      s_equal     COMP jump        : 23 [m4   5      4   5                            ]                                
 
    COND       v21  complete testing                                             - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.011))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
-     exec     v21  stop testing                         yREGEX__unitend                                                                                i_equal     0                                                                                                    
+     exec     v21  stop testing                         yregex__unit_end                                                                               i_equal     0                                                                                                    
 
 
 

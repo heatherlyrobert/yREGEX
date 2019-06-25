@@ -2,17 +2,17 @@
 .na
 
 .SH NAME
-yREGEX \- small, fast, clean, and custom regular expression library
+yREGEX \- transparent and flexible regular expression library
 
 .SH SUMMARY
-yREGEX is a small, fast, day-to-day library for regular expression processing
-that provides tailored and uniform regex support across my platform and into
-every application and tool.
+yREGEX is a tight and useful library for day-to-day regular expression matching
+based on ken thompsons wicked fast finite automata algorithm (not recursion)
+plus i added back references and sub-match rules.
 
-.SH CAVEAT
-i wanted to understand, learn, and never need to migrate, so i built it.  if you
-want cutting-edge coverage, data warehousing speeds, runtime optimization,
-and perfect results, buy a commercial library ;)
+.SH CAVEAT (deeper learning, bootstrapping, and dogfooding)
+i wanted to understand, learn, and never need to migrate, so i built it.
+if you want cutting-edge coverage, data warehousing speeds, and runtime
+optimization, buy a commercial library ;)
 
 .SH SYNOPSIS
 .nf
@@ -28,15 +28,15 @@ and perfect results, buy a commercial library ;)
 .SH LANGUAGE DEFINITION
 yREGEX uses the 14 posix standard regular expression meta-characters, plus a
 few additional ones (and my extended ascii) for ease and more functionality.
-this will not explain regular expressions in detail.
+this will NOT explain regular expressions in detail.
 
 .B characters ------------------------------------------- posix
    .               any character
-   µ.              explicitly a period
-   µw µs µd µp     :word:, :space:, :digit:, :punct:
-   µa µl µu µg µx  :alpha:, :lower:, :upper:, :greek:, :xdigi:
-   µf µt µe µn µc  field, tab, escape, return, control
-   µW µD µS µF µG  reverse of those above
+   \\.              explicitly a period
+   \\w \\s \\d \\p     :word:, :space:, :digit:, :punct:
+   \\a \\l \\u \\g \\x  :alpha:, :lower:, :upper:, :greek:, :xdigi:
+   \\f \\t \\e \\n \\c  field, tab, escape, return, control
+   \\W \\D \\S \\F \\G  reverse of those above
 
 .B quanfifiers ------------------------------------------ posix
    ?      !        one or none, greedy and lazy        (not ??)
@@ -89,11 +89,14 @@ this will not explain regular expressions in detail.
    º...»´º...»    the medium dot is nice between rules for clarity
 
 .SH FLAWS
-.B not re-entrant.  
+.B not re-entrant,
 can not be used on two regex patterns simultaneously.
 
 .B not recursive,
 so different solution orders that standard libraries.
+
+.B named patterns
+are internally compiled, and so not as flexible
 
 .SH POSSIBLE FEATURES
 .B solution prefixing

@@ -25,7 +25,7 @@ yREGEX_version       (void)
 #elif  __GNUC__  > 0
    strlcpy (t, "[gnu gcc    ]", 15);
 #elif  __HEPH__  > 0
-   strncpy (t, "[hephaestus ]", 15);
+   strlcpy (t, "[hephaestus ]", 15);
 #else
    strlcpy (t, "[unknown    ]", 15);
 #endif
@@ -63,7 +63,7 @@ yREGEX__testloc      (cchar *a_regex, cchar *a_source)
 static void      o___UNITTEST________________o (void) {;}
 
 char         /*-> set up quiet testing ---------------[ light  [uz.210.011.02]*/ /*-[00.0000.00#.A]-*/ /*-[--.---.---.--]-*/
-yREGEX__unitquiet     (void)
+yregex__unit_quiet      (void)
 {
    char       *x_args [1]  = { "yREGEX_unit" };
    yURG_logger (1, x_args);
@@ -72,7 +72,7 @@ yREGEX__unitquiet     (void)
 }
 
 char         /*-> set up debugged testing ------------[ light  [uz.211.011.03]*/ /*-[00.0000.00#.2]-*/ /*-[--.---.---.--]-*/
-yREGEX__unitloud      (void)
+yregex__unit_loud       (void)
 {
    char       *x_args [3]  = { "yREGEX_unit", "@@kitchen", "@@YREGEX"    };
    yURG_logger (3, x_args);
@@ -82,7 +82,7 @@ yREGEX__unitloud      (void)
 }
 
 char         /*-> stop testing -----------------------[ light  [uz.211.001.00]*/ /*-[00.0000.00#.!]-*/ /*-[--.---.---.--]-*/
-yREGEX__unitend       (void)
+yregex__unit_end        (void)
 {
    yLOGS_end     ();
    return 0;

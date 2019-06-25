@@ -8,11 +8,11 @@
 
 #define     P_FOCUS     "RS (run-time supprt)"
 #define     P_NICHE     "re (regex matching)"
-#define     P_PURPOSE   "provide fullsome regular expression text pattern matching"
+#define     P_PURPOSE   "provide transparent regular expression text pattern matching"
 
-#define     P_NAMESAKE  "ken thompson, pioneer of computer science and unix designer"
-#define     P_HERITAGE  ""
-#define     P_IMAGERY   ""
+#define     P_NAMESAKE  "artemis-agrotere (goddess of the hunt)"
+#define     P_HERITAGE  "artemis is the daughter of zeus and titaness leto, twin of apollo"
+#define     P_IMAGERY   "beautiful young woman in a cloak and deer pelt, with bow and spears"
 
 #define     P_SYSTEM    "gnu/linux   (powerful, ubiquitous, technical, and hackable)"
 #define     P_LANGUAGE  "ansi-c      (wicked, limitless, universal, and everlasting)"
@@ -24,8 +24,8 @@
 
 #define     P_VERMAJOR  "0.--, preparing for serious use"
 #define     P_VERMINOR  "0.5-, stable and removing bugs"
-#define     P_VERNUM    "0.5m"
-#define     P_VERTXT    "updated for character set upgrades and improved man file"
+#define     P_VERNUM    "0.5n"
+#define     P_VERTXT    "created basic regex utility to benchmark and caught speed issues"
 
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -119,6 +119,10 @@ char*       yREGEX_version       (void);
 char*       yREGEX__testloc      (cchar *a_regex, cchar *a_source);
 
 
+/*345678901-12345678901-12345678901-12345678901-12345678901-12345678901-123456*/
+char        yregex__unit_quiet      (void);
+char        yregex__unit_loud       (void);
+char        yregex__unit_end        (void);
 
 
 /*===[[ COMP ]]===============================*/
@@ -158,7 +162,6 @@ char        EXEC__solution       (int a_index);
 char        EXEC_sub             (int a_index, int a_paren);
 int         EXEC_tpos            (int a_index, int a_paren, int *a_tbeg, int *a_tend);
 char        EXEC__found          (int a_index);
-char        EXEC__list           (void);
 char        EXEC__prime          (void);
 char        EXEC__single         (int a_index);
 

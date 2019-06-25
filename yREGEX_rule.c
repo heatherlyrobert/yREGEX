@@ -359,39 +359,6 @@ RULE_exec            (short a_level, short a_rpos, short a_tpos, short a_index)
    return rc;
 }
 
-/*> char                                                                                                         <* 
- *> EXEC__and            (int a_level, int a_rpos, int a_tpos, int a_index)                                      <* 
- *> {                                                                                                            <* 
- *>    /+---(locals)-----------+-----+-----+-+/                                                                  <* 
- *>    char        rc          =    0;                                                                           <* 
- *>    int         x_tpos      =   -1;                                                                           <* 
- *>    int         x_indx      =    0;                                                                           <* 
- *>    /+> int         x_tmax      =   -1;                                                <+/                    <* 
- *>    int         x_beg       =   -1;                                                                           <* 
- *>    int         x_end       =   -1;                                                                           <* 
- *>    /+---(header)-------------------------+/                                                                  <* 
- *>    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);                                                                <* 
- *>    DEBUG_YREGEX  yLOG_complex ("header"    , "level %-3d, rpos %-3d, tpos %-3d", a_level, a_rpos, a_tpos);   <* 
- *>    /+---(prepare)------------------------+/                                                                  <* 
- *>    x_indx  = EXEC_indx (a_index);                                                                            <* 
- *>    /+> x_indx  = gre.indx [s_states [a_index].rpos];                                  <+/                    <* 
- *>    printf ("-----------\n");                                                                                 <* 
- *>    printf ("AND, level %-3d, rpos %-3d, tpos %-3d, indx %-3d\n", a_level, a_rpos, a_tpos, x_indx);           <* 
- *>    rc  = EXEC_tpos (a_index, x_indx, &x_beg, &x_end);                                                        <* 
- *>    printf ("AND, returned x_beg %-3d, x_end %-3d\n", x_beg, x_end);                                          <* 
- *>    DEBUG_YREGEX  yLOG_complex ("tpos"      , "indx %-3d, beg %-3d, end %-3d", x_indx, x_beg, x_end);         <* 
- *>    /+---(launch)-------------------------+/                                                                  <* 
- *>    DEBUG_YREGEX  yLOG_note    ("launch next for all successful steps");                                      <* 
- *>    /+> x_tmax  = s_states [a_index].tmax;                                             <+/                    <* 
- *>    /+> printf ("AND, tmax %-3d\n", x_tmax);                                           <+/                    <* 
- *>    /+> if (x_tmax == LEN_TEXT)  EXEC_push (a_level, a_rpos + 1, x_beg, a_tpos + 1);   <*                     <* 
- *>     *> else                     EXEC_push (a_level, a_rpos + 1, x_beg, x_tmax);       <+/                    <* 
- *>    EXEC_push (a_level, a_rpos + 1, x_beg, x_end + 1);                                                        <* 
- *>    /+---(complete)-----------------------+/                                                                  <* 
- *>    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);                                                                <* 
- *>    return 1;                                                                                                 <* 
- *> }                                                                                                            <*/
-
 
 
 /*===============================[[ end code ]]===============================*/
