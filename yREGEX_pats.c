@@ -36,7 +36,7 @@ static int       s_nsave     = 0;
 static void      o___PROGRAM_________________o (void) {;}
 
 char         /*-> initialize pattern database --------[ leaf   [fz.531.021.10]*/ /*-[02.0000.01#.!]-*/ /*-[--.---.---.--]-*/
-PATS__init           (void)
+yregex_pats_init     (void)
 {
    /*---(locals)-----------+-----+-----+-*/
    int         i           =    0;
@@ -70,7 +70,7 @@ PATS__init           (void)
 static void      o___FINDING_________________o (void) {;}
 
 int          /*-> retrieve pattern by abbeviation ----[ leaf   [fc.632.122.40]*/ /*-[01.0000.01#.8]-*/ /*-[--.---.---.--]-*/
-PATS__by_abbr        (cchar a_abbr)
+yregex_pats__by_abbr    (cchar a_abbr)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -109,7 +109,7 @@ PATS__by_abbr        (cchar a_abbr)
 }
 
 int          /*-> retrieve pattern by name -----------[ leaf   [fe.A53.145.A0]*/ /*-[01.0000.02#.E]-*/ /*-[--.---.---.--]-*/
-PATS__by_name        (cchar *a_name)
+yregex_pats__by_name    (cchar *a_name)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -155,7 +155,7 @@ PATS__by_name        (cchar *a_name)
 }
 
 char         /*-> compile a pattern ------------------[ ------ [fe.D54.156.65]*/ /*-[02.0000.01#.!]-*/ /*-[--.---.---.--]-*/
-PATS__abbr_ref       (int *a_rpos)
+yregex_pats__abbr_ref   (int *a_rpos)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -172,7 +172,7 @@ PATS__abbr_ref       (int *a_rpos)
    x_ch   = gre.orig [*a_rpos];
    DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
    --rce;  if (x_ch != '&') {
-      COMP_error (__FUNCTION__, a_rpos, "#PAT", "does not lead with a dollar sign");
+      yregex_comp_error (__FUNCTION__, a_rpos, "#PAT", "does not lead with a dollar sign");
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
@@ -183,10 +183,10 @@ PATS__abbr_ref       (int *a_rpos)
    x_abbr   = gre.orig [*a_rpos];
    /*---(abbreviated name)---------------*/
    DEBUG_YREGEX  yLOG_note    ("using abbreviated name");
-   x_pat = PATS__by_abbr (x_abbr);
+   x_pat = yregex_pats__by_abbr (x_abbr);
    DEBUG_YREGEX  yLOG_value   ("x_pat"     , x_pat);
    if (x_pat < 0) {
-      COMP_error (__FUNCTION__, a_rpos, "#PAT", "not a valid pattern abbreviation");
+      yregex_comp_error (__FUNCTION__, a_rpos, "#PAT", "not a valid pattern abbreviation");
       ++(*a_rpos);
       strlcat (gre.regex, "#PAT", LEN_REGEX);
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
@@ -210,7 +210,7 @@ PATS__abbr_ref       (int *a_rpos)
 }
 
 char         /*-> compile a pattern ------------------[ ------ [fe.D54.156.65]*/ /*-[02.0000.01#.!]-*/ /*-[--.---.---.--]-*/
-PATS__named_ref      (int *a_rpos)
+yregex_pats__named_ref  (int *a_rpos)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -227,7 +227,7 @@ PATS__named_ref      (int *a_rpos)
    x_ch   = gre.orig [*a_rpos];
    DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
    --rce;  if (x_ch != '&') {
-      COMP_error (__FUNCTION__, a_rpos, "#PAT", "does not lead with an ampersand");
+      yregex_comp_error (__FUNCTION__, a_rpos, "#PAT", "does not lead with an ampersand");
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
@@ -245,22 +245,22 @@ PATS__named_ref      (int *a_rpos)
    }
    /*---(troubles)-----------------------*/
    --rce;  if (x_len == 0) {
-      COMP_error (__FUNCTION__, a_rpos, "#PAT", "could not parse name");
+      yregex_comp_error (__FUNCTION__, a_rpos, "#PAT", "could not parse name");
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    --rce;  if (x_ch  != ')') {
-      COMP_error (__FUNCTION__, a_rpos, "#PAT", "could not find close paren");
+      yregex_comp_error (__FUNCTION__, a_rpos, "#PAT", "could not find close paren");
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    /*---(abbreviated name)---------------*/
    --rce;  if (x_len == 1) {
       DEBUG_YREGEX  yLOG_note    ("using abbreviated name");
-      x_pat = PATS__by_abbr (x_name [0]);
+      x_pat = yregex_pats__by_abbr (x_name [0]);
       DEBUG_YREGEX  yLOG_value   ("x_pat"     , x_pat);
       if (x_pat < 0) {
-         COMP_error (__FUNCTION__, a_rpos, "#PAT", "not a valid pattern abbreviation");
+         yregex_comp_error (__FUNCTION__, a_rpos, "#PAT", "not a valid pattern abbreviation");
          ++(*a_rpos);
          strlcat (gre.regex, "#PAT", LEN_REGEX);
          DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
@@ -274,10 +274,10 @@ PATS__named_ref      (int *a_rpos)
    /*---(full name)----------------------*/
    --rce;
    DEBUG_YREGEX  yLOG_note    ("trying pattern name");
-   x_pat = PATS__by_name (x_name);
+   x_pat = yregex_pats__by_name (x_name);
    DEBUG_YREGEX  yLOG_value   ("x_pat"     , x_pat);
    if (x_pat < 0) {
-      COMP_error (__FUNCTION__, a_rpos, "#PAT", "not a valid pattern name");
+      yregex_comp_error (__FUNCTION__, a_rpos, "#PAT", "not a valid pattern name");
       *a_rpos += x_len;
       strlcat (gre.regex, "#PAT", LEN_REGEX);
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
@@ -299,7 +299,7 @@ PATS__named_ref      (int *a_rpos)
 static void      o___SAVING__________________o (void) {;}
 
 char         /*-> tbd --------------------------------[ leaf   [fe.943.034.30]*/ /*-[01.0000.01#.!]-*/ /*-[--.---.---.--]-*/
-PATS__save           (cchar *a_pattern)
+yregex_pats__save           (cchar *a_pattern)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -351,7 +351,7 @@ PATS__save           (cchar *a_pattern)
 }
 
 char
-PATS__save_run       (void)
+yregex_pats__save_run   (void)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -403,7 +403,7 @@ PATS__save_run       (void)
             DEBUG_YREGEX  yLOG_value   ("x_len"     , x_len);
             sprintf (t, "%-*.*s", x_len, x_len, gre.orig + x_beg);
             DEBUG_YREGEX  yLOG_info    ("t"         , t);
-            PATS__save (t);
+            yregex_pats__save (t);
          }
       }
    }
@@ -420,7 +420,7 @@ PATS__save_run       (void)
 static void      o___DRIVER__________________o (void) {;}
 
 char
-PATS_comp            (void)
+yregex_pats_comp        (void)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -434,8 +434,8 @@ PATS_comp            (void)
    char        t           [LEN_REGEX] = "";
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
-   PATS__init     ();
-   PATS__save_run ();
+   yregex_pats_init  ();
+   yregex_pats__save_run ();
    /*---(parse)--------------------------*/
    DEBUG_YREGEX  yLOG_info    ("gre.orig"  , gre.orig);
    DEBUG_YREGEX  yLOG_value   ("gre.olen"  , gre.olen);
@@ -457,7 +457,7 @@ PATS_comp            (void)
          DEBUG_YREGEX  yLOG_info    ("t"         , t);
          strlcat (gre.regex, t, LEN_REGEX);
          DEBUG_YREGEX  yLOG_info    ("gre.regex"   , gre.regex);
-         rc     = PATS__named_ref (&i);
+         rc     = yregex_pats__named_ref (&i);
          x_prev = i;
          DEBUG_YREGEX  yLOG_value   ("x_prev"    , x_prev);
          DEBUG_YREGEX  yLOG_info    ("gre.regex"   , gre.regex);
@@ -472,7 +472,7 @@ PATS_comp            (void)
          DEBUG_YREGEX  yLOG_info    ("t"         , t);
          strlcat (gre.regex, t, LEN_REGEX);
          DEBUG_YREGEX  yLOG_info    ("gre.regex"   , gre.regex);
-         rc     = PATS__abbr_ref   (&i);
+         rc     = yregex_pats__abbr_ref (&i);
          x_prev = i;
          DEBUG_YREGEX  yLOG_value   ("x_prev"    , x_prev);
          DEBUG_YREGEX  yLOG_info    ("gre.regex"   , gre.regex);

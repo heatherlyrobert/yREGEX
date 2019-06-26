@@ -81,7 +81,7 @@ static int         s_mapcount  =  0;
 static void      o___PROGRAM_________________o (void) {;}
 
 char         /*-> tbd --------------------------------[ leaf   [fz.531.021.10]*/ /*-[02.0000.01#.!]-*/ /*-[--.---.---.--]-*/
-SETS_init            (void)
+yregex_sets_init     (void)
 {
    /*---(locals)-----------+-----+-----+-*/
    int         i           =    0;
@@ -113,7 +113,7 @@ SETS_init            (void)
 static void      o___FINDING_________________o (void) {;}
 
 char         /*-> tbd --------------------------------[ leaf   [fc.632.122.40]*/ /*-[01.0000.01#.8]-*/ /*-[--.---.---.--]-*/
-SETS_by_abbr         (cchar a_abbr)
+yregex_sets__by_abbr    (cchar a_abbr)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -155,7 +155,7 @@ SETS_by_abbr         (cchar a_abbr)
 }
 
 char         /*-> tbd --------------------------------[ leaf   [fe.A53.145.A0]*/ /*-[01.0000.02#.E]-*/ /*-[--.---.---.--]-*/
-SETS__by_name        (cchar *a_name)
+yregex_sets__by_name    (cchar *a_name)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -204,7 +204,7 @@ SETS__by_name        (cchar *a_name)
 }
 
 char         /*-> tbd --------------------------------[ leaf   [fe.833.044.30]*/ /*-[01.0000.01#.!]-*/ /*-[--.---.---.--]-*/
-SETS__by_map         (void)
+yregex_sets__by_map     (void)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -249,7 +249,7 @@ SETS__by_map         (void)
 static void      o___MAPPING_________________o (void) {;}
 
 char         /*-> tbd --------------------------------[ leaf   [fz.321.111.00]*/ /*-[00.0000.01#.!]-*/ /*-[--.---.---.--]-*/
-SETS__clear          (char a_unmark)
+yregex_sets__clear      (char a_unmark)
 {
    int         i           =    0;
    /*---(header)-------------------------*/
@@ -263,7 +263,7 @@ SETS__clear          (char a_unmark)
 }
 
 char         /*-> tbd --------------------------------[ leaf   [fe.943.034.30]*/ /*-[01.0000.01#.!]-*/ /*-[--.---.---.--]-*/
-SETS__save           (void)
+yregex_sets__save       (void)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -304,7 +304,7 @@ SETS__save           (void)
 }
 
 char         /*-> tbd --------------------------------[ ------ [fe.LA5.196.D1]*/ /*-[03.0000.01#.D]-*/ /*-[--.---.---.--]-*/
-SETS__mapper         (int *a_rpos)
+yregex_sets__mapper     (int *a_rpos)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -342,7 +342,7 @@ SETS__mapper         (int *a_rpos)
    }
    DEBUG_YREGEX  yLOG_char    ("x_mark"    , x_mark);
    DEBUG_YREGEX  yLOG_char    ("x_unmark"  , x_unmark);
-   SETS__clear (x_unmark);
+   yregex_sets__clear (x_unmark);
    /*---(map)----------------------------*/
    DEBUG_YREGEX  yLOG_note    ("walk through regex");
    --rce;  for (i = *a_rpos; i < gre.rlen; ++i) {
@@ -380,7 +380,7 @@ SETS__mapper         (int *a_rpos)
          DEBUG_YREGEX  yLOG_char    ("x_sch"     , x_sch);
          if  (x_ch < x_sch) {
             DEBUG_YREGEX  yLOG_note    ("backwards ranges are illegal");
-            SETS__clear (x_unmark);
+            yregex_sets__clear (x_unmark);
             DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
             return rce;
          }
@@ -399,7 +399,7 @@ SETS__mapper         (int *a_rpos)
    }
    /*---(check for runon)----------------*/
    --rce;  if (i == gre.rlen) {
-      SETS__clear (x_unmark);
+      yregex_sets__clear (x_unmark);
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
@@ -421,7 +421,7 @@ SETS__mapper         (int *a_rpos)
 static void      o___OTHER___________________o (void) {;}
 
 char         /*-> tbd --------------------------------[ ------ [fe.D55.138.72]*/ /*-[01.0000.01#.A]-*/ /*-[--.---.---.--]-*/
-SETS__standard       (int *a_rpos)
+yregex_sets__standard   (int *a_rpos)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -465,11 +465,11 @@ SETS__standard       (int *a_rpos)
    /*---(check for set)------------------*/
    sprintf (t, "%-5.5s", gre.regex + *a_rpos + 1);
    DEBUG_YREGEX  yLOG_info    ("name"      , t);
-   x_set = SETS__by_name (t);
+   x_set = yregex_sets__by_name (t);
    DEBUG_YREGEX  yLOG_value   ("x_set"     , x_set);
    /*---(append set)---------------------*/
    if (x_set > 0) {
-      COMP_add ('[', x_set);
+      yregex_comp_add ('[', x_set);
       *a_rpos += 7;
       DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
       DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
@@ -489,7 +489,7 @@ SETS__standard       (int *a_rpos)
 static void      o___COMPILE_________________o (void) {;}
 
 char         /*-> tbd --------------------------------[ ------ [fe.B44.145.52]*/ /*-[01.0000.01#.B]-*/ /*-[--.---.---.--]-*/
-SETS_backslash       (int *a_rpos)
+yregex_sets_backslash   (int *a_rpos)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -526,39 +526,39 @@ SETS_backslash       (int *a_rpos)
    /*---(check for set)------------------*/
    DEBUG_YREGEX  yLOG_info    ("allowed"   , BACKSLASH_SETS);
    if (strchr (BACKSLASH_SETS, x_ch) != NULL) {
-      x_set = SETS_by_abbr (x_ch);
+      x_set = yregex_sets__by_abbr (x_ch);
    }
    DEBUG_YREGEX  yLOG_value   ("x_set"     , x_set);
    /*---(append set)---------------------*/
    if (x_set > 0) {
-      COMP_add ('[', x_set);
+      yregex_comp_add ('[', x_set);
       DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
       return 1;
    }
    /*---(boundaries)---------------------*/
    if (x_ch == 'b') {
       DEBUG_YREGEX  yLOG_note    ("begin word marker");
-      COMP_add ('<', SETS_by_abbr ('w'));
-      COMP_mod ('<');
+      yregex_comp_add ('<', yregex_sets__by_abbr ('w'));
+      yregex_comp_mod ('<');
       DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
       return 1;
    }
    if (x_ch == 'B') {
       DEBUG_YREGEX  yLOG_note    ("end word marker");
-      COMP_add ('>', SETS_by_abbr ('w'));
-      COMP_mod ('>');
+      yregex_comp_add ('>', yregex_sets__by_abbr ('w'));
+      yregex_comp_mod ('>');
       DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
       return 1;
    }
    /*---(literal)------------------------*/
-   COMP_add (x_ch, 0);
+   yregex_comp_add (x_ch, 0);
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
    return 0;
 }
 
 char         /*-> tbd --------------------------------[ ------ [fe.632.152.12]*/ /*-[01.0000.01#.!]-*/ /*-[--.---.---.--]-*/
-SETS_dot             (int *a_rpos)
+yregex_sets_dot         (int *a_rpos)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -578,15 +578,15 @@ SETS_dot             (int *a_rpos)
       return rce;
    }
    /*---(set)----------------------------*/
-   x_set = SETS__by_name ("dotta");
-   COMP_add ('[', x_set);
+   x_set = yregex_sets__by_name ("dotta");
+   yregex_comp_add ('[', x_set);
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
    return 1;
 }
 
 char         /*-> tbd --------------------------------[ ------ [fe.D54.156.65]*/ /*-[02.0000.01#.!]-*/ /*-[--.---.---.--]-*/
-SETS_comp            (int *a_rpos)
+yregex_sets_comp        (int *a_rpos)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -612,7 +612,7 @@ SETS_comp            (int *a_rpos)
    /*---(check standard sets)------------*/
    if (x_ch == ':') {
       DEBUG_YREGEX  yLOG_note    ("is colon (:) posix set indicator");
-      rc = SETS__standard (a_rpos);
+      rc = yregex_sets__standard (a_rpos);
       DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
       if (rc > 0) {
          DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
@@ -621,25 +621,25 @@ SETS_comp            (int *a_rpos)
       }
    }
    /*---(map the set)--------------------*/
-   rc = SETS__mapper  (a_rpos);
+   rc = yregex_sets__mapper  (a_rpos);
    --rce;  if (rc < 0) {
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
    /*---(try to find existing)-----------*/
-   x_set = SETS__by_map  ();
+   x_set = yregex_sets__by_map  ();
    DEBUG_YREGEX  yLOG_value   ("x_set"     , x_set);
    if (x_set > 0) {
-      COMP_add ('[', x_set);
+      yregex_comp_add ('[', x_set);
       DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
       return 1;
    }
    /*---(add a new one)------------------*/
-   x_set = SETS__save  ();
+   x_set = yregex_sets__save  ();
    DEBUG_YREGEX  yLOG_value   ("x_set"     , x_set);
    if (x_set > 0) {
-      COMP_add ('[', x_set);
+      yregex_comp_add ('[', x_set);
       DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
       return 1;
    }
@@ -650,7 +650,7 @@ SETS_comp            (int *a_rpos)
 }
 
 char         /*-> tbd --------------------------------[ ------ [fe.D54.156.65]*/ /*-[02.0000.01#.!]-*/ /*-[--.---.---.--]-*/
-SETS_list            (void)
+yregex_sets_list     (void)
 {
    /*---(locals)-----------+-----+-----+-*/
    int         i           =    0;
@@ -680,7 +680,7 @@ SETS_list            (void)
 static void      o___EXECUTE_________________o (void) {;}
 
 char
-SETS_break           (int a_level, int a_rpos, int a_tpos)
+yregex_sets_break       (int a_level, int a_rpos, int a_tpos)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rc          =    0;
@@ -756,14 +756,14 @@ SETS_break           (int a_level, int a_rpos, int a_tpos)
    }
    DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
    /*---(prepare next)-------------------*/
-   EXEC_launcher (a_level, a_rpos, a_tpos - 1, rc);
+   yregex_exec_launcher (a_level, a_rpos, a_tpos - 1, rc);
    /*---(return)-------------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
    return rc;
 }
 
 char
-SETS_exec            (int a_level, int a_rpos, int a_tpos)
+yregex_sets_exec     (int a_level, int a_rpos, int a_tpos)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rc          =    0;
@@ -786,13 +786,13 @@ SETS_exec            (int a_level, int a_rpos, int a_tpos)
    else         DEBUG_YREGEX  yLOG_snote   ("FAIL");
    DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
    /*---(prepare next)-------------------*/
-   EXEC_launcher (a_level, a_rpos, a_tpos, rc);
+   yregex_exec_launcher (a_level, a_rpos, a_tpos, rc);
    /*---(complete)-----------------------*/
    return rc;
 }
 
 char
-SETS_rule            (char *a_text, int a_set)
+yregex_sets_rule        (char *a_text, int a_set)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -813,7 +813,7 @@ SETS_rule            (char *a_text, int a_set)
 }
 
 char
-SETS_rule_rev        (char *a_text, int a_set)
+yregex_sets_rule_rev    (char *a_text, int a_set)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -842,7 +842,7 @@ SETS_rule_rev        (char *a_text, int a_set)
 static void      o___UNITTEST________________o (void) {;}
 
 char*        /*-> unit test accessor -----------------[ light  [us.D90.241.L0]*/ /*-[03.0000.00#.#]-*/ /*-[--.---.---.--]-*/
-SETS__unit         (char *a_question, int a_num)
+yregex_sets__unit       (char *a_question, int a_num)
 {
    /*---(locals)-----------+-----+-----+-*/
    int         i           = 0;

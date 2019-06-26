@@ -24,8 +24,8 @@
 
 #define     P_VERMAJOR  "0.--, preparing for serious use"
 #define     P_VERMINOR  "0.5-, stable and removing bugs"
-#define     P_VERNUM    "0.5p"
-#define     P_VERTXT    "focus group working and yREGEX_best and yREGEX_cursor return these values"
+#define     P_VERNUM    "0.5q"
+#define     P_VERTXT    "changed all function names to avoid future namespace collisions with programs"
 
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -127,109 +127,113 @@ char        yregex__unit_end        (void);
 
 /*===[[ COMP ]]===============================*/
 /*---(program)--------------*/
-char        COMP__init           (cchar *a_regex);
-char        COMP_error           (cchar *a_func, cint a_line, cchar *a_marker, cchar *a_message);
+char        yregex_comp__prep       (cchar *a_regex);
+char        yregex_comp_error       (cchar *a_func, cint a_line, cchar *a_marker, cchar *a_message);
 /*---(structure)------------*/
-char        COMP_add             (cchar a_comp, cint a_indx);
-char        COMP_mod             (cchar a_mod);
-char        COMP__dup_one        (void);
-char        COMP__dup_group      (void);
+char        yregex_comp_add         (cchar a_comp, cint a_indx);
+char        yregex_comp_mod         (cchar a_mod);
+char        yregex_comp__dup_one    (void);
+char        yregex_comp__dup_group  (void);
 /*---(literal)--------------*/
-char        COMP__literal        (int *a_rpos);
+char        yregex_comp__literal    (int *a_rpos);
 /*---(quantifiers)----------*/
-char        COMP__quan_simple    (int *a_rpos);
-char        COMP__quan_complex   (int *a_rpos);
+char        yregex_comp__quan_simp  (int *a_rpos);
+char        yregex_comp__quan_comp  (int *a_rpos);
 /*---(groups)---------------*/
-int         COMP_group_beg       (int  a_rpos);
-int         COMP_group_end       (int  a_rpos);
-char        COMP__extended       (void);
+int         yregex_comp__group_beg  (int  a_rpos);
+int         yregex_comp__group_end  (int  a_rpos);
+char        yregex_comp__extended   (void);
+/*---(unittest)-------------*/
+char*       yregex_comp__unit       (char *a_question, int a_num);
 
 
 
+/*345678901-12345678901-12345678901-12345678901-12345678901-12345678901-123456*/
 /*===[[ EXEC ]]===============================*/
 /*---(program)--------------*/
-char        EXEC__init           (cchar *a_source);
+char        yregex_exec__prep       (cchar *a_source);
 /*---(handlers)-------------*/
-char        EXEC__group          (int a_level, int a_rpos, int a_tpos);
-char        EXEC__anchor         (int a_level, int a_rpos, int a_tpos);
-char        EXEC__literal        (int a_level, int a_rpos, int a_tpos);
+char        yregex_exec__group      (int a_level, int a_rpos, int a_tpos);
+char        yregex_exec__anchor     (int a_level, int a_rpos, int a_tpos);
+char        yregex_exec__literal    (int a_level, int a_rpos, int a_tpos);
 /*---(nfa)------------------*/
-char        EXEC_push            (short a_level, short a_rpos, short a_tpos, short a_tmax);
-char        EXEC_backpush        (short a_level, short a_rpos, short a_tpos, short a_tmax);
-char        EXEC_launcher        (short a_level, short a_rpos, short a_tpos, char a_rc);
-int         EXEC_indx            (int a_index);
-char        EXEC__solution       (int a_index);
-char        EXEC_sub             (int a_index, int a_paren);
-int         EXEC_tpos            (int a_index, int a_paren, int *a_tbeg, int *a_tend);
-char        EXEC__found          (int a_index);
-char        EXEC__prime          (void);
-char        EXEC__single         (int a_index);
+char        yregex_exec_push        (short a_level, short a_rpos, short a_tpos, short a_tmax);
+char        yregex_exec_backpush    (short a_level, short a_rpos, short a_tpos, short a_tmax);
+char        yregex_exec_launcher    (short a_level, short a_rpos, short a_tpos, char a_rc);
+int         yregex_exec_index       (int a_index);
+char        yregex_exec_sub         (int a_index, int a_paren);
+int         yregex_exec_tpos        (int a_index, int a_paren, int *a_tbeg, int *a_tend);
+char        yregex_exec__found      (int a_index);
+char        yregex_exec__single     (int a_index);
 
 
+/*345678901-12345678901-12345678901-12345678901-12345678901-12345678901-123456*/
 /*===[[ SETS ]]===============================*/
 /*---(program)--------------*/
-char        SETS_init            (void);
+char        yregex_sets_init        (void);
 /*---(lookup)---------------*/
-char        SETS_by_abbr         (cchar a_abbr);
-char        SETS__by_name        (cchar *a_name);
-char        SETS__by_map         (void);
-char        SETS__standard       (int *a_rpos);
+char        yregex_sets__by_abbr    (cchar a_abbr);
+char        yregex_sets__by_name    (cchar *a_name);
+char        yregex_sets__by_map     (void);
+char        yregex_sets__standard   (int *a_rpos);
 /*---(mapping)--------------*/
-char        SETS__clear          (char a_unmark);
-char        SETS__save           (void);
-char        SETS__mapper         (int *a_rpos);
+char        yregex_sets__clear      (char a_unmark);
+char        yregex_sets__save       (void);
+char        yregex_sets__mapper     (int *a_rpos);
 /*---(compile)--------------*/
-char        SETS_backslash       (int *a_rpos);
-char        SETS_dot             (int *a_rpos);
-char        SETS_comp            (int *a_rpos);
-char        SETS_list            (void);
+char        yregex_sets_backslash   (int *a_rpos);
+char        yregex_sets_dot         (int *a_rpos);
+char        yregex_sets_comp        (int *a_rpos);
+char        yregex_sets_list        (void);
 /*---(execute)--------------*/
-char        SETS_break           (int a_level, int a_rpos, int a_tpos);
-char        SETS_exec            (int a_level, int a_rpos, int a_tpos);
-char        SETS_rule            (char *a_text, int a_set);
-char        SETS_rule_rev        (char *a_text, int a_set);
+char        yregex_sets_break       (int a_level, int a_rpos, int a_tpos);
+char        yregex_sets_exec        (int a_level, int a_rpos, int a_tpos);
+char        yregex_sets_rule        (char *a_text, int a_set);
+char        yregex_sets_rule_rev    (char *a_text, int a_set);
+/*---(unittest)-------------*/
+char*       yregex_sets__unit       (char *a_question, int a_num);
 /*---(done)-----------------*/
 
 
 
 /*===[[ PATS ]]===============================*/
 /*---(program)--------------*/
-char        PATS__init           (void);
+char        yregex_pats_init        (void);
 /*---(lookup)---------------*/
-int         PATS__by_abbr        (cchar a_abbr);
-int         PATS__by_name        (cchar *a_name);
+int         yregex_pats__by_abbr    (cchar a_abbr);
+int         yregex_pats__by_name    (cchar *a_name);
 /*---(workhorse)------------*/
-char        PATS__named_ref      (int *a_rpos);
-char        PATS__back_ref       (int *a_rpos);
+char        yregex_pats__named_ref  (int *a_rpos);
+char        PATS__back_ref          (int *a_rpos);
 /*---(driver)---------------*/
-char        PATS_comp            (void);
+char        yregex_pats_comp        (void);
 
 
 
+/*345678901-12345678901-12345678901-12345678901-12345678901-12345678901-123456*/
 /*===[[ FIND ]]===============================*/
 /*---(program)--------------*/
-char        FIND_init            (void);
+char        yregex_find_init        (void);
 /*---(structure)------------*/
-char        FIND_add             (cint a_ref, cint a_beg, cchar *a_text, cchar *a_quan);
-char        FIND_sub             (cint a_ref, cint a_num, short a_beg, cchar *a_text, cchar *a_quan);
-char        FIND_list            (char a_detail);
-char        FIND_text            (cint a_ref, char *a_text);
-int         FIND_count           (void);
-char*       FIND__unit           (char *a_question, int a_num);
+char        yregex_find_add         (cint a_ref, cint a_beg, cchar *a_text, cchar *a_quan);
+char        yregex_find_addsub      (cint a_ref, cint a_num, short a_beg, cchar *a_text, cchar *a_quan);
+char        yregex_find_text        (cint a_ref, char *a_text);
+int         yregex_find_count       (void);
+char*       yregex_find__unit       (char *a_question, int a_num);
 /*---(results)--------------*/
-char        FIND_first           (int  *a_beg, int *a_len);
-char        FIND_next            (int  *a_beg, int *a_len);
+char        FIND_first              (int  *a_beg, int *a_len);
+char        FIND_next               (int  *a_beg, int *a_len);
 
 
 
 /*===[[ RULE ]]===============================*/
-int         RULE__group          (int *a_rpos);
-int         RULE__operator       (int *a_rpos);
+int         yregex_rule__group      (int *a_rpos);
+int         yregex_rule__operator   (int *a_rpos);
 /*---(driver)---------------*/
-char        RULE_init            (void);
-char        RULE_comp            (int *a_rpos);
-char        RULE_exec            (short a_level, short a_rpos, short a_tpos, short a_index);
-char        RULE_regex           (short a_level, short a_rpos, short a_tpos, short a_index);
+char        yregex_rule_init        (void);
+char        yregex_rule_comp        (int *a_rpos);
+char        yregex_rule_exec        (short a_level, short a_rpos, short a_tpos, short a_index);
+char        RULE_regex              (short a_level, short a_rpos, short a_tpos, short a_index);
 
 
 

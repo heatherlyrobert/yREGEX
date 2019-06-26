@@ -52,7 +52,7 @@ yREGEX__testloc      (cchar *a_regex, cchar *a_source)
    rc = yREGEX_exec (a_source);
    if (rc <  0)   return "yREGEX_tester    : execution failed";
    /*---(question)-----------------------*/
-   return FIND__unit ("match", 0);
+   return yregex_find__unit ("match", 0);
 }
 
 

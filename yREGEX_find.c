@@ -7,10 +7,10 @@
  * metis  mw4··  additional unit testing and debugging on find algorithm
  * metis  mw4··  external function to return primary focus group pos/len
  * metis  ml1··  investigate switching to malloc for find results
+ * metis  ww4#·  look at speeding up FIND__dup for overall performance
  *
  *
  */
-
 
 #define     MAX_FIND    1000
 #define     MAX_SUB       11
@@ -54,7 +54,7 @@ static      int         s_curr      = 0;           /* point to current state  */
 static void      o___PROGRAM_________________o (void) {;}
 
 char
-FIND_init            (void)
+yregex_find_init        (void)
 {
    int         i           =     0;
    int         j           =     0;
@@ -91,7 +91,7 @@ FIND_init            (void)
 static void      o___STRUCTURE_______________o (void) {;}
 
 int
-FIND__dup            (cint a_beg, cint a_len)
+yregex_find__dup        (cint a_beg, cint a_len)
 {
    /*---(locals)-----------+-----+-----+-*/
    int         i           =    0;
@@ -106,7 +106,7 @@ FIND__dup            (cint a_beg, cint a_len)
 }
 
 char
-FIND_add             (cint a_ref, cint a_beg, cchar *a_text, cchar *a_quan)
+yregex_find_add         (cint a_ref, cint a_beg, cchar *a_text, cchar *a_quan)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -120,7 +120,7 @@ FIND_add             (cint a_ref, cint a_beg, cchar *a_text, cchar *a_quan)
    --rce;  if (a_quan == NULL)  return rce;
    /*---(check dups)---------------------*/
    x_len = strllen (a_text, LEN_TEXT);
-   x_ref = FIND__dup (a_beg, x_len);
+   x_ref = yregex_find__dup (a_beg, x_len);
    if (x_ref >= 0) {
       ++(s_finds [x_ref].count);
       return 0;
@@ -153,7 +153,7 @@ FIND_add             (cint a_ref, cint a_beg, cchar *a_text, cchar *a_quan)
 }
 
 char
-FIND_sub             (cint a_ref, cint a_num, short a_beg, cchar *a_text, cchar *a_quan)
+yregex_find_addsub      (cint a_ref, cint a_num, short a_beg, cchar *a_text, cchar *a_quan)
 {
    /*---(locals)-----------+-----+-----+-*/
    int         i           =    0;
@@ -182,27 +182,41 @@ FIND_sub             (cint a_ref, cint a_num, short a_beg, cchar *a_text, cchar 
 }
 
 char
-FIND_text            (cint a_ref, char *a_text)
+yregex_find_text        (cint a_ref, char *a_text)
 {
+   /*---(locals)-----------+-----+-----+-*/
    int         i           =     0;
+   static int  x_ref       =    -1;
+   static int  x_curr      =    -1;
+   /*---(defense)------------------------*/
    if (a_text == NULL) return 0;
+   /*---(shortcut)-----------------------*/
+   if (x_ref == a_ref) {
+      strlcpy (a_text, s_finds [x_curr].text, LEN_TEXT);
+      return 0;
+   }
+   /*---(prepare)------------------------*/
    strlcpy (a_text, "", LEN_TEXT);
+   /*---(find)---------------------------*/
    for (i = 0; i < s_nfind; ++i) {
       if (s_finds [i].ref != a_ref)  continue;
       strlcpy (a_text, s_finds [i].text, LEN_TEXT);
+      x_ref  = a_ref;
+      x_curr = i;
       break;
    }
+   /*---(complete)-----------------------*/
    return 0;
 }
 
 int
-FIND_count           (void)
+yregex_find_count       (void)
 {
    return s_nfind;
 }
 
 char
-FIND_list            (char a_detail)
+yregex_find__listall    (char a_detail)
 {
    int         i           =     0;
    int         j           =     0;
@@ -225,10 +239,10 @@ FIND_list            (char a_detail)
    return 0;
 }
 
-char yREGEX_finds (void) { return FIND_list ('y'); }
+char yREGEX_finds (void) { return yregex_find__listall ('y'); }
 
 int
-FIND_solution        (char a_scorer, int a_pos, int  *a_beg, int *a_len, int *a_fbeg, int *a_flen)
+yregex_find__solution   (char a_scorer, int a_pos, int  *a_beg, int *a_len, int *a_fbeg, int *a_flen)
 {
    /*---(locals)-----------+------+----+-*/
    char        rce         =   -10;
@@ -371,7 +385,7 @@ yREGEX_best          (cchar a_type, cchar a_dir, int  *a_beg, int *a_len, int *a
       return -1;
       break;
    }
-   rc = FIND_solution (x_scorer, -1, a_beg, a_len, a_fbeg, a_flen);
+   rc = yregex_find__solution (x_scorer, -1, a_beg, a_len, a_fbeg, a_flen);
    if (rc < 0)  return -1;
    return 0;
 }
@@ -572,7 +586,7 @@ yREGEX_cursor           (char a_dir, int *a_beg, int *a_len, int *a_fbeg, int *a
 static void      o___UNITTEST________________o (void) {;}
 
 char*
-FIND__unit           (char *a_question, int a_num)
+yregex_find__unit    (char *a_question, int a_num)
 {
    /*---(locals)-----------+------+----+-*/
    int         x_find      =     0;
@@ -592,7 +606,7 @@ FIND__unit           (char *a_question, int a_num)
       else                   snprintf (unit_answer, LEN_TEXT, "FIND score  (%2d) : %3dg, %3dl, %3db, %3ds", a_num, s_finds [a_num].greedy, s_finds [a_num].lazy, s_finds [a_num].balance, s_finds [a_num].score);
    }
    else if (strncmp (a_question, "scorer"    , 20)  == 0) {
-      x_find = FIND_solution (a_num, -1, NULL, NULL, NULL, NULL);
+      x_find = yregex_find__solution (a_num, -1, NULL, NULL, NULL, NULL);
       if (x_find < 0) {
          snprintf (unit_answer, LEN_TEXT, "FIND scorer (%2d) : %c unknown solution", x_find, a_num);
       } else {

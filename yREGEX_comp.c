@@ -58,7 +58,7 @@ static int         s_nerror   = 0;
 static void      o___PROGRAM_________________o (void) {;}
 
 char         /*-> tbd --------------------------------[ shoot  [fe.C73.144.31]*/ /*-[01.0000.01#.Z]-*/ /*-[--.---.---.--]-*/
-COMP__init           (cchar *a_regex)
+yregex_comp__prep    (cchar *a_regex)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -93,7 +93,7 @@ COMP__init           (cchar *a_regex)
    DEBUG_YREGEX  yLOG_info    ("before"    , gre.orig);
    gre.olen = strllen (gre.orig  , LEN_REGEX);
    DEBUG_YREGEX  yLOG_value   ("gre.olen"  , gre.olen);
-   COMP__extended ();
+   yregex_comp__extended ();
    DEBUG_YREGEX  yLOG_info    ("gre.orig"  , gre.orig);
    gre.olen = strllen (gre.orig  , LEN_REGEX);
    DEBUG_YREGEX  yLOG_value   ("gre.olen"  , gre.olen);
@@ -114,8 +114,8 @@ COMP__init           (cchar *a_regex)
    s_ghidden  = 10;
    s_gfocus   = '-';
    /*---(initialize sets)----------------*/
-   SETS_init ();
-   RULE_init ();
+   yregex_sets_init ();
+   yregex_rule_init ();
    gre.ready = '-';
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
@@ -123,7 +123,7 @@ COMP__init           (cchar *a_regex)
 }
 
 char         /*-> tbd --------------------------------[ leaf   [fz.632.201.00]*/ /*-[00.0000.06#.!]-*/ /*-[--.---.---.--]-*/
-COMP_error           (cchar *a_func, cint a_line, cchar *a_marker, cchar *a_message)
+yregex_comp_error    (cchar *a_func, cint a_line, cchar *a_marker, cchar *a_message)
 {
    if (a_func    != NULL)  strlcpy (s_errors [s_nerror].func   , a_func   , LEN_NAME);
    s_errors [s_nerror].line = a_line;
@@ -141,7 +141,7 @@ COMP_error           (cchar *a_func, cint a_line, cchar *a_marker, cchar *a_mess
 static void      o___STRUCTURE_______________o (void) {;}
 
 char         /*-> tbd --------------------------------[ leaf   [fz.632.201.00]*/ /*-[00.0000.06#.!]-*/ /*-[--.---.---.--]-*/
-COMP_add            (cchar a_comp, cint a_indx)
+yregex_comp_add         (cchar a_comp, cint a_indx)
 {
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
@@ -159,7 +159,7 @@ COMP_add            (cchar a_comp, cint a_indx)
 }
 
 char         /*-> tbd --------------------------------[ leaf   [fz.412.301.00]*/ /*-[00.0000.02#.!]-*/ /*-[--.---.---.--]-*/
-COMP_mod             (cchar a_mod)
+yregex_comp_mod         (cchar a_mod)
 {
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
@@ -171,7 +171,7 @@ COMP_mod             (cchar a_mod)
 }
 
 char         /*-> tbd --------------------------------[ leaf   [fz.632.201.00]*/ /*-[00.0000.06#.!]-*/ /*-[--.---.---.--]-*/
-COMP__dup_one        (void)
+yregex_comp__dup_one        (void)
 {
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
@@ -189,7 +189,7 @@ COMP__dup_one        (void)
 }
 
 char         /*-> tbd --------------------------------[ leaf   [fz.632.201.00]*/ /*-[00.0000.06#.!]-*/ /*-[--.---.---.--]-*/
-COMP__dup_group      (void)
+yregex_comp__dup_group      (void)
 {
    int         x_beg       = 0;
    int         x_end       = 0;
@@ -198,14 +198,14 @@ COMP__dup_group      (void)
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    DEBUG_YREGEX  yLOG_value   ("gre.clen"  , gre.clen);
    x_end = gre.clen - 1;
-   x_beg = COMP_group_beg (x_end);
+   x_beg = yregex_comp__group_beg (x_end);
    DEBUG_YREGEX  yLOG_value   ("x_beg"     , x_beg);
    DEBUG_YREGEX  yLOG_value   ("x_end"     , x_end);
    for (i = x_beg; i <= x_end; ++i) {
       DEBUG_YREGEX  yLOG_value   ("pos"       , i);
-      COMP_add (gre.comp [i], gre.indx [i]);
+      yregex_comp_add (gre.comp [i], gre.indx [i]);
       if (strchr ("(|)", gre.comp [i]) != NULL)  gre.indx [gre.clen - 1] = s_gmulti;
-      COMP_mod (gre.mods [i]);
+      yregex_comp_mod (gre.mods [i]);
       gre.jump [gre.clen - 1] = gre.jump [i];
    }
    ++s_gmulti;
@@ -222,7 +222,7 @@ COMP__dup_group      (void)
 static void      o___LITERAL_________________o (void) {;}
 
 char         /*-> tbd --------------------------------[ ------ [fe.833.134.31]*/ /*-[01.0000.01#.6]-*/ /*-[--.---.---.--]-*/
-COMP__literal        (int *a_rpos)
+yregex_comp__literal        (int *a_rpos)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -234,7 +234,7 @@ COMP__literal        (int *a_rpos)
    /*---(check)--------------------------*/
    x_ch  = gre.regex [*a_rpos];
    DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
-   rc = COMP_add  (x_ch, 0);
+   rc = yregex_comp_add  (x_ch, 0);
    DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
    --rce;  if (rc < 0) {
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
@@ -253,7 +253,7 @@ COMP__literal        (int *a_rpos)
 static void      o___MODS____________________o (void) {;}
 
 char         /*-> tbd --------------------------------[ ------ [fe.732.151.11]*/ /*-[01.0000.01#.!]-*/ /*-[--.---.---.--]-*/
-COMP__quan_simple    (int *a_rpos)
+yregex_comp__quan_simp  (int *a_rpos)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -276,18 +276,18 @@ COMP__quan_simple    (int *a_rpos)
    switch (x_mod) {
    case '*' : case '@' :
       DEBUG_YREGEX  yLOG_note    ("any modifier * (greedy) and @ (lazy)");
-      COMP_mod (x_mod);
+      yregex_comp_mod (x_mod);
       break;
    case '?' : case '!' :
       DEBUG_YREGEX  yLOG_note    ("one modifier ? (greedy) and ! (lazy)");
-      COMP_mod (x_mod);
+      yregex_comp_mod (x_mod);
       break;
    case '+' : case '~' :
       DEBUG_YREGEX  yLOG_note    ("many modifier + (greedy) and ~ (lazy)");
-      if (x_pch == ')')  COMP__dup_group   ();
-      else               COMP__dup_one     ();
-      if (x_mod == '+')  COMP_mod   ('*');
-      else               COMP_mod   ('@');
+      if (x_pch == ')')  yregex_comp__dup_group   ();
+      else               yregex_comp__dup_one     ();
+      if (x_mod == '+')  yregex_comp_mod   ('*');
+      else               yregex_comp_mod   ('@');
       break;
    }
    /*---(complete)-----------------------*/
@@ -296,7 +296,7 @@ COMP__quan_simple    (int *a_rpos)
 }
 
 char         /*-> tbd --------------------------------[ ------ [fe.I86.1C3.D1]*/ /*-[03.0000.01#.!]-*/ /*-[--.---.---.--]-*/
-COMP__quan_complex   (int *a_rpos)
+yregex_comp__quan_comp   (int *a_rpos)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -385,35 +385,35 @@ COMP__quan_complex   (int *a_rpos)
    /*---(zero or more)-------------------*/
    if (x_min == 0) {
       if (x_max >= MAX_QUAN) {
-         if (x_lazy == 'y')  COMP_mod ('@');
-         else                COMP_mod ('*');
+         if (x_lazy == 'y')  yregex_comp_mod ('@');
+         else                yregex_comp_mod ('*');
          return 1;
       }
-      if (x_lazy == 'y')  COMP_mod ('!');
-      else                COMP_mod ('?');
+      if (x_lazy == 'y')  yregex_comp_mod ('!');
+      else                yregex_comp_mod ('?');
       for (i = 1; i < x_max; ++i) {
-         if (x_pch == ')')  COMP__dup_group   ();
-         else               COMP__dup_one     ();
+         if (x_pch == ')')  yregex_comp__dup_group   ();
+         else               yregex_comp__dup_one     ();
       }
       return 1;
    }
    /*---(one or more)--------------------*/
    for (i = 1; i < x_min; ++i) {
-      if (x_pch == ')')  COMP__dup_group   ();
-      else               COMP__dup_one     ();
+      if (x_pch == ')')  yregex_comp__dup_group   ();
+      else               yregex_comp__dup_one     ();
    }
    if (x_max > x_min) {
       if (x_max >= MAX_QUAN) {
-         if (x_pch  == ')')  COMP__dup_group   ();
-         else                COMP__dup_one     ();
-         if (x_lazy == 'y')  COMP_mod ('@');
-         else                COMP_mod ('*');
+         if (x_pch  == ')')  yregex_comp__dup_group   ();
+         else                yregex_comp__dup_one     ();
+         if (x_lazy == 'y')  yregex_comp_mod ('@');
+         else                yregex_comp_mod ('*');
       } else {
          for (i = x_min; i < x_max; ++i) {
-            if (x_pch  == ')')  COMP__dup_group   ();
-            else                COMP__dup_one     ();
-            if (x_lazy == 'y')  COMP_mod ('!');
-            else                COMP_mod ('?');
+            if (x_pch  == ')')  yregex_comp__dup_group   ();
+            else                yregex_comp__dup_one     ();
+            if (x_lazy == 'y')  yregex_comp_mod ('!');
+            else                yregex_comp_mod ('?');
          }
       }
    }
@@ -430,7 +430,7 @@ COMP__quan_complex   (int *a_rpos)
 static void      o___GROUPS__________________o (void) {;}
 
 int
-COMP_group_beg       (int a_rpos)
+yregex_comp__group_beg  (int a_rpos)
 {
    /*---(locals)-----------+-----+-----+-*/
    int         x_lvl       =    0;
@@ -446,7 +446,7 @@ COMP_group_beg       (int a_rpos)
 }
 
 int
-COMP_group_end       (int a_rpos)
+yregex_comp__group_end  (int a_rpos)
 {
    /*---(locals)-----------+-----+-----+-*/
    int         x_lvl       =    0;
@@ -554,7 +554,7 @@ COMP__group          (int *a_rpos)
          }
          break;
       }
-      rc = COMP_add  ('(', x_grp);
+      rc = yregex_comp_add  ('(', x_grp);
       s_gstack [s_glevel] = x_grp;
       break;
    case '<' :
@@ -565,7 +565,7 @@ COMP__group          (int *a_rpos)
          DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
          return -1;
       }
-      rc = COMP_add  (')', x_grp);
+      rc = yregex_comp_add  (')', x_grp);
       rc = COMP__group_fix  (x_grp);
       --s_glevel;
       ++*a_rpos;
@@ -573,14 +573,14 @@ COMP__group          (int *a_rpos)
    case ')' :
       DEBUG_YREGEX  yLOG_note    ("close normal/hidden group");
       x_grp = s_gstack [s_glevel];
-      rc = COMP_add  (x_ch, x_grp);
+      rc = yregex_comp_add  (x_ch, x_grp);
       rc = COMP__group_fix  (x_grp);
       --s_glevel;
       break;
    case '|' :
       DEBUG_YREGEX  yLOG_note    ("divide branches/matches");
       x_grp = s_gstack [s_glevel];
-      rc = COMP_add  (x_ch, x_grp);
+      rc = yregex_comp_add  (x_ch, x_grp);
       break;
    }
    DEBUG_YREGEX  yLOG_complex ("current"   , "lvl %2d, nrm %2d, hid %2d, grp %2d", s_glevel, s_ggroup, s_ghidden, x_grp);
@@ -597,7 +597,7 @@ COMP__group          (int *a_rpos)
 static void      o___EXTENDED________________o (void) {;}
 
 char         /*-> tbd --------------------------------[ ------ [ge.E54.142.98]*/ /*-[02.0000.00#.#]-*/ /*-[--.---.---.--]-*/
-COMP__extended       (void)
+yregex_comp__extended   (void)
 {
    /*---(locals)-----------+-----+-----+-*/
    int         i           =    0;
@@ -704,7 +704,7 @@ yREGEX_comp          (cchar *a_regex)
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    DEBUG_YREGEX  yLOG_point   ("a_regex"   , a_regex);
    /*---(prepare)------------------------*/
-   rc = COMP__init (a_regex);
+   rc = yregex_comp__prep (a_regex);
    DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
    if (rc < 0) {
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rc);
@@ -714,7 +714,7 @@ yREGEX_comp          (cchar *a_regex)
    DEBUG_YREGEX  yLOG_info    ("tranlated" , gre.orig);
    DEBUG_YREGEX  yLOG_point   ("gre.olen"  , gre.olen);
    /*---(pattern run)--------------------*/
-   rc = PATS_comp ();
+   rc = yregex_pats_comp ();
    DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
    if (rc < 0) {
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rc);
@@ -733,20 +733,20 @@ yREGEX_comp          (cchar *a_regex)
       /*---(backslashed metas)-----------*/
       if (x_ch == G_KEY_BSLASH) {
          DEBUG_YREGEX  yLOG_note    ("handle escaped character");
-         rc = SETS_backslash (&i);
+         rc = yregex_sets_backslash (&i);
          continue;
       }
       /*---(dot)-------------------------*/
       if (x_ch == '.') {
          DEBUG_YREGEX  yLOG_note    ("handle dot character");
-         rc = SETS_dot (&i);
+         rc = yregex_sets_dot (&i);
          continue;
       }
       /*---(rules handling)--------------*/
       if (x_ch == '(' && x_nch == ';') {
          DEBUG_YREGEX  yLOG_note    ("handle special rules");
          rc = COMP__group (&i);
-         rc = RULE_comp   (&i);
+         rc = yregex_rule_comp  (&i);
          /*> if (rc >= 0)  continue;                                                  <*/
          continue;
       }
@@ -759,30 +759,30 @@ yREGEX_comp          (cchar *a_regex)
       /*---(anchors)---------------------*/
       if (strchr (G_ANCHOR, x_ch) != NULL) {
          DEBUG_YREGEX  yLOG_note    ("handle anchors");
-         rc = COMP_add (x_ch, SETS_by_abbr ('w'));
+         rc = yregex_comp_add (x_ch, yregex_sets__by_abbr ('w'));
          if (rc >= 0)  continue;
       }
       /*---(set handling)----------------*/
       if (x_ch == '[') {
          DEBUG_YREGEX  yLOG_note    ("handle character set");
-         rc = SETS_comp (&i);
+         rc = yregex_sets_comp (&i);
          if (rc >= 0)  continue;
       }
       /*---(quick modifiers)-------------*/
       if (strchr (TYPE_QUANS, x_ch) != NULL) {
          DEBUG_YREGEX  yLOG_note    ("handle simple modifier");
-         rc = COMP__quan_simple (&i);
+         rc = yregex_comp__quan_simp (&i);
          continue;
       }
       /*---(specific modifiers)----------*/
       if (x_ch == '{') {
          DEBUG_YREGEX  yLOG_note    ("handle complex modifier");
-         rc = COMP__quan_complex (&i);
+         rc = yregex_comp__quan_comp (&i);
          continue;
       }
       /*---(literals)--------------------*/
       DEBUG_YREGEX  yLOG_note    ("handle character literal");
-      rc = COMP__literal (&i);
+      rc = yregex_comp__literal (&i);
    }
    /*---(check for failure)--------------*/
    if (rc < 0) {
@@ -833,7 +833,7 @@ COMP__unitmap      (char a_type, int a_value)
 }
 
 char*        /*-> unit test accessor -----------------[ light  [us.D90.241.L0]*/ /*-[03.0000.00#.#]-*/ /*-[--.---.---.--]-*/
-COMP__unit         (char *a_question, int a_num)
+yregex_comp__unit       (char *a_question, int a_num)
 {
    /*---(locals)-----------+-----+-----+-*/
    int         i           = 0;
