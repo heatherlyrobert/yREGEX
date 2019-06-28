@@ -9,6 +9,7 @@
 
 static char s_run        = 'y';
 static char s_regex      [LEN_RECD] = "";
+static char s_dump       = '-';
 
 
 
@@ -26,10 +27,11 @@ PROG_args          (int argc, char *argv[])
       ++x_total;
       if (a[0] == '@')  continue;
       ++x_args;
-      if      (strcmp (a, "--base"      ) == 0)  s_run = '-';
-      else if (strcmp (a, "--regcomp"   ) == 0)  s_run = 'c';
-      else if (strcmp (a, "--yregex"    ) == 0)  s_run = 'y';
-      else if (strcmp (a, "--fast"      ) == 0)  s_run = 'f';
+      if      (strcmp (a, "--base"      ) == 0)  s_run  = '-';
+      else if (strcmp (a, "--regcomp"   ) == 0)  s_run  = 'c';
+      else if (strcmp (a, "--yregex"    ) == 0)  s_run  = 'y';
+      else if (strcmp (a, "--fast"      ) == 0)  s_run  = 'f';
+      else if (strcmp (a, "--dump"      ) == 0)  s_dump = 'y';
       else if (a[0] != '-'              )  strlcpy (s_regex , argv[i]  , LEN_RECD);
    }
    if (strlen (s_regex) == 0) return -10;
@@ -94,8 +96,10 @@ main          (int a_argc, char *a_argv[])
          if (rc == 0)  ++c;
          break;
       }
-      /*> yREGEX_dump  ();                                                            <*/
-      /*> yREGEX_finds ();                                                            <*/
+      if (s_dump == 'y') {
+         yREGEX_dump  ();
+         yREGEX_finds ();
+      }
       /*> if (a % 100  == 0)  printf ("%06d (%06d)\n", a, c);                         <*/
    }
    if (s_run == 'c') regfree (&regex_comp);

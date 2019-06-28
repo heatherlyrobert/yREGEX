@@ -24,8 +24,8 @@
 
 #define     P_VERMAJOR  "0.--, preparing for serious use"
 #define     P_VERMINOR  "0.5-, stable and removing bugs"
-#define     P_VERNUM    "0.5q"
-#define     P_VERTXT    "changed all function names to avoid future namespace collisions with programs"
+#define     P_VERNUM    "0.5r"
+#define     P_VERTXT    "fixed trouble with leading # and ; misinterpreted as groups/rules"
 
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -67,7 +67,6 @@ typedef   unsigned char  uchar;
 #define     TYPE_GROUP   "()|"
 #define     GROUP_FOCUS    999
 
-#define     BACKSLASH_SETS   "entfswdlugaxWDSFG"
 
 #define     G_ANCHOR     "^$<>"
 #define     G_GROUP      "(|)"
@@ -100,6 +99,9 @@ struct      cREGEX {
    uchar       mods        [LEN_REGEX];    /* compilied regex modifier        */
    int         jump        [LEN_REGEX];    /* compilied regex group jumps     */
    int         clen;                       /* compliled regex length          */
+   char        groups      [LEN_LABEL];    /* marks for named groups          */
+   int         gbegs       [LEN_LABEL];    /* actual group beginnings         */
+   int         gends       [LEN_LABEL];    /* actual group endings            */
 };
 extern      tREGEX      gre;
 
@@ -170,7 +172,7 @@ char        yregex_exec__single     (int a_index);
 /*345678901-12345678901-12345678901-12345678901-12345678901-12345678901-123456*/
 /*===[[ SETS ]]===============================*/
 /*---(program)--------------*/
-char        yregex_sets_init        (void);
+char        yregex_sets_prep        (void);
 /*---(lookup)---------------*/
 char        yregex_sets__by_abbr    (cchar a_abbr);
 char        yregex_sets__by_name    (cchar *a_name);

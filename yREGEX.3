@@ -2,11 +2,11 @@
 .na
 
 .SH NAME
-yREGEX \- transparent and flexible regular expression library
+yREGEX \- powerful, focused, small-volume regular expression library
 
 .SH SUMMARY
-yREGEX is a clean and useful library for day-to-day regular expression matching
-based on ken thompsons wicked fast finite automata algorithm (not recursion)
+yREGEX is a transparent library for small-volume, day-to-day regular expression
+matching based on ken thompsons finite automata algorithm (not recursion)
 plus added back references and sub-match rules.
 
 .SH CAVEAT (deeper learning, bootstrapping, and dogfooding)
@@ -26,10 +26,16 @@ data warehousing speeds, and runtime optimization, buy a commercial library ;)
 .BI "char  yREGEX_exec   (cchar *" "a_text " ");"
 .BI "char  yREGEX_fast   (cchar *" "a_text " ");"
 .sp
----(matches)-----------------------------------
-.BI "char  yREGEX_best   (cchar  " "a_type " ", cchar " "a_side" ", int *" "a_beg" ", int *" "a_len" ");"
+---(best solution)-----------------------------
+.BI "char  yREGEX_best   (cchar  " "a_type " ", cchar " "a_side" ","
+.BI " " "                    " "int   *" "a_beg  " ", int  *" "a_len"  ","
+.BI " " "                    " "int   *" "a_fbeg " ", int  *" "a_flen" ");"
+.sp
+---(match cursoring)---------------------------
 .BI "char  yREGEX_method (cchar  " "a_type " ");"
-.BI "char  yREGEX_cursor (cchar  " "a_dir  " ", int *" "a_beg" ", int *" "a_len" ");"
+.BI "char  yREGEX_cursor (cchar  " "a_dir  " ","
+.BI " " "                    " "int   *" "a_beg  " ", int  *" "a_len"  ","
+.BI " " "                    " "int   *" "a_fbeg " ", int  *" "a_flen" ");"
 .sp
 ---(linking)-----------------------------------
 .B link with -L/usr/local/libs -lyREGEX or -lyREGEX_debug
@@ -87,7 +93,7 @@ this will NOT explain regular expressions in detail.
    ºnÞm»      first group must sort same or later      (;n>=m)
    ºn+...»    contains the substring                   (;n+...)
    ºn-...»    does not contain substring               (;n-...)
-   ºnµu»      has a char in standard set               (;nµu)
+   ºn\\u»      has a char in standard set               (;n\\u)
    ºn[...]»   has a char in custom set                 (;n[...])
    ºn[^...]»  does not have any char in set            (;n[^...])
    ºn...»     freeform regex sequence for matching     (;n...)
@@ -103,9 +109,25 @@ this will NOT explain regular expressions in detail.
    @          laziest overall
    !          leftmost lazy
    ~          rightmost lazy
+   #          numeric search (see below)
+
+.B numeric match prefix---------------------------------- maybe
+   while not a regex, numeric ranges are key searching mechanisms, so
+   yREGEX will interpret these symbols as well
+   #=n        equal                                    #==n
+   #ßn        not equal                                #!=n
+   #<n        less than                                #<n
+   #>n        greater than                             #>n
+   #Ýn        less than or equal                       #<=n
+   #Þn        greater than of equal                    #>=n
+   #n±m       inclusive range by absolutes             #n><m
+   #n%m       inclusive range by percents              #n%m
+   #!n±m      exclusion of range by absolutes          #!n><m
+   #!n%m      exclusion of range by percents           #!n%m
+   #´´´|´´´   or conjunction                           #´´´|´´´
 
 .B spacers (for readability) ---------------------------- new
-   ² ´ ³ ± ¬      used in any combination or number
+   ² ´ ³ ¬        used in any combination or number
    ²²²º...»       sometimes this before the rule section can help
    º...»´º...»    the medium dot is nice between rules for clarity
 
@@ -126,16 +148,17 @@ is returned.
 
 .B yREGEX_fast (<text>)
 same as yREGEX_exec, but returns once a single match is found.  this is useful
-when just filtering or counting matching lines.
+when just filtering matching lines.
 
-.SH SOLUTION FUNCTIONS
+.SH BEST SOLUTION and MATCH CURSOR FUNCTIONS
 yREGEX is a little different here as it does not return match arrays for the
 source program to iterate over.  yREGEX_exec returns the number of matches
 (100 means >= 100).  yREGEX then provides two levels of solution access.
 
-.B yREGEX_best (<type>, <start>, <beg>, <len>)
-this returns what is determined to be the best match based on the first two
-arguments.
+.B yREGEX_best (<type>, <start>, <beg>, <len>, <fbeg>, <flen>)
+.RS 3
+returns the best match based on the first two arguments.
+.RE
 
 .RS 3
 .B <type>
@@ -149,26 +172,36 @@ arguments.
    YREGEX_MOST     most greedy or lazy match based on <type>.
 
 .B <beg>
-returns the start position of the selected match.
+returns the start position of selected match (may be NULL).
 
 .B <len>
-returns the length of the selected match.
+returns the length of selected match (may be NULL).
+
+.B <fbeg>
+returns the start position of ¼focus½ group (may be NULL).
+
+.B <flen>
+returns the length of ¼focus½ group (may be NULL).
 .RE
 
 .B yREGEX_method (<type>)
-prepares the match cursor for one of the three types of matches as shown
-above (yREGEX_best).
+.RS 3
+prepares the match cursor for one of two types of matches as shown above
+(yREGEX_greedy, yREGEX_lazy).  defaults to greedy.
+.RE
 
-.B yREGEX_cursor (<dir>, <beg>, <len>)
-walks through the finds for the type set with yREGEX_method.  a move past
-the beginning or end will return negative <beg> and <len> but not adjust
-the position.
+.B yREGEX_cursor (<dir>, <beg>, <len>, <fbeg>, <flen>)
+.RS 3
+walks through the matches for the type set in yREGEX_method.  same as
+yREGEX_best, it returns both the match beg and length as well as the focus
+group beg and length.
+.RE
 
 .RS 3
 .B <dir>
-[ head > next . curr < prev ] last.
+is '['=head '>'=next '.'=curr '<'=prev ']'=last
 
-.B <beg> and <len>
+.B <beg>, <len>, <fbeg>, and <flen>
 same as yREGEX_best.
 .RE
 

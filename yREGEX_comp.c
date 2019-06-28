@@ -52,6 +52,7 @@ static int         s_nerror   = 0;
 
 
 
+
 /*====================------------------------------------====================*/
 /*===----                        program level                         ----===*/
 /*====================------------------------------------====================*/
@@ -113,8 +114,9 @@ yregex_comp__prep    (cchar *a_regex)
    s_ggroup   =  0;
    s_ghidden  = 10;
    s_gfocus   = '-';
+   strlcpy (gre.groups, "               ", LEN_LABEL);
    /*---(initialize sets)----------------*/
-   yregex_sets_init ();
+   yregex_sets_prep ();
    yregex_rule_init ();
    gre.ready = '-';
    /*---(complete)-----------------------*/
@@ -464,7 +466,7 @@ yregex_comp__group_end  (int a_rpos)
 }
 
 char         /*-> tbd --------------------------------[ leaf   [fc.741.141.50]*/ /*-[03.0000.01#.!]-*/ /*-[--.---.---.--]-*/
-COMP__group_fix      (cint a_grp)
+yregex_comp__group_fix  (cint a_grp)
 {
    /*---(locals)-----------+-----+-----+-*/
    int         i           =    0;
@@ -506,7 +508,7 @@ COMP__group_fix      (cint a_grp)
 }
 
 char         /*-> tbd --------------------------------[ ------ [fe.B53.141.32]*/ /*-[02.0000.01#.!]-*/ /*-[--.---.---.--]-*/
-COMP__group          (int *a_rpos)
+yregex_comp__group      (int *a_rpos)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -519,6 +521,12 @@ COMP__group          (int *a_rpos)
    x_ch   = gre.regex [*a_rpos];
    x_nch  = gre.regex [*a_rpos + 1];
    DEBUG_YREGEX  yLOG_complex ("position"  , "pos %2d, ch  %c, nch %c", *a_rpos, x_ch, x_nch);
+   /*---(defense)------------------------*/
+   --rce;  if (*a_rpos == 0 && strchr ("#;", x_nch) != NULL){
+      DEBUG_YREGEX  yLOG_note    ("prefix hash (#) or semi (;), not really group");
+      x_nch = '?';
+   }
+   /*---(check)--------------------------*/
    switch (x_ch) {
    case '(' :
       ++s_glevel;
@@ -530,6 +538,7 @@ COMP__group          (int *a_rpos)
             x_grp = ++s_ghidden;
          } else {
             DEBUG_YREGEX  yLOG_note    ("open normal group");
+            gre.groups [x_grp - 1] = 'y';
          }
          ++*a_rpos;
          break;
@@ -537,6 +546,7 @@ COMP__group          (int *a_rpos)
          DEBUG_YREGEX  yLOG_note    ("open primary group");
          s_gfocus = 'y';
          x_grp = GROUP_FOCUS;
+         gre.groups [10] = 'F';
          ++*a_rpos;
          break;
       case ';' :
@@ -548,6 +558,7 @@ COMP__group          (int *a_rpos)
          if (*a_rpos == 0) {
             DEBUG_YREGEX  yLOG_note    ("open full regex container");
             x_grp = ++s_ggroup;
+            gre.groups [x_grp - 1] = '.';
          } else {
             DEBUG_YREGEX  yLOG_note    ("open hidden group");
             x_grp = ++s_ghidden;
@@ -566,7 +577,7 @@ COMP__group          (int *a_rpos)
          return -1;
       }
       rc = yregex_comp_add  (')', x_grp);
-      rc = COMP__group_fix  (x_grp);
+      rc = yregex_comp__group_fix  (x_grp);
       --s_glevel;
       ++*a_rpos;
       break;
@@ -574,7 +585,7 @@ COMP__group          (int *a_rpos)
       DEBUG_YREGEX  yLOG_note    ("close normal/hidden group");
       x_grp = s_gstack [s_glevel];
       rc = yregex_comp_add  (x_ch, x_grp);
-      rc = COMP__group_fix  (x_grp);
+      rc = yregex_comp__group_fix  (x_grp);
       --s_glevel;
       break;
    case '|' :
@@ -608,7 +619,7 @@ yregex_comp__extended   (void)
    for (i = 0; i <= gre.olen; ++i) {
       x_ch = gre.orig [i];
       switch (x_ch) {
-      case G_CHAR_STORAGE : case G_CHAR_BIGDOT  : case G_CHAR_HUGE    : 
+      case G_CHAR_STORAGE : case G_CHAR_BIGDOT  :
       case G_CHAR_HALT    : case G_CHAR_MASK    :  /* just a spacer, not used  */
          break;
       case G_CHAR_DBSLASH :  /* delayed backslash      */
@@ -743,17 +754,16 @@ yREGEX_comp          (cchar *a_regex)
          continue;
       }
       /*---(rules handling)--------------*/
-      if (x_ch == '(' && x_nch == ';') {
+      if (x_ch == '(' && x_nch == ';' && i > 0) {
          DEBUG_YREGEX  yLOG_note    ("handle special rules");
-         rc = COMP__group (&i);
+         rc = yregex_comp__group (&i);
          rc = yregex_rule_comp  (&i);
-         /*> if (rc >= 0)  continue;                                                  <*/
          continue;
       }
       /*---(group handling)--------------*/
       if (strchr (TYPE_GROUP, x_ch) != NULL || (x_ch == '<' && x_nch == ')')) {
          DEBUG_YREGEX  yLOG_note    ("handle grouping");
-         rc = COMP__group (&i);
+         rc = yregex_comp__group (&i);
          if (rc >= 0)  continue;
       }
       /*---(anchors)---------------------*/
@@ -785,11 +795,16 @@ yREGEX_comp          (cchar *a_regex)
       rc = yregex_comp__literal (&i);
    }
    /*---(check for failure)--------------*/
-   if (rc < 0) {
+   gre.ready = 'n';
+   --rce;  if (s_glevel != 0) {
+      DEBUG_YREGEX  yLOG_note    ("parenthesis do not balance");
+      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   --rce;  if (rc < 0) {
       DEBUG_YREGEX  yLOG_note    ("compilation failed");
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rc);
-      gre.ready = 'n';
-      return rc;
+      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
    }
    gre.ready = 'y';
    /*---(complete)-----------------------*/
@@ -807,7 +822,7 @@ static void      o___UNITTEST________________o (void) {;}
 char        unit_answer  [LEN_TEXT];
 
 char         /*-> unit test accessor -----------------[ light  [us.D90.241.L0]*/ /*-[03.0000.00#.#]-*/ /*-[--.---.---.--]-*/
-COMP__unitmap      (char a_type, int a_value)
+yregex_comp__unit_map   (char a_type, int a_value)
 {
    char        x_ch        = ' ';
    char       *x_range     = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ***********************************************************************";
@@ -867,17 +882,19 @@ yregex_comp__unit       (char *a_question, int a_num)
       snprintf (unit_answer, LEN_TEXT, "COMP base        : %2d [%-45.45s]", gre.clen, gre.comp);
    } else if (strncmp (a_question, "indx"      , 20)  == 0) {
       for (i = 0; i < 45; ++i) {
-         if (strchr ("(|&)", gre.comp [i]) != NULL)  t [i] = COMP__unitmap ('(', gre.indx [i]);
-         else                                        t [i] = COMP__unitmap ('i', gre.indx [i]);
+         if (strchr ("(|&)", gre.comp [i]) != NULL)  t [i] = yregex_comp__unit_map ('(', gre.indx [i]);
+         else                                        t [i] = yregex_comp__unit_map ('i', gre.indx [i]);
       }
       t [45] = 0;
       snprintf (unit_answer, LEN_TEXT, "COMP indx        : %2d [%-45.45s]", gre.clen, t);
    } else if (strncmp (a_question, "mods"      , 20)  == 0) {
       snprintf (unit_answer, LEN_TEXT, "COMP mods        : %2d [%-45.45s]", gre.clen, gre.mods);
    } else if (strncmp (a_question, "jump"      , 20)  == 0) {
-      for (i = 0; i < 45; ++i)   t [i] = COMP__unitmap ('j', gre.jump [i]);
+      for (i = 0; i < 45; ++i)   t [i] = yregex_comp__unit_map ('j', gre.jump [i]);
       t [45] = 0;
       snprintf (unit_answer, LEN_TEXT, "COMP jump        : %2d [%-45.45s]", gre.clen, t);
+   } else if (strncmp (a_question, "groups"    , 20)  == 0) {
+      snprintf (unit_answer, LEN_TEXT, "COMP groups      : [%-11.11s]", gre.groups);
    }
    /*---(complete)-----------------------*/
    return unit_answer;

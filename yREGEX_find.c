@@ -172,11 +172,18 @@ yregex_find_addsub      (cint a_ref, cint a_num, short a_beg, cchar *a_text, cch
    }
    if (a_ref != x_ref)  return -1;
    /*---(update)-------------------------*/
-   s_finds [x_curr].sub [a_num].beg  = a_beg;
-   if (a_text != NULL)  strlcpy (s_finds [x_curr].sub [a_num].text, a_text, LEN_TEXT);
-   if (a_quan != NULL)  strlcpy (s_finds [x_curr].sub [a_num].quan, a_quan, LEN_TEXT);
-   if (a_text != NULL)  x_len = strllen (a_text, LEN_TEXT);
-   s_finds [x_curr].sub [a_num].len  = x_len;
+   if (a_beg == -1) {
+      s_finds [x_curr].sub [a_num].beg  = a_beg;
+      s_finds [x_curr].sub [a_num].text [0] = '\0';
+      s_finds [x_curr].sub [a_num].quan [0] = '\0';
+      s_finds [x_curr].sub [a_num].len  = 0;
+   } else {
+      s_finds [x_curr].sub [a_num].beg  = a_beg;
+      if (a_text != NULL)  strlcpy (s_finds [x_curr].sub [a_num].text, a_text, LEN_TEXT);
+      if (a_quan != NULL)  strlcpy (s_finds [x_curr].sub [a_num].quan, a_quan, LEN_TEXT);
+      if (a_text != NULL)  x_len = strllen (a_text, LEN_TEXT);
+      s_finds [x_curr].sub [a_num].len  = x_len;
+   }
    /*---(complete)-----------------------*/
    return 0;
 }

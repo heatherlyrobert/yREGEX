@@ -45,6 +45,7 @@ static tSETS       s_sets [MAX_SETS] = {
    { ':', 'a', "alpha"              , "                                                                 ..........................      ..........................                                                                                                                                     " },
    { ':', '-', "alnum"              , "                                                ..........       ..........................      ..........................                                                                                                                                     " },
    { ':', 'p', "punct"              , "                                 ...............          .......                          ......                          ....                                                                                                                                 " },
+   { '-', 'q', "rpunc"              , "                                ..      ..  . .           ..   .                           . .                             . .                                                                                                                                  " },
    { ':', 'x', "xdigi"              , "                                                ..........       ......                          ......                                                                                                                                                         " },
    /*type abbr  ---name-------------   0123456789abcdef0123456789abcde  !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~½                                 ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ  */
    { ':', '-', "graph"              , "                                 ..............................................................................................                                  ..............................................................................................." },
@@ -67,6 +68,7 @@ static tSETS       s_sets [MAX_SETS] = {
    {  0 , '-', ""                   , "                                                                                                                                                                                                                                                                " },
 };
 static int         s_nset      = 0;
+static char        s_allowed   [LEN_HUND] = "";
 
 
 
@@ -81,25 +83,37 @@ static int         s_mapcount  =  0;
 static void      o___PROGRAM_________________o (void) {;}
 
 char         /*-> tbd --------------------------------[ leaf   [fz.531.021.10]*/ /*-[02.0000.01#.!]-*/ /*-[--.---.---.--]-*/
-yregex_sets_init     (void)
+yregex_sets_prep     (void)
 {
    /*---(locals)-----------+-----+-----+-*/
    int         i           =    0;
    int         j           =    0;
+   char        t           [LEN_LABEL];
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
    /*---(initialize sets)----------------*/
+   strlcpy (s_allowed, "", LEN_HUND);
    s_nset = 0;
    for (i = 0; i < MAX_SETS; ++i) {
+      /*---(allowed abbr)----------------*/
+      if (s_sets [i].abbr != '-') {
+         sprintf (t, "%c", s_sets [i].abbr);
+         strlcat (s_allowed, t, LEN_HUND);
+      }
+      /*---(count)-----------------------*/
       if (s_sets [i].type != 0   && s_sets [i].type != ' ') {
          ++s_nset;
          continue;
       }
+      /*---(added ones)------------------*/
       s_sets [i].type     = 0;
       strlcpy (s_sets [i].name, "", LEN_NAME);
       for (j = 0; j < 256;  ++j)   s_sets [i].map [j] = ' ';
       s_sets [i].map [256] = 0;
+      /*---(done)------------------------*/
    }
+   DEBUG_YREGEX  yLOG_snote   (s_allowed);
+   DEBUG_YREGEX  yLOG_sint    (s_nset);
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
    return 0;
@@ -524,8 +538,8 @@ yregex_sets_backslash   (int *a_rpos)
    x_ch   = gre.regex [*a_rpos];
    DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
    /*---(check for set)------------------*/
-   DEBUG_YREGEX  yLOG_info    ("allowed"   , BACKSLASH_SETS);
-   if (strchr (BACKSLASH_SETS, x_ch) != NULL) {
+   DEBUG_YREGEX  yLOG_info    ("allowed"   , s_allowed);
+   if (strchr (s_allowed, x_ch) != NULL) {
       x_set = yregex_sets__by_abbr (x_ch);
    }
    DEBUG_YREGEX  yLOG_value   ("x_set"     , x_set);

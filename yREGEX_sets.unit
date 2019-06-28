@@ -20,7 +20,7 @@ SCRP          v21  (sets  ) verify set abbreviations and backslashes          
 
    COND       v21  initialize the testing environment                           - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.001))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
      exec     v21  start testing                        yregex__unit_quiet                                                                            i_equal     0                                                                                                    
-     exec     v21  prepare sets                         yregex_sets_init                                                                              i_equal     0                                                                                                    
+     exec     v21  prepare sets                         yregex_sets_prep                                                                              i_equal     0                                                                                                    
      code     v21  create a position indicator          - - - - - - - - - -   int    x_rpos        = 0;                                                                                                                                                                    
 
    GROUP      v21  validate finding set by abbreviation                         - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   - - - - -   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
@@ -205,7 +205,7 @@ SCRP          v21  (sets  ) verify set names                                  
 
    COND       v21  initialize the testing environment                           - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((02.001))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
      exec     v21  start testing                        yregex__unit_quiet                                                                            i_equal     0                                                                                                    
-     exec     v21  prepare sets                         yregex_sets_init                                                                              i_equal     0                                                                                                    
+     exec     v21  prepare sets                         yregex_sets_prep                                                                              i_equal     0                                                                                                    
 
    GROUP      v21  validate finding set by name                                 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   - - - - -   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
 

@@ -336,6 +336,73 @@ char  g_subq    [LEN_TEXT];
 #define       S_SUB_DONE         3
 
 char    
+yregex_exec_found_NEW   (int a_index)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   int         i           =    0;
+   int         p           =   -1;
+   int         x_rpos      =    0;
+   uchar       x_reg       =  ' ';
+   int         x_tpos      =    0;
+   uchar       x_ch        =  ' ';
+   uchar       x_mod       =  ' ';
+   int         x_indx      =    0;
+   int         x_len       =    0;
+   char        x_text      [LEN_RECD];
+   char        x_quan      [LEN_RECD];
+   char        t           [LEN_RECD];
+   char        q           [LEN_RECD];
+   /*---(mark tail)----------------------*/
+   s_states [a_index].ready = 'W';
+   s_states [a_index].rc    =  1;
+   /*---(identify groups)----------------*/
+   i = a_index;
+   while ((i = s_states [i].prev) != p) {
+      /*---(mark solution)---------------*/
+      p = i;
+      s_states [i].ready = '+';
+      /*---(get  solution)---------------*/
+      x_rpos = s_states [i].rpos;
+      x_reg  = gre.comp [x_rpos];
+      /*---(text)---------------------------*/
+      x_tpos = s_states [i].tpos;
+      x_ch   = gre.text [x_tpos];
+      x_indx = gre.indx [x_rpos] - 1;
+      if (x_indx == 998)  x_indx = 10;
+      x_mod  = gre.mods [x_rpos];
+      /*---(handle grouping)----------------*/
+      switch (x_reg) {
+      case ')' : case '|' :
+         gre.gends [x_indx] = x_tpos - 1;
+         break;
+      case '(' :
+         gre.gbegs [x_indx] = x_tpos;
+         break;
+      default  :
+         x_text [x_tpos] = x_ch;
+         x_quan [x_tpos] = x_mod;
+         break;
+      }
+   }
+   /*---(fill groups)--------------------*/
+   for (i = 0; i <= 10; ++i) {
+      /*> printf ("%2d %c\n", i, gre.groups [i]);                                     <*/
+      if (gre.groups [i] == ' ') {
+         yregex_find_addsub (a_index, i, -1    , ""    , ""    );
+         continue;
+      }
+      x_len = gre.gends [i] - gre.gbegs [i] + 1;
+      strlcpy (t, x_text + gre.gbegs [i], x_len + 1);
+      strlcpy (q, x_quan + gre.gbegs [i], x_len + 1);
+      /*> printf ("   %3d %3d %3d [%s] [%s]\n", gre.gbegs [i], gre.gends [i], x_len, t, q);   <*/
+      if (i == 0)  yregex_find_add (a_index, s_states [a_index].begin, t, q);
+      yregex_find_addsub (a_index, i, gre.gbegs [i], t, q);
+   }
+   /*---(complete)-----------------------*/
+   return 0;
+}
+
+char    
 yregex_exec_sub         (int a_index, int a_paren)
 {
    /*---(locals)-----------+-----+-----+-*/
@@ -597,20 +664,28 @@ yregex_exec__single     (int a_index)
    /*---(check for null)-----------------*/
    if (x_ch == 0) {
       DEBUG_YREGEX  yLOG_note    ("found null");
-      s_states [a_index].ready = 'W';
-      s_states [a_index].rc    =  1;
-      rc = yregex_exec__found (a_index);
-      yregex_find_add (a_index, s_states [a_index].begin, g_found, g_quans);
-      for (i = 1; i <= 10; ++i) {
-         /*> printf ("search for paren %d\n", i);                                     <*/
-         rc = yregex_exec_sub (a_index, i);
-         /*> printf ("   index %d, sub %d, rc %d\n", a_index, i, rc);                 <*/
-         if (rc < S_SUB_AFTER)  yregex_find_addsub (a_index, i - 1, -1    , ""    , ""    );
-         else                   yregex_find_addsub (a_index, i - 1, g_subb, g_subf, g_subq);
-      }
-      rc = yregex_exec_sub (a_index, GROUP_FOCUS);
-      if (rc <= 0)  yregex_find_addsub (a_index, 10, -1    , ""    , ""    );
-      if (rc >  0)  yregex_find_addsub (a_index, 10, g_subb, g_subf, g_subq);
+      yregex_exec_found_NEW (a_index);
+      /*> s_states [a_index].ready = 'W';                                                             <* 
+       *> s_states [a_index].rc    =  1;                                                              <* 
+       *> rc = yregex_exec__found (a_index);                                                          <* 
+       *> yregex_find_add (a_index, s_states [a_index].begin, g_found, g_quans);                      <* 
+       *> for (i = 1; i <= 10; ++i) {                                                                 <* 
+       *>    if (gre.groups [i - 1] == ' ') {                                                         <* 
+       *>       yregex_find_addsub (a_index, i - 1, -1    , ""    , ""    );                          <* 
+       *>    }                                                                                        <* 
+       *>    else {                                                                                   <* 
+       *>       rc = yregex_exec_sub (a_index, i);                                                    <* 
+       *>       if (rc < S_SUB_AFTER)  yregex_find_addsub (a_index, i - 1, -1    , ""    , ""    );   <* 
+       *>       else                   yregex_find_addsub (a_index, i - 1, g_subb, g_subf, g_subq);   <* 
+       *>    }                                                                                        <* 
+       *> }                                                                                           <* 
+       *> if (gre.groups [10] == ' ') {                                                               <* 
+       *>    yregex_find_addsub (a_index, i - 1, -1    , ""    , ""    );                             <* 
+       *> } else {                                                                                    <* 
+       *>    rc = yregex_exec_sub (a_index, GROUP_FOCUS);                                             <* 
+       *>    if (rc <= 0)  yregex_find_addsub (a_index, 10, -1    , ""    , ""    );                  <* 
+       *>    if (rc >  0)  yregex_find_addsub (a_index, 10, g_subb, g_subf, g_subq);                  <* 
+       *> }                                                                                           <*/
       DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
       return 100;
    }
