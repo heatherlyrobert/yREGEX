@@ -8,24 +8,33 @@
 
 #define     P_FOCUS     "RS (run-time supprt)"
 #define     P_NICHE     "re (regex matching)"
+#define     P_SUBJECT   "regular expression matching"
 #define     P_PURPOSE   "provide transparent regular expression text pattern matching"
 
 #define     P_NAMESAKE  "artemis-agrotere (goddess of the hunt)"
 #define     P_HERITAGE  "artemis is the daughter of zeus and titaness leto, twin of apollo"
 #define     P_IMAGERY   "beautiful young woman in a cloak and deer pelt, with bow and spears"
+#define     P_REASON    ""
+
+#define     P_ONELINE   P_NAMESAKE " " P_SUBJECT
+
+#define     P_BASENAME  ""
+#define     P_FULLPATH  ""
+#define     P_SUFFIX    ""
+#define     P_CONTENT   ""
 
 #define     P_SYSTEM    "gnu/linux   (powerful, ubiquitous, technical, and hackable)"
 #define     P_LANGUAGE  "ansi-c      (wicked, limitless, universal, and everlasting)"
 #define     P_CODESIZE  "small       (less than 2,000 lines of code)"
+#define     P_DEPENDS   "none"
 
 #define     P_AUTHOR    "heatherlyrobert"
 #define     P_CREATED   "2014-10"
-#define     P_DEPENDS   "none"
 
 #define     P_VERMAJOR  "0.--, preparing for serious use"
 #define     P_VERMINOR  "0.5-, stable and removing bugs"
-#define     P_VERNUM    "0.5r"
-#define     P_VERTXT    "fixed trouble with leading # and ; misinterpreted as groups/rules"
+#define     P_VERNUM    "0.5s"
+#define     P_VERTXT    "minor updates to improve/fix unit testing"
 
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"

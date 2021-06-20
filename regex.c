@@ -1,5 +1,6 @@
 /*===============================[[ beg code ]]===============================*/
 #include    "yREGEX.h"
+#include    "yREGEX_priv.h"
 #include    <stdio.h>
 #include    <ySTR.h>
 
@@ -10,6 +11,7 @@
 static char s_run        = 'y';
 static char s_regex      [LEN_RECD] = "";
 static char s_dump       = '-';
+static char s_comp       = '-';
 
 
 
@@ -31,6 +33,7 @@ PROG_args          (int argc, char *argv[])
       else if (strcmp (a, "--regcomp"   ) == 0)  s_run  = 'c';
       else if (strcmp (a, "--yregex"    ) == 0)  s_run  = 'y';
       else if (strcmp (a, "--fast"      ) == 0)  s_run  = 'f';
+      else if (strcmp (a, "--comped"    ) == 0)  s_comp = 'y';
       else if (strcmp (a, "--dump"      ) == 0)  s_dump = 'y';
       else if (a[0] != '-'              )  strlcpy (s_regex , argv[i]  , LEN_RECD);
    }
@@ -58,12 +61,16 @@ main          (int a_argc, char *a_argv[])
       printf ("must include regex as argument\n");
       return rce;
    }
-   printf ("regex  [%s]\n", s_regex);
    printf ("method %c\n"  , s_run);
+   printf ("regex  [%s]\n", s_regex);
    /*---(compile)------------------------*/
    switch (s_run) {
    case 'y'  : case 'f'  :
       rc = yREGEX_comp (s_regex);
+      if (s_comp == 'y') {
+         printf ("base   [%-.45s]\n", gre.comp);
+         printf ("mods   [%-.45s]\n", gre.mods);
+      }
       break;
    case 'c'  :
       rc = regcomp (&regex_comp, s_regex, REG_EXTENDED);

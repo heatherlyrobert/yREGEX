@@ -48,7 +48,7 @@ this will NOT explain regular expressions in detail.
 .B characters ------------------------------------------- posix
    .               any character
    \\.              explicitly a period
-   \\w \\s \\d \\p     :word:, :space:, :digit:, :punct:
+   \\w \\s \\d \\p \\q  :word:, :space:, :digit:, :punct:, :rpunc:
    \\a \\l \\u \\g \\x  :alpha:, :lower:, :upper:, :greek:, :xdigi:
    \\f \\t \\e \\n \\c  field, tab, escape, return, control
    \\W \\D \\S \\F \\G  reverse of those above
@@ -97,6 +97,13 @@ this will NOT explain regular expressions in detail.
    ºn[...]»   has a char in custom set                 (;n[...])
    ºn[^...]»  does not have any char in set            (;n[^...])
    ºn...»     freeform regex sequence for matching     (;n...)
+
+.B look-ahead, look-behind------------------------------- posix too
+   too complicated in original designs and complicated to implement.
+   i have chosen to find the entire string including before and
+   after, then mark the important bit as the "focus" group.  the
+   focus group is returned independently.  clean, sweet, tight.
+   see logic and grouping above.
 
 .B regex prefix ----------------------------------------- maybe
    this feature will be used only inside programs to short-cut

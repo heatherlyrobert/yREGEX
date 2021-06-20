@@ -33,6 +33,43 @@ yREGEX_version       (void)
    return yREGEX_ver;
 }
 
+char
+yREGEX_clear            (void)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   int         i           =    0;
+   /*---(header)-------------------------*/
+   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
+   /*---(comparison text)----------------*/
+   strlcpy (gre.text , ""       , LEN_TEXT);
+   gre.tlen = 0;
+   /*---(scorer)-------------------------*/
+   gre.scorer = '?';
+   /*---(original)-----------------------*/
+   strlcpy (gre.orig , ""       , LEN_REGEX);
+   gre.olen = 0;
+   /*---(regex)--------------------------*/
+   strlcpy (gre.regex, ""       , LEN_REGEX);
+   gre.rlen = 0;
+   /*---(initialize compiled)------------*/
+   for (i = 0; i < LEN_REGEX; ++i) {
+      gre.comp [i] =   0;
+      gre.indx [i] =   0;
+      gre.mods [i] =   0;
+      gre.jump [i] =   0;
+   }
+   gre.clen = 0;
+   /*---(initialize grouping)------------*/
+   strlcpy (gre.groups, "               ", LEN_LABEL);
+   /*---(initialize sets)----------------*/
+   yregex_sets_prep ();
+   yregex_rule_init ();
+   gre.ready = '-';
+   /*---(initialize sets)----------------*/
+   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+   return 0;
+}
+
 
 
 /*====================------------------------------------====================*/

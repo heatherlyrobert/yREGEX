@@ -19,6 +19,7 @@ typedef   const int      cint;
 #define   YREGEX_RIGHT   'r'
 
 
+char        yREGEX_clear         (void);
 
 char        yREGEX_comp          (cchar *a_regex);
 

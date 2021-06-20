@@ -14,6 +14,7 @@
  *      $        $           $              EOL
  *      <        <     6     <              BOW
  *      >        >     6     >              EOW
+ *                                          col#
  *
  *   GROUPS     comp  indx  mods  jump
  *      (        (     .           .

@@ -4,6 +4,8 @@
 
 /*
  * metis  mw2··  invesigate if i can switch s_sets to const to save run-time space
+ * metis  tw2#·  check ranges for A-Za-z0-9 endpoints, or just make three singles
+ * metis  tw2#·  make sure backslash sets are working inside custom sets
  *
  *
  *
@@ -330,6 +332,7 @@ yregex_sets__mapper     (int *a_rpos)
    uchar       x_ch        =    0;
    char        x_unmark    =  ' ';
    char        x_mark      =  '.';
+   char       *x_ends      = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
@@ -378,10 +381,14 @@ yregex_sets__mapper     (int *a_rpos)
       }
       /*---(hyphen)----------------------*/
       if (x_ch == '-') {
-         if      (i <= *a_rpos) {
+         if      (gre.regex [i - 1] == '[') {
             DEBUG_YREGEX  yLOG_note    ("found prefix hyphen, process it");
-         } else if (i >= gre.rlen - 3) {
+         } else if (gre.regex [i + 1] == ']') {
             DEBUG_YREGEX  yLOG_note    ("found suffix hyphen, process it");
+         } else if (strchr (x_ends, gre.regex [i - 1]) == NULL) {
+            DEBUG_YREGEX  yLOG_note    ("range start not A-Za-z0-9, just a hyphen");
+         } else if (strchr (x_ends, gre.regex [i + 1]) == NULL) {
+            DEBUG_YREGEX  yLOG_note    ("range end not A-Za-z0-9, just a hyphen");
          } else {
             DEBUG_YREGEX  yLOG_note    ("found range hyphen");
             x_range = 'y';
