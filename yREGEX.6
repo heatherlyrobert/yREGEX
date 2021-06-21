@@ -1,0 +1,220 @@
+.TH yREGEX 6 2017-nov "linux" "interactive usage and navigation"
+
+.SH NAME
+.B yREGEX
+\- personal, small-volume regular-expression matching library
+
+.SH PATRON
+.B artemis-agrotera
+(the huntress) goddess of the wilderness
+
+.SH IMAGERY
+beautiful young woman in cloak and deer pelt, with bow and spears
+
+.SH SUMMARY
+yREGEX is a transparent library for small-volume, day-to-day regular expression
+matching based on ken thompsons finite automata algorithm (not recursion),
+plus added back-references and sub-match rules.
+
+.SH CRAZY, NIAVE, DOG-FOODING, BOOT-STRAPPING ANIMAL
+i am not competing to be the best.  i created this to understand, learn,
+and own every byte.  it's optimized for transparency and debugging.  if i
+wanted awesome, fast, and cutting-edge, i'd use yours ;)
+
+.SH DOCUMENTATION FILES (see also)
+.nf  
+yREGEX (3)         interfacing applications with library
+.B yREGEX (6)∑∑∑∑∑∑∑∑∑interactive usage and navigation
+yREGEX (7)         decision rationale, scope, and objectives
+
+.SH TABLE OF CONTENTS
+.nf  
+a) meta-chars      standard extended meta-characters
+b) sets/classes    character sets and classes
+c) achors          anchor characters
+d) quantifiers     character match quantifiers
+e) grouping        sub-matches
+f) look-ahead      replacement for look-ahead, look-behind
+g) rules           capture group filters and rules
+h) tbd             to be defined and handled
+
+.SH A) META-CHARACTERS
+meta-characters are reserved and have special meaning.  to match them
+specifically, they must be escaped individually with a backslash (\\).
+
+.SS posix-defined (14 extended)
+yREGEX uses the 14 posix-standard regular-expression meta-characters as
+its base.  this way, no matter which system or character-set, it will work as
+advertised.  i do not like differentiating globbing-only, normal, and extended
+regular expressions.  i always use extended.
+
+.B   .   * ? +   { }   ( | )   [ ]   ^ $  \\
+   .           any single character
+   a*          zero or more of preceeding character
+   a?          zero or one of preceeding character
+   a+          one or more of preceeding character
+   a{n,m}      specific range of preceeding characters
+   (red|not)   either/or of two strings
+   [a-p]       any one of the characters in the range
+   ^any        achor at start of line
+   who$        achor at end of line
+   \\[         to escape a meta-character
+
+.SS heatherly (12 short-hand)
+i have an extended ascii character-set (shrike) that allows more ease of use,
+spacing, and better visual confirmation.
+
+.B   ∑ ¨   ¢ ± §   ∏ π   ∫ ª   º Ω   ®
+   ∑         a space (\\s) helps for counting/visual confirmation
+   ¨         any single character (.), my mask character
+   §         lazy version of *
+   ¢         lazy version of ?
+   ±         lazy version of +
+   ∏¥¥¥π     capturing group, instead of (#œœœ)
+   ∫¥¥¥ª     rules, instead of (;œœœ)
+   º¥¥¥Ω     focus group, instead of (>œœœ<)
+   ®{n}      absolute column reference
+
+.SS search-combining (6 custom)
+also in my extended ascii character-set (shrike) are additional logical
+symbols which i will use to combine multiple regex searches.
+
+.B   – ‘ — ’ “ ”
+   –         and, both must be true
+   ‘         nand, only one true or neither true
+   —         or, either one or both true
+   ’         nor, both false
+   “         xor, one and only one true
+   ”         nxor, both true or both false
+
+.SH B) SETS/CLASSES
+posix has a number of standard character-sets, all are supported
+   .    any             \\w   :word:          \\s   :space:
+   \\d   :digit:         \\p   :punct:         \\q   :rpunc:
+   \\a   :alpha:         \\l   :lower:         \\u   :upper:
+   \\g   :greek:         \\x   :xdigi:
+
+also, some special or hidden characters need matching
+   \\.   period          \\f   field           \\t   tab
+   \\e   escape          \\n   return          \\c   control
+
+and, some character sets are reverse of lower-case
+   \\W     \\D     \\S     \\F     \\G
+
+character classes are exactly as in posix.
+   [...]     any one of the characters included
+   [^...]    not any of the characters included
+   m-n       any character between m and n (inclusive) 
+
+.SH C) ANCHORS
+anchor points are 80% posix standard
+   ^¥¥¥      beginning of line
+   ¥¥¥$      end of line
+   <         beginning of word word (not µb)
+   >         ending of word (µB)
+   ®{n}      absolute column position (not posix, but useful)
+
+.SH D) QUANTIFIERS
+most quantifiers are posix-standard, but the lazy versions where
+clumbsy in posix, so i used special characters.
+   *      §        zero or more, greedy and lazy       (not *?)
+   ?      ¢        zero or one, greedy and lazy        (not ??)
+   +      ±        one or more, greedy and lazy        (not +?)
+   {m}             exactly m times
+   {m,n}  {-m,n}   m to n times (inclusive), greedy and lazy
+   {m,}            at least and including m times
+   {,n}            up to and including n times
+
+.SH E) GROUPING
+normal posix-grouping is supported with some additions
+   (¥¥¥)     default, non-capturing group            (...)
+   (¥¥¥|¥¥)  alternation (either-or)
+   ∏¥¥¥π     capturing group (1 - 9) explicit        (#...)
+
+.SH F) LOOK AHEAD
+i found the look-ahead and look-behind notions very cumbersome and
+painful.  i have chosen to specifically mark the final match area
+so it can be extracted without look-ahead and -behind.
+   º¥¥¥Ω     focus group (0) for final positioning   (>...<)
+
+.SH G) SAVED PATTERNS
+yREGEX has a number of saved patterns, and easily extended.
+   &f    (&float)    ... float number
+   &i    (&int)      ... signed integer
+   &b    (&byte)     ... and a byte in integer form
+   &w    (&word)     ... word plus word boundaries
+
+also, the pattern in a capturing group can be resused
+   (&1)      pattern saved from 1st capture group
+
+.SH G) RULES
+capture groups can then be used to apply additional filters
+   ∫n+...ª    contains the substring                   (;n+...)
+   ∫n-...ª    does not contain substring               (;n-...)
+   ∫n\\uª      has a char in standard set               (;n\\u)
+   ∫n[...]ª   has a char in custom set                 (;n[...])
+   ∫n[^...]ª  does not have any char in set            (;n[^...])
+   ∫n...ª     freeform regex sequence for matching     (;n...)
+
+and two capture groups can also be comparied
+   ∫n‡mª      two capture groups must match            (;n==m)
+   ∫nﬁmª      two groups must be different             (;n!=m)
+   ∫n<mª      first group must sort earlier            (;n<m)
+   ∫n>mª      first group must sort later              (;n>m)
+   ∫n‹mª      first group must sort same or earlier    (;n<=m)
+   ∫n›mª      first group must sort same or later      (;n>=m)
+
+.SH H) TBD
+
+.B regex prefix ----------------------------------------- maybe
+   this feature will be used only inside programs to short-cut
+   later requests for a solution <type> and <start>. all of these
+   prefixes are meta-characters and would be illegal if used first.
+   $          best solution based on regex operator (*?+@!~)
+   *          greediest overall
+   ?          leftmost greedy
+   +          rightmost greedy
+   @          laziest overall
+   !          leftmost lazy
+   ~          rightmost lazy
+   #          numeric search (see below)
+
+.B numeric match prefix---------------------------------- maybe
+   while not a regex, numeric ranges are key searching mechanisms, so
+   yREGEX will interpret these symbols as well
+   #=n        equal                                    #==n
+   #ﬁn        not equal                                #!=n
+   #<n        less than                                #<n
+   #>n        greater than                             #>n
+   #›n        less than or equal                       #<=n
+   #‹n        greater than of equal                    #>=n
+   #n±m       inclusive range by absolutes             #n><m
+   #n%m       inclusive range by percents              #n%m
+   #!n±m      exclusion of range by absolutes          #!n><m
+   #!n%m      exclusion of range by percents           #!n%m
+   #¥¥¥|¥¥¥   or conjunction                           #¥¥¥|¥¥¥
+
+.B spacers (for readability) ---------------------------- new
+   ≤ ¥ ≥ ¨        used in any combination or number
+   ≤≤≤∫...ª       sometimes this before the rule section can help
+   ∫...ª¥∫...ª    the medium dot is nice between rules for clarity
+
+.SH FLAWS
+.B not re-entrant,
+can not be used on two regex patterns simultaneously.
+
+.B not recursive,
+so different solution orders than standard libraries.
+
+.B named patterns
+are internally compiled, and so not as flexible
+
+.SH AUTHOR
+heatherly <jelloshrke at gmail dot com>
+
+.SH COLOPHON
+this page is part of a documentation package mean to make the use of the
+heatherly tools easier and faster
+
+
+

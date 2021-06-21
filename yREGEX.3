@@ -1,37 +1,56 @@
-.TH yREGEX 3 2017-nov "linux" "heatherly custom tools manual"
-.na
+.TH yREGEX 3 2017-nov "linux" "interfacing applications with library"
 
 .SH NAME
-yREGEX \- powerful, focused, small-volume regular expression library
+.B yREGEX
+\- personal, small-volume regular-expression matching library
+
+.SH PATRON
+.B artemis-agrotera
+(the huntress) goddess of the wilderness
+
+.SH IMAGERY
+beautiful young woman in cloak and deer pelt, with bow and spears
 
 .SH SUMMARY
 yREGEX is a transparent library for small-volume, day-to-day regular expression
-matching based on ken thompsons finite automata algorithm (not recursion)
-plus added back references and sub-match rules.
+matching based on ken thompsons finite automata algorithm (not recursion),
+plus added back-references and sub-match rules.
 
-.SH CAVEAT (deeper learning, bootstrapping, and dogfooding)
-i wanted to understand, learn, and never migrate, so i built it.  yREGEX is
-optimized for transparency, debugging, and tracing, AND it also runs at
-reasonable (not blazing, but decent) production speed.  when speed becomes
-an issue, i'll dig in and tune harder.  if you want cutting-edge coverage,
-data warehousing speeds, and runtime optimization, buy a commercial library ;)
+.SH CRAZY, NIAVE, DOG-FOODING, BOOT-STRAPPING ANIMAL
+i am not competing to be the best.  i created this to understand, learn,
+and own every byte.  it's optimized for transparency and debugging.  if i
+wanted awesome, fast, and cutting-edge, i'd use yours ;)
 
-.SH SYNOPSIS
+.SH DOCUMENTATION FILES (see also)
+.nf  
+yREGEX (3)∑∑∑∑∑∑∑∑∑interfacing applications with library
+yREGEX (6)         interactive usage and navigation
+.B yREGEX (7)         decision rationale, scope, and objectives
+
+.SH TABLE OF CONTENTS
+.nf  
+a) synopsis        standard public function overview
+b) primary         compiling and executing
+c) solution        getting solution details
+d) cursoring       walking through alternate solutions
+e) debugging       logging, debugging, and tracing
+
+.SH A) SYNOPSIS
 .nf
 ---(header)------------------------------------
 .B #include  <yREGEX.h>
 .sp
----(regex)-------------------------------------
+---(primary)-----------------------------------
 .BI "char  yREGEX_comp   (cchar *" "a_regex" ");"
 .BI "char  yREGEX_exec   (cchar *" "a_text " ");"
 .BI "char  yREGEX_fast   (cchar *" "a_text " ");"
 .sp
----(best solution)-----------------------------
+---(solution)----------------------------------
 .BI "char  yREGEX_best   (cchar  " "a_type " ", cchar " "a_side" ","
 .BI " " "                    " "int   *" "a_beg  " ", int  *" "a_len"  ","
 .BI " " "                    " "int   *" "a_fbeg " ", int  *" "a_flen" ");"
 .sp
----(match cursoring)---------------------------
+---(cursoring)---------------------------------
 .BI "char  yREGEX_method (cchar  " "a_type " ");"
 .BI "char  yREGEX_cursor (cchar  " "a_dir  " ","
 .BI " " "                    " "int   *" "a_beg  " ", int  *" "a_len"  ","
@@ -40,108 +59,10 @@ data warehousing speeds, and runtime optimization, buy a commercial library ;)
 ---(linking)-----------------------------------
 .B link with -L/usr/local/libs -lyREGEX or -lyREGEX_debug
 
-.SH LANGUAGE DEFINITION
-yREGEX uses the 14 posix standard regular expression meta-characters, plus a
-few additional ones (and my extended ascii) for ease and more functionality.
-this will NOT explain regular expressions in detail.
-
-.B characters ------------------------------------------- posix
-   .               any character
-   \\.              explicitly a period
-   \\w \\s \\d \\p \\q  :word:, :space:, :digit:, :punct:, :rpunc:
-   \\a \\l \\u \\g \\x  :alpha:, :lower:, :upper:, :greek:, :xdigi:
-   \\f \\t \\e \\n \\c  field, tab, escape, return, control
-   \\W \\D \\S \\F \\G  reverse of those above
-
-.B quanfifiers ------------------------------------------ posix
-   ?      !        zero or one, greedy and lazy        (not ??)
-   +      ~        one or more, greedy and lazy        (not +?)
-   *      @        zero or more, greedy and lazy       (not *?)
-   {m}             exactly m times
-   {m,n}  {-m,n}   m to n times, greedy and lazy
-   {n}             up to n times
-
-.B logic and grouping ----------------------------------- posix too
-   |               alternation (either-or)
-   (...)           default, non-capturing group        (...)
-   ∏...π           capturing group (1 - 9) explicit    (#...)
-   º...Ω           focus group for final positioning   (>...<)
-
-.B classes ---------------------------------------------- posix
-   [...]           any one of the characters included
-   [^...]          not any of the characters included
-   m-n             any character between m and n (inclusive) 
-
-.B anchors ---------------------------------------------- posix
-   ^     $         begin and end of string
-   <     >         begin and end of word               (not µb µB)
-
-.B saved patterns --------------------------------------- posix
-   &.    (&.....)    saved patterns for reuse by abbr or short name
-   &f    (&float)    ... float number
-   &i    (&int)      ... signed integer
-   &b    (&byte)     ... and a byte in integer form
-   &w    (&word)     ... word plus word boundaries
-   (&1)              pattern saved from 1st capture group
-
-.B sub-match rules -------------------------------------- posix too
-   ∫nÂmª      two capture groups must match            (;n==m)
-   ∫nﬂmª      two groups must be different             (;n!=m)
-   ∫n<mª      first group must sort earlier            (;n<m)
-   ∫n>mª      first group must sort later              (;n>m)
-   ∫n›mª      first group must sort same or earlier    (;n<=m)
-   ∫nﬁmª      first group must sort same or later      (;n>=m)
-   ∫n+...ª    contains the substring                   (;n+...)
-   ∫n-...ª    does not contain substring               (;n-...)
-   ∫n\\uª      has a char in standard set               (;n\\u)
-   ∫n[...]ª   has a char in custom set                 (;n[...])
-   ∫n[^...]ª  does not have any char in set            (;n[^...])
-   ∫n...ª     freeform regex sequence for matching     (;n...)
-
-.B look-ahead, look-behind------------------------------- posix too
-   too complicated in original designs and complicated to implement.
-   i have chosen to find the entire string including before and
-   after, then mark the important bit as the "focus" group.  the
-   focus group is returned independently.  clean, sweet, tight.
-   see logic and grouping above.
-
-.B regex prefix ----------------------------------------- maybe
-   this feature will be used only inside programs to short-cut
-   later requests for a solution <type> and <start>. all of these
-   prefixes are meta-characters and would be illegal if used first.
-   $          best solution based on regex operator (*?+@!~)
-   *          greediest overall
-   ?          leftmost greedy
-   +          rightmost greedy
-   @          laziest overall
-   !          leftmost lazy
-   ~          rightmost lazy
-   #          numeric search (see below)
-
-.B numeric match prefix---------------------------------- maybe
-   while not a regex, numeric ranges are key searching mechanisms, so
-   yREGEX will interpret these symbols as well
-   #=n        equal                                    #==n
-   #ﬂn        not equal                                #!=n
-   #<n        less than                                #<n
-   #>n        greater than                             #>n
-   #›n        less than or equal                       #<=n
-   #ﬁn        greater than of equal                    #>=n
-   #n±m       inclusive range by absolutes             #n><m
-   #n%m       inclusive range by percents              #n%m
-   #!n±m      exclusion of range by absolutes          #!n><m
-   #!n%m      exclusion of range by percents           #!n%m
-   #¥¥¥|¥¥¥   or conjunction                           #¥¥¥|¥¥¥
-
-.B spacers (for readability) ---------------------------- new
-   ≤ ¥ ≥ ¨        used in any combination or number
-   ≤≤≤∫...ª       sometimes this before the rule section can help
-   ∫...ª¥∫...ª    the medium dot is nice between rules for clarity
-
-.SH REGEX FUNCTIONS
-yREGEX is pretty standard stuff from an interface standpoint, but
-a little simplier, just because it is not re-entrant yet so it does
-not require pointers to maintain context.
+.SH B) PRIMARY
+yREGEX is pretty standard stuff from an interface standpoint, but a little
+simplier.  mainly because it is not re-entrant so it does not require pointers
+to maintain context.
 
 .B yREGEX_comp (<regex>)
 takes one argument, a plain-text c-string containing the regular expression.
@@ -154,13 +75,13 @@ the compiled regex is used to find matches and the number of matches found
 is returned.
 
 .B yREGEX_fast (<text>)
-same as yREGEX_exec, but returns once a single match is found.  this is useful
-when just filtering matching lines.
+same as yREGEX_exec, but returns once the first match is found.  this is
+useful when just filtering matching lines.
 
-.SH BEST SOLUTION and MATCH CURSOR FUNCTIONS
+.SH C) SOLUTIONS
 yREGEX is a little different here as it does not return match arrays for the
 source program to iterate over.  yREGEX_exec returns the number of matches
-(100 means >= 100).  yREGEX then provides two levels of solution access.
+(100 means >= 100).
 
 .B yREGEX_best (<type>, <start>, <beg>, <len>, <fbeg>, <flen>)
 .RS 3
@@ -191,6 +112,10 @@ returns the start position of ºfocusΩ group (may be NULL).
 returns the length of ºfocusΩ group (may be NULL).
 .RE
 
+.SH D) CURSORING
+in addition to providing the best solution, you can cursor over the
+alternative solutions.
+
 .B yREGEX_method (<type>)
 .RS 3
 prepares the match cursor for one of two types of matches as shown above
@@ -217,15 +142,10 @@ same as yREGEX_best.
 can not be used on two regex patterns simultaneously.
 
 .B not recursive,
-so different solution orders that standard libraries.
+so different solution orders than standard libraries.
 
 .B named patterns
 are internally compiled, and so not as flexible
-
-.SH SEE ALSO
-this documentation is layered to provide easier navigation.
-   yREGEX  (3), library overview and calling
-   yREGEX  (7), decision rationale, objectives, and overview
 
 .SH AUTHOR
 heatherly <jelloshrke at gmail dot com>

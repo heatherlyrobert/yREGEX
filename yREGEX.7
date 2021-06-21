@@ -1,12 +1,39 @@
-.TH yREGEX 7 2017-nov "linux" "heatherly custom tools manual"
+.TH yREGEX 7 2017-nov "linux" "decision rationale, scope, and objectives"
 
 .SH NAME
-yREGEX \- decision rationale, objectives, and overview
+.B yREGEX
+\- personal, small-volume regular-expression matching library
+
+.SH PATRON
+.B artemis-agrotera
+(the huntress) goddess of the wilderness
+
+.SH IMAGERY
+beautiful young woman in cloak and deer pelt, with bow and spears
 
 .SH SUMMARY
 yREGEX is a transparent library for small-volume, day-to-day regular expression
-matching based on ken thompsons finite automata algorithm (not recursion)
-plus added back references and sub-match rules.
+matching based on ken thompsons finite automata algorithm (not recursion),
+plus added back-references and sub-match rules.
+
+.SH CRAZY, NIAVE, DOG-FOODING, BOOT-STRAPPING ANIMAL
+i am not competing to be the best.  i created this to understand, learn,
+and own every byte.  it's optimized for transparency and debugging.  if i
+wanted awesome, fast, and cutting-edge, i'd use yours ;)
+
+.SH DOCUMENTATION FILES (see also)
+.nf  
+yREGEX (3)         interfacing applications with library
+yREGEX (6)         interactive usage and navigation
+.B yREGEX (7)·········decision rationale, scope, and objectives
+
+.SH TABLE OF CONTENTS
+.nf  
+a) synopsis        standard public function overview
+b) overview        general overview of program
+c) user-mode       detailed command line options
+d) daemon-mode     detailed command line options
+e) debugging       logging, debugging, and tracing
 
 .SH BACKSTORY
 .B concept.  
@@ -54,7 +81,7 @@ me, just me.  i am a dogfooder and bootstrapper.
    -- backslashes are much, much too common (brutal to read)
    -- kitchen sink additions to what should have been a focused thing
    -- reportedly slow algorithms due to increased feature load
-   -- recursive algorithms with postentially exponential run-times
+   -- recursive algorithms with potentially exponential run-times
    -- use of crazy pos/neg look-aheads to target a find string
    -- way too complex code so everyone relies on faceless maintainers
    -- summary, the mini-language, engines, and algorithms got fugly
@@ -65,7 +92,7 @@ me, just me.  i am a dogfooder and bootstrapper.
    -- compile each regex first to create a wicked easy execution path
    -- support full posix extended regular expression standard (ERE)
    -- implement the 14 base metacharacters   .[]  *+?  {}  ^$  ()|  \\
-   -- add short, lazy versions of *+? using the @~! symbols
+   -- add short, lazy versions of *+? using the @±¢ symbols
    -- make set comparisons wicked fast since it is so common
    -- (...) become non-capuring groups rather than (?:...)
    -- (#...) become capuring groups to make them stand out
@@ -95,10 +122,15 @@ me, just me.  i am a dogfooder and bootstrapper.
    -- all tables must be self describing with labels and queries
    -- all data structures must include dumps, reports, and audits
 
-.SH SEE ALSO
-this documentation is layered to provide easier navigation.
-   yREGEX  (3), library overview and calling
-   yREGEX  (7), decision rationale, objectives, and overview
+.SH FLAWS
+.B not re-entrant,
+can not be used on two regex patterns simultaneously.
+
+.B not recursive,
+so different solution orders than standard libraries.
+
+.B named patterns
+are internally compiled, and so not as flexible
 
 .SH AUTHOR
 heatherly <jelloshrke at gmail dot com>
@@ -106,4 +138,5 @@ heatherly <jelloshrke at gmail dot com>
 .SH COLOPHON
 this page is part of a documentation package mean to make the use of the
 heatherly tools easier and faster
+
 

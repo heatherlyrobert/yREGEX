@@ -11,10 +11,10 @@
 #define     P_SUBJECT   "regular expression matching"
 #define     P_PURPOSE   "provide transparent regular expression text pattern matching"
 
-#define     P_NAMESAKE  "artemis-agrotere (goddess of the hunt)"
+#define     P_NAMESAKE  "artemis-agrotera (the huntress)"
 #define     P_HERITAGE  "artemis is the daughter of zeus and titaness leto, twin of apollo"
 #define     P_IMAGERY   "beautiful young woman in a cloak and deer pelt, with bow and spears"
-#define     P_REASON    ""
+#define     P_REASON    "regex is all about hunting for matches"
 
 #define     P_ONELINE   P_NAMESAKE " " P_SUBJECT
 
@@ -32,9 +32,9 @@
 #define     P_CREATED   "2014-10"
 
 #define     P_VERMAJOR  "0.--, preparing for serious use"
-#define     P_VERMINOR  "0.5-, stable and removing bugs"
-#define     P_VERNUM    "0.5s"
-#define     P_VERTXT    "minor updates to improve/fix unit testing"
+#define     P_VERMINOR  "0.6-, keep advancing"
+#define     P_VERNUM    "0.6a"
+#define     P_VERTXT    "solid advancements on manuals and understanding"
 
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -42,6 +42,35 @@
 
 /*===[[ REASONING ]]==========================================================*/
 /*345678901-12345678901-12345678901-12345678901-12345678901-12345678901-12345678901-12345678901-*/
+
+/* NEXT STEPS
+ *
+ * dynamically allocate s_errors to save space
+ *
+ * create beautified string marking troubles, just like in yEXEC flags
+ *
+ * dynamically allocate states as a block at beginning and destroy later
+ *
+ * dynamically allocate states individually
+ *
+ * allocate states differently/smaller for yREGEX_fast
+ *
+ * dynamically allocate finds
+ *
+ * create a yREGEX_done to destroy unneeded solution/finds/states after
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ */
+
+
+
 
 
 /*===[[ HEADER GUARD ]]=======================================================*/
