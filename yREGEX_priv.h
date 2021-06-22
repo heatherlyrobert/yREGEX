@@ -33,8 +33,8 @@
 
 #define     P_VERMAJOR  "0.--, preparing for serious use"
 #define     P_VERMINOR  "0.6-, keep advancing"
-#define     P_VERNUM    "0.6a"
-#define     P_VERTXT    "solid advancements on manuals and understanding"
+#define     P_VERNUM    "0.6b"
+#define     P_VERTXT    "moved error to malloc, started exec also toward malloc"
 
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -85,6 +85,7 @@
 #include    <yURG.h>                    /* heatherly urgent processing         */
 #include    <yLOG.h>                    /* heatherly program logger            */
 #include    <ySTR.h>                    /* heatherly string handling           */
+#include    <yDLST_solo.h>              /* heatherly double-doubly linked list */
 
 
 typedef   unsigned char  uchar;
@@ -113,6 +114,20 @@ typedef   unsigned char  uchar;
 #define     G_ZERO       "*@?!"
 #define     G_MANY       "*@"
 #define     G_PREFIX     "*?!@"
+
+
+
+typedef    struct   cERROR   tERROR;
+struct cERROR {
+   char       *func;
+   int         line;
+   char       *mark;
+   char       *msg;
+   uchar       beg;
+   uchar       len;
+   tERROR     *m_prev;
+   tERROR     *m_next;
+};
 
 
 /*---(struct.re)--------+-----------+-*//*-+----------------------------------*/
@@ -168,7 +183,6 @@ char        yregex__unit_end        (void);
 /*===[[ COMP ]]===============================*/
 /*---(program)--------------*/
 char        yregex_comp__prep       (cchar *a_regex);
-char        yregex_comp_error       (cchar *a_func, cint a_line, cchar *a_marker, cchar *a_message);
 /*---(structure)------------*/
 char        yregex_comp_add         (cchar a_comp, cint a_indx);
 char        yregex_comp_mod         (cchar a_mod);
@@ -186,6 +200,52 @@ char        yregex_comp__extended   (void);
 /*---(unittest)-------------*/
 char*       yregex_comp__unit       (char *a_question, int a_num);
 
+
+
+/*---(support)--------------*/
+char*       yregex_err__memory      (void *a_cur);
+char        yregex_err__wipe        (void *a_cur);
+/*---(memory)---------------*/
+char        yregex_err__new         (void **a_new);
+char        yregex_err__free        (void **a_old);
+/*---(program)--------------*/
+char        yregex_err_init         (void);
+char        yregex_err__purge       (void);
+char        yregex_err_wrap         (void);
+/*---(create)---------------*/
+char        yregex_err_add          (cchar *a_func, cint a_line, cchar *a_mark, cint a_beg, cint a_len, cchar *a_msg);
+/*---(search)---------------*/
+char        yregex_err__by_cursor   (void **r_curr, char a_move);
+char        yregex_err__by_index    (void **r_curr, int a_index);
+/*---(unittest)-------------*/
+char*       yregex_err__unit        (char *a_question, int n);
+/*---(done)-----------------*/
+
+
+
+/*---(support)--------------*/
+char*       EXEC__memory            (void *a_cur);
+char        EXEC__wipe              (void *a_cur);
+/*---(memory)---------------*/
+char        EXEC__new               (void **a_new, short a_lvl);
+char        EXEC__free              (void **a_old);
+/*---(program)--------------*/
+char        EXEC_init               (void);
+char        EXEC__purge             (void);
+char        EXEC_wrap               (void);
+/*---(create)---------------*/
+char        EXEC__push              (short a_lvl, short a_rpos, short a_tpos);
+char        EXEC__push_for_zero     (short a_lvl, short a_rpos, short a_tpos);
+/*---(search)---------------*/
+char        EXEC__by_index          (void **r_curr, short a_lvl, short a_index);
+/*---(running)--------------*/
+char        EXEC__prep              (cchar *a_source);
+char        EXEC__literal           (int a_lvl, int a_rpos, int a_tpos);
+/*---(unittest)-------------*/
+char        EXEC__setfocus          (short a_lvl, short a_index);
+char        EXEC__setbegin          (int a_beg);
+char*       EXEC__unit              (char *a_question, int n, int m);
+/*---(done)-----------------*/
 
 
 /*345678901-12345678901-12345678901-12345678901-12345678901-12345678901-123456*/

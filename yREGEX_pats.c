@@ -172,7 +172,7 @@ yregex_pats__abbr_ref   (int *a_rpos)
    x_ch   = gre.orig [*a_rpos];
    DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
    --rce;  if (x_ch != '&') {
-      yregex_comp_error (__FUNCTION__, a_rpos, "#PAT", "does not lead with a dollar sign");
+      yregex_err_add (__FUNCTION__, a_rpos, "#PAT", 0, 0, "does not lead with a dollar sign");
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
@@ -186,7 +186,7 @@ yregex_pats__abbr_ref   (int *a_rpos)
    x_pat = yregex_pats__by_abbr (x_abbr);
    DEBUG_YREGEX  yLOG_value   ("x_pat"     , x_pat);
    if (x_pat < 0) {
-      yregex_comp_error (__FUNCTION__, a_rpos, "#PAT", "not a valid pattern abbreviation");
+      yregex_err_add (__FUNCTION__, a_rpos, "#PAT", 0, 0, "not a valid pattern abbreviation");
       ++(*a_rpos);
       strlcat (gre.regex, "#PAT", LEN_REGEX);
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
@@ -227,7 +227,7 @@ yregex_pats__named_ref  (int *a_rpos)
    x_ch   = gre.orig [*a_rpos];
    DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
    --rce;  if (x_ch != '&') {
-      yregex_comp_error (__FUNCTION__, a_rpos, "#PAT", "does not lead with an ampersand");
+      yregex_err_add (__FUNCTION__, a_rpos, "#PAT", 0, 0, "does not lead with an ampersand");
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
@@ -245,12 +245,12 @@ yregex_pats__named_ref  (int *a_rpos)
    }
    /*---(troubles)-----------------------*/
    --rce;  if (x_len == 0) {
-      yregex_comp_error (__FUNCTION__, a_rpos, "#PAT", "could not parse name");
+      yregex_err_add (__FUNCTION__, a_rpos, "#PAT", 0, 0, "could not parse name");
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    --rce;  if (x_ch  != ')') {
-      yregex_comp_error (__FUNCTION__, a_rpos, "#PAT", "could not find close paren");
+      yregex_err_add (__FUNCTION__, a_rpos, "#PAT", 0, 0, "could not find close paren");
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
@@ -260,7 +260,7 @@ yregex_pats__named_ref  (int *a_rpos)
       x_pat = yregex_pats__by_abbr (x_name [0]);
       DEBUG_YREGEX  yLOG_value   ("x_pat"     , x_pat);
       if (x_pat < 0) {
-         yregex_comp_error (__FUNCTION__, a_rpos, "#PAT", "not a valid pattern abbreviation");
+         yregex_err_add (__FUNCTION__, a_rpos, "#PAT", 0, 0, "not a valid pattern abbreviation");
          ++(*a_rpos);
          strlcat (gre.regex, "#PAT", LEN_REGEX);
          DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
@@ -277,7 +277,7 @@ yregex_pats__named_ref  (int *a_rpos)
    x_pat = yregex_pats__by_name (x_name);
    DEBUG_YREGEX  yLOG_value   ("x_pat"     , x_pat);
    if (x_pat < 0) {
-      yregex_comp_error (__FUNCTION__, a_rpos, "#PAT", "not a valid pattern name");
+      yregex_err_add (__FUNCTION__, a_rpos, "#PAT", 0, 0, "not a valid pattern name");
       *a_rpos += x_len;
       strlcat (gre.regex, "#PAT", LEN_REGEX);
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);

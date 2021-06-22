@@ -2,6 +2,17 @@
 #include    "yREGEX.h"
 #include    "yREGEX_priv.h"
 
+/* NEXT STEPS
+ *
+ * add formal errors (yregex_err_add)
+ *
+ *
+ *
+ *
+ *
+ */
+
+
 /*
  *   CHAR       comp  indx  mods  jump
  *     n         n           -
@@ -14,7 +25,6 @@
  *      $        $           $              EOL
  *      <        <     6     <              BOW
  *      >        >     6     >              EOW
- *                                          col#
  *
  *   GROUPS     comp  indx  mods  jump
  *      (        (     .           .
@@ -32,24 +42,14 @@
 
 
 /*---(group shared variables)---------*/
-static int         s_gstack    [100];
-static int         s_glevel          =    0;
+#define     MAX_STACK  100
+static int         s_gstack    [MAX_STACK];
+static char        s_glevel          =    0;
 static int         s_ggroup          =    0;
 static int         s_ghidden         =   10;
 static int         s_gmulti          =  100;
-static char        s_gfocus          =  '-';
+static char        s_gfocus          =  '-';  /* focus group used (y/-)      */
 
-
-#define    MAX_ERROR   200
-typedef    struct   cERROR   tERROR;
-struct cERROR {
-   char        func        [LEN_NAME];
-   int         line;
-   char        marker      [LEN_NAME];
-   char        message     [LEN_DESC];
-};
-static tERROR      s_errors   [MAX_ERROR];
-static int         s_nerror   = 0;
 
 
 
@@ -122,17 +122,6 @@ yregex_comp__prep    (cchar *a_regex)
    gre.ready = '-';
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
-   return 0;
-}
-
-char         /*-> tbd --------------------------------[ leaf   [fz.632.201.00]*/ /*-[00.0000.06#.!]-*/ /*-[--.---.---.--]-*/
-yregex_comp_error    (cchar *a_func, cint a_line, cchar *a_marker, cchar *a_message)
-{
-   if (a_func    != NULL)  strlcpy (s_errors [s_nerror].func   , a_func   , LEN_NAME);
-   s_errors [s_nerror].line = a_line;
-   if (a_marker  != NULL)  strlcpy (s_errors [s_nerror].marker , a_marker , LEN_DESC);
-   if (a_message != NULL)  strlcpy (s_errors [s_nerror].message, a_message, LEN_DESC);
-   ++s_nerror;
    return 0;
 }
 

@@ -14,13 +14,13 @@
 
 /*---(struct.re)--------+-----------+-*//*-+----------------------------------*/
 typedef     struct      cSTATE      tSTATE;
-struct      cSTATE {
+static struct      cSTATE {
    /*---(basics)-----------------*/
-   int         begin;                       /* starting point                 */
-   int         level;                       /* processing depth               */
-   int         rpos;                        /* regex position                 */
-   int         tpos;                        /* text position                  */
-   int         tmax;                        /* max text position              */
+   short       begin;                       /* starting point                 */
+   short       level;                       /* processing depth               */
+   short       rpos;                        /* regex position                 */
+   short       tpos;                        /* text position                  */
+   short       tmax;                        /* max text position              */
    /*---(results)----------------*/
    char        ready;                       /* ready for action/complete      */
    char        rc;                          /* link to shared return codes    */
@@ -34,13 +34,18 @@ static      int         s_nstate    = 0;           /* total number of states  */
 static      int         s_curr      = 0;           /* point to current state  */
 
 
+
+
+/*> static tSTATE     *s_head     = NULL;                                             <* 
+ *> static tSTATE     *s_tail     = NULL;                                             <* 
+ *> static tSTATE     *s_curr     = NULL;                                             <* 
+ *> static int         s_count    = 0;                                                <*/
+
+
+
+static      char        s_print     [LEN_RECD] = "";
+
 static      int         s_begin     = 0;                /* current search begin    */
-
-
-/*====================------------------------------------====================*/
-/*===----                        program level                         ----===*/
-/*====================------------------------------------====================*/
-static void      o___PROGRAM_________________o (void) {;}
 
 char         /*-> tbd --------------------------------[ shoot  [fe.833.144.30]*/ /*-[01.0000.01#.H]-*/ /*-[--.---.---.--]-*/
 yregex_exec__prep    (cchar *a_source)
