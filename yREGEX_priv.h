@@ -33,8 +33,8 @@
 
 #define     P_VERMAJOR  "0.--, preparing for serious use"
 #define     P_VERMINOR  "0.6-, keep advancing"
-#define     P_VERNUM    "0.6b"
-#define     P_VERTXT    "moved error to malloc, started exec also toward malloc"
+#define     P_VERNUM    "0.6c"
+#define     P_VERTXT    "initial unit testing done on literal and anchor"
 
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -240,10 +240,13 @@ char        EXEC__push_for_zero     (short a_lvl, short a_rpos, short a_tpos);
 char        EXEC__by_index          (void **r_curr, short a_lvl, short a_index);
 /*---(running)--------------*/
 char        EXEC__prep              (cchar *a_source);
-char        EXEC__literal           (int a_lvl, int a_rpos, int a_tpos);
+char        EXEC__passed            (void);
+char        EXEC__failed            (void);
+char        EXEC__literal           (short a_lvl, short a_rpos, short a_tpos);
+char        EXEC__anchor            (short a_lvl, short a_rpos, short a_tpos);
 /*---(unittest)-------------*/
 char        EXEC__setfocus          (short a_lvl, short a_index);
-char        EXEC__setbegin          (int a_beg);
+char        EXEC__setbegin          (short a_beg);
 char*       EXEC__unit              (char *a_question, int n, int m);
 /*---(done)-----------------*/
 

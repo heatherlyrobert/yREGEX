@@ -102,7 +102,7 @@ static void      o___UNITTEST________________o (void) {;}
 char         /*-> set up quiet testing ---------------[ light  [uz.210.011.02]*/ /*-[00.0000.00#.A]-*/ /*-[--.---.---.--]-*/
 yregex__unit_quiet      (void)
 {
-   char       *x_args [1]  = { "yREGEX_unit" };
+   char       *x_args [1]  = { "yREGEX" };
    yURG_logger (1, x_args);
    yURG_urgs   (1, x_args);
    EXEC_init       ();
