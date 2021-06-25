@@ -699,7 +699,6 @@ EXEC__anchor                (short a_lvl, short a_rpos, short a_tpos)
       }
       DEBUG_YREGEX  yLOG_note    ("at BOL, success, set tpos back one");
       rc = EXEC__passed (HAND_ANC);
-      --a_tpos;
       break;
    case '$' :   /* end of line       */
       if (a_tpos < gre.tlen){
@@ -720,7 +719,7 @@ EXEC__anchor                (short a_lvl, short a_rpos, short a_tpos)
    }
    DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
    /*---(prepare next)-------------------*/
-   EXEC__launcher (a_lvl + 1, a_rpos, a_tpos, rc);
+   EXEC__launcher (a_lvl + 1, a_rpos, a_tpos - 1, rc);
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
    return rc;

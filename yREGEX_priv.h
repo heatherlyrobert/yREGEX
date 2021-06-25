@@ -33,8 +33,8 @@
 
 #define     P_VERMAJOR  "0.--, preparing for serious use"
 #define     P_VERMINOR  "0.6-, keep advancing"
-#define     P_VERNUM    "0.6d"
-#define     P_VERTXT    "first run at EXEC__driver with malloc, unit tested literals"
+#define     P_VERNUM    "0.6e"
+#define     P_VERTXT    "literals and string anchors fully re-tested using malloc"
 
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"

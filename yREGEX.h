@@ -23,8 +23,8 @@ char        yREGEX_clear         (void);
 
 char        yREGEX_comp          (cchar *a_regex);
 
-char        yREGEX_exec          (cchar *a_source);  /* count all matches      */
-char        yREGEX_fast          (cchar *a_source);  /* stop after first match */
+char        yREGEX_full          (cchar *a_source);
+char        yREGEX_filter        (cchar *a_source);
 
 char        yREGEX_free          (void);
 
@@ -36,9 +36,10 @@ char        yREGEX_cursor        (char a_dir, int *a_beg, int *a_len, int *a_fbe
 char        yREGEX_dump          (void);
 char        yREGEX_finds         (void);
 
-char        yREGEX_full          (cchar *a_source);
-char        yREGEX_filter        (cchar *a_source);
+/*===[[ DEPRECATED ]]========================================*/
 
+char        yREGEX_exec          (cchar *a_source);  /* count all matches      */
+char        yREGEX_fast          (cchar *a_source);  /* stop after first match */
 
 #endif
 
