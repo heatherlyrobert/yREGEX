@@ -36,6 +36,8 @@ char        yREGEX_cursor        (char a_dir, int *a_beg, int *a_len, int *a_fbe
 char        yREGEX_dump          (void);
 char        yREGEX_finds         (void);
 
+char        yREGEX_full          (cchar *a_source);
+char        yREGEX_filter        (cchar *a_source);
 
 
 #endif
