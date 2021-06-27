@@ -713,7 +713,7 @@ yREGEX_comp          (cchar *a_regex)
    }
    /*---(translate)----------------------*/
    DEBUG_YREGEX  yLOG_info    ("tranlated" , gre.orig);
-   DEBUG_YREGEX  yLOG_point   ("gre.olen"  , gre.olen);
+   DEBUG_YREGEX  yLOG_value   ("gre.olen"  , gre.olen);
    /*---(pattern run)--------------------*/
    rc = yregex_pats_comp ();
    DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
@@ -723,7 +723,7 @@ yREGEX_comp          (cchar *a_regex)
    }
    /*---(parse)--------------------------*/
    DEBUG_YREGEX  yLOG_info    ("gre.regex" , gre.regex);
-   DEBUG_YREGEX  yLOG_point   ("gre.rlen"  , gre.rlen);
+   DEBUG_YREGEX  yLOG_value   ("gre.rlen"  , gre.rlen);
    for (i = 0; i < gre.rlen; ++i) {
       /*---(check last run)--------------*/
       if (rc < 0) break;

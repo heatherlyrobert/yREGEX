@@ -360,7 +360,7 @@ yregex_sets__save       (void)
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
    char        rc          =    0;
-   uchar       x_set       =   -1;
+   int         x_set       =   -1;
    int         x_len       =    0;
    tSETS      *x_new       = NULL;
    /*---(header)-------------------------*/
@@ -573,7 +573,7 @@ yregex_sets__by_index   (cint a_index, tSETS **r_set)
    if (r_set != NULL)  *r_set = NULL;
    /*---(defense)------------------------*/
    DEBUG_YREGEX  yLOG_sint    (s_count);
-   --rce;  if (a_index < 0 || a_index > s_count) {
+   --rce;  if (a_index < 0 || a_index >= s_count) {
       DEBUG_YREGEX  yLOG_snote   ("index out of range");
       DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
       return rce;
@@ -657,8 +657,8 @@ yregex_sets__by_name    (cchar *a_name, tSETS **r_set)
    int         n           =    0;
    tSETS      *x_curr      = NULL;
    /*---(header)-------------------------*/
-   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
-   DEBUG_YREGEX  yLOG_point   ("a_name"    , a_name);
+   DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
+   DEBUG_YREGEX  yLOG_spoint  (a_name);
    /*---(default)------------------------*/
    if (r_set != NULL)  *r_set = NULL;
    /*---(defense)------------------------*/
@@ -667,17 +667,17 @@ yregex_sets__by_name    (cchar *a_name, tSETS **r_set)
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   DEBUG_YREGEX  yLOG_info    ("a_name"    , a_name);
+   DEBUG_YREGEX  yLOG_snote   (a_name);
    x_len = strllen (a_name, LEN_NAME);
-   DEBUG_YREGEX  yLOG_value   ("x_len"     , x_len);
+   DEBUG_YREGEX  yLOG_sint    (x_len);
    --rce;  if (x_len <= 4) {
-      DEBUG_YREGEX  yLOG_note    ("too short");
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
+      DEBUG_YREGEX  yLOG_snote   ("too short");
+      DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
       return rce;
    }
-   --rce;  if (x_len >= 6) {
-      DEBUG_YREGEX  yLOG_note    ("too long");
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
+   --rce;  if (x_len >= 7) {
+      DEBUG_YREGEX  yLOG_snote   ("too long");
+      DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
       return rce;
    }
    /*---(walk)---------------------------*/
@@ -706,12 +706,14 @@ yregex_sets__by_map     (tSETS **r_set)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
-   uchar       x_set       =   -1;
+   int         x_set       =   -1;
    int         x_len       =    0;
-   int         i           =    0;
+   int         n           =    0;
    tSETS      *x_curr      = NULL;
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
+   /*---(default)------------------------*/
+   if (r_set != NULL)  *r_set = NULL;
    /*---(defense)------------------------*/
    x_len = strllen (s_map, LEN_MAP );
    DEBUG_YREGEX  yLOG_sint    (x_len);
@@ -728,18 +730,22 @@ yregex_sets__by_map     (tSETS **r_set)
    /*---(walk)---------------------------*/
    x_curr = s_head;
    while (x_curr != NULL) {
-      if (strcmp (x_curr->map, s_map) == 0) {
-         DEBUG_YREGEX  yLOG_snote   ("found");
-         DEBUG_YREGEX  yLOG_sint    (i);
-         DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
-         return i;
-      }
+      if (strcmp (x_curr->map, s_map) == 0) break;
+      ++n;
       x_curr = x_curr->m_next;
    }
-   DEBUG_YREGEX  yLOG_snote   ("not found");
+   /*---(check)--------------------------*/
+   DEBUG_YREGEX  yLOG_spoint  (x_curr);
+   --rce;  if (x_curr == NULL) {
+      DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(saveback)-----------------------*/
+   DEBUG_YREGEX  yLOG_snote   ("found");
+   if (r_set != NULL)  *r_set = x_curr;
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
-   return 0;
+   return n;
 }
 
 
@@ -755,13 +761,17 @@ yregex_sets__standard   (int *a_rpos)
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
    char        t           [LEN_NAME] = "";
-   uchar       x_set       =    0;
+   int         x_set       =    0;
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
-   DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
    /*---(defense)------------------------*/
-   --rce;  if (*a_rpos  <  1     ) {
-      DEBUG_YREGEX  yLOG_note    ("does not leave room to left for [");
+   DEBUG_YREGEX  yLOG_point   ("a_rpos"    , a_rpos);
+   --rce;  if (a_rpos == NULL) {
+      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
+   --rce;  if (*a_rpos  <  0) {
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
@@ -771,43 +781,42 @@ yregex_sets__standard   (int *a_rpos)
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   --rce;  if (gre.regex [*a_rpos - 1] != '[') {
+   --rce;  if (gre.regex [*a_rpos    ] != '[') {
       DEBUG_YREGEX  yLOG_note    ("does not have [ to left");
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   --rce;  if (gre.regex [*a_rpos    ] != ':') {
+   --rce;  if (gre.regex [*a_rpos + 1] != ':') {
       DEBUG_YREGEX  yLOG_note    ("does not have : at current position");
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   --rce;  if (gre.regex [*a_rpos + 6] != ':') {
+   --rce;  if (gre.regex [*a_rpos + 7] != ':') {
       DEBUG_YREGEX  yLOG_note    ("does not have : near end");
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   --rce;  if (gre.regex [*a_rpos + 7] != ']') {
+   --rce;  if (gre.regex [*a_rpos + 8] != ']') {
       DEBUG_YREGEX  yLOG_note    ("does not have ] at end");
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    /*---(check for set)------------------*/
-   sprintf (t, "%-5.5s", gre.regex + *a_rpos + 1);
+   sprintf (t, "%-5.5s", gre.regex + *a_rpos + 2);
    DEBUG_YREGEX  yLOG_info    ("name"      , t);
    x_set = yregex_sets__by_name (t, NULL);
    DEBUG_YREGEX  yLOG_value   ("x_set"     , x_set);
-   /*---(append set)---------------------*/
-   if (x_set > 0) {
-      yregex_comp_add ('[', x_set);
-      *a_rpos += 7;
-      DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
-      DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
-      return 1;
+   --rce;  if (x_set < 0) {
+      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
    }
+   /*---(append set)---------------------*/
+   yregex_comp_add ('[', x_set);
+   *a_rpos += 8;
+   DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
    /*---(complete)-----------------------*/
-   --rce;
-   DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-   return rce;
+   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+   return 1;
 }
 
 
@@ -822,7 +831,7 @@ yregex_sets_backslash   (int *a_rpos)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
-   uchar       x_set       =    0;
+   int         x_set       =    0;
    char        t           [LEN_NAME] = "";
    uchar       x_ch        =  '-';
    /*---(header)-------------------------*/
@@ -892,7 +901,7 @@ yregex_sets_dot         (int *a_rpos)
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
    char        rc          =   -1;
-   uchar       x_set       =    0;
+   int         x_set       =    0;
    char        t           [LEN_NAME] = "";
    char        x_ch        =  ' ';
    /*---(header)-------------------------*/
@@ -920,7 +929,7 @@ yregex_sets_comp        (int *a_rpos)
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
    char        rc          =   -1;
-   uchar       x_set       =    0;
+   int         x_set       =    0;
    char        t           [LEN_NAME] = "";
    char        x_ch        =  ' ';
    /*---(header)-------------------------*/
@@ -1101,8 +1110,18 @@ yregex_sets_exec     (int a_level, int a_rpos, int a_tpos)
 }
 
 char
-yregex_sets_rule        (char *a_text, int a_set)
+yregex_sets_rule        (char a_mod, char *a_text, int a_set)
 {
+   /*---(design notes)-------------------*/
+   /*
+    *  after already being vetted for set in main regex
+    *  this allows checking for special exceptions
+    *
+    *
+    *  ºË[´´´]»   means capture group Ë includes a letter in the set
+    *  ºË[^´´´]»  means capture group Ë does not include a letter in the set
+    *
+    */
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
    char        rc          =    0;
@@ -1114,35 +1133,14 @@ yregex_sets_rule        (char *a_text, int a_set)
    /*---(prepare)------------------------*/
    --rce;  if (a_text == NULL    )  return rce;
    x_len = strllen (a_text, LEN_TEXT);
-   rc = yregex_sets__by_index (a_set, &x_curr);
-   for (i = 0; i <= x_len; ++i) {
+   yregex_sets__by_index (a_set, &x_curr);
+   if (a_mod == '[')  rc = 0;
+   else               rc = 1;
+   for (i = 0; i < x_len; ++i) {
       x_txt  = a_text [i];
       x_mark = x_curr->map [x_txt];
-      if (x_mark == '.')   return 1;
-   }
-   /*---(complete)-----------------------*/
-   return 0;
-}
-
-char
-yregex_sets_rule_rev    (char *a_text, int a_set)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   char        rc          =    1;
-   int         x_len       =    0;
-   uchar       x_txt       =    0;
-   uchar       x_mark      =    0;
-   int         i           =    0;
-   tSETS      *x_curr      = NULL;
-   /*---(prepare)------------------------*/
-   --rce;  if (a_text == NULL    )  return rce;
-   x_len = strllen (a_text, LEN_TEXT);
-   rc = yregex_sets__by_index (a_set, &x_curr);
-   for (i = 0; i <= x_len; ++i) {
-      x_txt  = a_text [i];
-      x_mark = x_curr->map [x_txt];
-      if (x_mark == ' ')   rc = 0;
+      if (a_mod == '[' && x_mark == '.')   rc = 1;
+      if (a_mod == ']' && x_mark == '.')   rc = 0;
    }
    /*---(complete)-----------------------*/
    return rc;
@@ -1154,6 +1152,13 @@ yregex_sets_rule_rev    (char *a_text, int a_set)
 /*===----                         unit testing                         ----===*/
 /*====================------------------------------------====================*/
 static void      o___UNITTEST________________o (void) {;}
+
+char
+yregex_sets__setmap     (char *a_map)
+{
+   strlcpy (s_map, a_map, LEN_MAP);
+   return 0;
+}
 
 char*        /*-> unit test accessor -----------------[ light  [us.D90.241.L0]*/ /*-[03.0000.00#.#]-*/ /*-[--.---.---.--]-*/
 yregex_sets__unit       (char *a_question, int a_num)

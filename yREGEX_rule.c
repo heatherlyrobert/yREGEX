@@ -323,10 +323,7 @@ yregex_rule_exec        (short a_level, short a_rpos, short a_tpos, short a_inde
    /*---(has a set)----------------------*/
    else if (strchr ("[]", x_mod) != NULL) {
       DEBUG_YREGEX  yLOG_note    ("executing a has-a match");
-      switch (x_mod) {
-      case '[' :  rc = yregex_sets_rule     (s1, x_two);   break;
-      case ']' :  rc = yregex_sets_rule_rev (s1, x_two);   break;
-      }
+      rc = yregex_sets_rule (x_mod, s1, x_two);
    }
    /*---(substring)----------------------*/
    else if (strchr ("+-", x_mod) != NULL) {

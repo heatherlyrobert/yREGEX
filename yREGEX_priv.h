@@ -33,8 +33,8 @@
 
 #define     P_VERMAJOR  "0.--, preparing for serious use"
 #define     P_VERMINOR  "0.6-, keep advancing"
-#define     P_VERNUM    "0.6d"
-#define     P_VERTXT    "sets adds standards from text-segment!!!  purges properly"
+#define     P_VERNUM    "0.6e"
+#define     P_VERTXT    "all basic set logic tested, need to complete with yEXEC execution support"
 
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -324,9 +324,9 @@ char        yregex_sets_list        (void);
 /*---(execute)--------------*/
 char        yregex_sets_break       (int a_level, int a_rpos, int a_tpos);
 char        yregex_sets_exec        (int a_level, int a_rpos, int a_tpos);
-char        yregex_sets_rule        (char *a_text, int a_set);
-char        yregex_sets_rule_rev    (char *a_text, int a_set);
+char        yregex_sets_rule        (char a_mod, char *a_text, int a_set);
 /*---(unittest)-------------*/
+char        yregex_sets__setmap     (char *a_map);
 char*       yregex_sets__unit       (char *a_question, int a_num);
 /*---(done)-----------------*/
 
