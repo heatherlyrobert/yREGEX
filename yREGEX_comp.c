@@ -759,7 +759,7 @@ yREGEX_comp          (cchar *a_regex)
       /*---(anchors)---------------------*/
       if (strchr (G_ANCHOR, x_ch) != NULL) {
          DEBUG_YREGEX  yLOG_note    ("handle anchors");
-         rc = yregex_comp_add (x_ch, yregex_sets__by_abbr ('w'));
+         rc = yregex_comp_add (x_ch, yregex_sets__by_abbr ('w', NULL));
          if (rc >= 0)  continue;
       }
       /*---(set handling)----------------*/

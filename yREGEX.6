@@ -60,19 +60,20 @@ regular expressions.  i always use extended.
    who$        achor at end of line
    \\[         to escape a meta-character
 
-.SS heatherly (11 short-hand)
+.SS heatherly (12 short-hand)
 i have an extended ascii character-set (shrike) that allows more ease of use,
 spacing, and better visual confirmation.
 
-.B   · ¬   ¢ ± ¤   ¸ ¹   º »   ¼ ½
+.B   · ¬   ¸ ¹   º »   ¼ ½   < >   À Å
    ·         a space (\\s) helps for counting/visual confirmation
    ¬         any single character (.), my mask character
-   ¤         lazy version of *
-   ¢         lazy version of ?
-   ±         lazy version of +
-   ¸´´´¹     capturing group, instead of (#ÏÏÏ)
-   º´´´»     rules, instead of (;ÏÏÏ)
-   ¼´´´½     focus group, instead of (>ÏÏÏ<)
+   ¸´´´¹     capturing group, and in text (#´´´)
+   º´´´»     rules, and in text (;´´´)
+   ¼´´´½     focus group, and in text (>´´´<)
+   <         \\w, beginning of word (too useful to be ugly)
+   >         \\W, end of word (too useful to be ugly)
+   ´À        suggest laziest match
+   ´Å        suggest greediest match
 
 .SS search-combining (6 custom)
 also in my extended ascii character-set (shrike) are additional logical
@@ -103,26 +104,26 @@ and, some character sets are reverse of lower-case
 character classes are exactly as in posix.
    [...]     any one of the characters included
    [^...]    not any of the characters included
+   mnop      any character in series
    m-n       any character between m and n (inclusive) 
 
 .SH C) ANCHORS
 anchor points are 80% posix standard
    ^´´´      beginning of line
    ´´´$      end of line
-   <         beginning of word word (not µb)
-   >         ending of word (µB)
-   ¨{n}      absolute column position (not posix, but useful)
+   <´´´      beginning of word word (not µw)
+   ´´´>      ending of word (µW)
 
 .SH D) QUANTIFIERS
 most quantifiers are posix-standard, but the lazy versions where
 clumbsy in posix, so i used special characters.
-   *      ¤        zero or more, greedy and lazy       (not *?)
-   ?      ¢        zero or one, greedy and lazy        (not ??)
-   +      ±        one or more, greedy and lazy        (not +?)
-   {m}             exactly m times
-   {m,n}  {-m,n}   m to n times (inclusive), greedy and lazy
-   {m,}            at least and including m times
-   {,n}            up to and including n times
+   * *À *Å   zero or more; normal, lazy, and greedy  (not *?)
+   ? ?À ?Å   zero or one; normal, lazy, and greedy   (not ??)
+   + +À +Å   one or more; normal, lazy, and greedy   (not +?)
+   {m}       exactly m times, can use À lazy and Å greedy
+   {m,n}     m to n times (inclusive) also À lazy and Å greedy
+   {m,}      at least m times (inclusive) also À lazy and Å greedy
+   {,n}      up to n times (inclusive) also À lazy and Å greedy
 
 .SH E) GROUPING
 normal posix-grouping is supported with some additions

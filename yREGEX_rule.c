@@ -224,7 +224,7 @@ yregex_rule_comp        (int *a_rpos)
       ++(*a_rpos);
       x_ch2  = gre.regex [*a_rpos];
       DEBUG_YREGEX  yLOG_char    ("x_ch2"     , x_ch2);
-      x_set = yregex_sets__by_abbr (x_ch2);
+      x_set = yregex_sets__by_abbr (x_ch2, NULL);
       if (x_set <= 0) {
          DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, x_set);
          return rce;
@@ -304,7 +304,7 @@ yregex_rule_exec        (short a_level, short a_rpos, short a_tpos, short a_inde
    strlcpy (s1, g_subf, LEN_TEXT);
    DEBUG_YREGEX  yLOG_info    ("s1"        , s1);
    /*---(capture group match-------------*/
-   if (strchr ("=п<>но", x_mod) != NULL) {
+   if (strchr ("=о<>мн", x_mod) != NULL) {
       DEBUG_YREGEX  yLOG_note    ("executing a capture group match");
       rc = yregex_exec_sub (a_index, x_two);
       strlcpy (s2, g_subf, LEN_TEXT);

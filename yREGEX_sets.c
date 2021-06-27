@@ -13,61 +13,49 @@
 
 
 
+#define     SETS_BASE   'b'
+
 /*---(struct.re)--------+-----------+-*//*-+----------------------------------*/
 #define     LEN_MAP     270
-#define     MAX_SETS    250
-typedef     struct      cSETS       tSETS;
-struct      cSETS {
-   char        type;
-   char        abbr;
-   char        name        [LEN_NAME];
-   char        map         [LEN_MAP ];
-};
-static tSETS       s_sets [MAX_SETS] = {
-   /*           0         1            0               1               2               3               4               5               6               7               8               9               A               B               C               D               E               F                 */
-   /*1234 1234  01234567890123456789   0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef  */
-   /*type abbr  ---name-------------   0123456789abcdef0123456789abcde  !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~Ω                                 °¢£§•¶ß®©™´¨≠ÆØ∞±≤≥¥µ∂∑∏π∫ªºΩæø¿¡¬√ƒ≈∆«»… ÀÃÕŒœ–—“”‘’÷◊ÿŸ⁄€‹›ﬁﬂ‡·‚„‰ÂÊÁËÈÍÎÏÌÓÔÒÚÛÙıˆ˜¯˘˙˚¸˝˛ˇ  */
-   { '-', '-', "---beg---"          , "                                                                                                                                                                                                                                                                " },
+#define     MAX_SETS    25
+static const tSETS s_sets [MAX_SETS] = {
+   /*                      0         1            0               1               2               3               4               5               6               7               8               9               A               B               C               D               E               F                 */
+   /*           1234 1234  01234567890123456789   0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef  */
    /*---(metas)----------------*/
-   /*type type  ---name-------------   0123456789abcdef0123456789abcde  !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~Ω                                 °¢£§•¶ß®©™´¨≠ÆØ∞±≤≥¥µ∂∑∏π∫ªºΩæø¿¡¬√ƒ≈∆«»… ÀÃÕŒœ–—“”‘’÷◊ÿŸ⁄€‹›ﬁﬂ‡·‚„‰ÂÊÁËÈÍÎÏÌÓÔÒÚÛÙıˆ˜¯˘˙˚¸˝˛ˇ  */
-   { '-', 'n', "return"             , "          . ..                                                                                                                                                        .                                                                                         " },
-   { '-', 'e', "escape"             , "                       .                                                                                                                                             .                                                                                          " },
-   { '-', 't', "tab"                , "         . .                                                                                                                                                               .                                                                                    " },
-   { '-', 'f', "field"              , "                             ...                                                                                                                                       .                          .                                                             " },
-   { ':', 's', "space"              , "         .....                  .                                                                                                                                                        .                                                                      " },
-   { '-', 'w', "word"               , "                                                ..........       ..........................    . ..........................                                                                                                                                     " },
-   /*type abbr  ---name-------------   0123456789abcdef0123456789abcde  !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~Ω                                 °¢£§•¶ß®©™´¨≠ÆØ∞±≤≥¥µ∂∑∏π∫ªºΩæø¿¡¬√ƒ≈∆«»… ÀÃÕŒœ–—“”‘’÷◊ÿŸ⁄€‹›ﬁﬂ‡·‚„‰ÂÊÁËÈÍÎÏÌÓÔÒÚÛÙıˆ˜¯˘˙˚¸˝˛ˇ  */
-   { ':', 'd', "digit"              , "                                                ..........                                                                                                                                                                                                      " },
-   { ':', 'l', "lower"              , "                                                                                                 ..........................                                                                                                                                     " },
-   { ':', 'u', "upper"              , "                                                                 ..........................                                                                                                                                                                     " },
-   { '-', 'g', "greek"              , "                                                                                                                                ........................                                                                                ........................" },
+   /*--------  type  type  ---name-------------   ∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~ΩÄÅÇÉÑÖÜáàâäãåçéèêëíìîïñóòôöõúùûü†°¢£§•¶ß®©™´¨≠ÆØ∞±≤≥¥µ∂∑∏π∫ªºΩæø¿¡¬√ƒ≈∆«»… ÀÃÕŒœ–—“”‘’÷◊ÿŸ⁄€‹›ﬁﬂ‡·‚„‰ÂÊÁËÈÍÎÏÌÓÔÒÚÛÙıˆ˜¯˘˙˚¸˝˛ˇ  */
+   { SETS_BASE, '-', 'n', "return"             , "          . ..                                                                                                                                                        .                                                                                         ", 0, NULL, NULL },
+   { SETS_BASE, '-', 'e', "escape"             , "                       .                                                                                                                                             .                                                                                          ", 0, NULL, NULL },
+   { SETS_BASE, '-', 't', "tab"                , "         . .                                                                                                                                                               .                                                                                    ", 0, NULL, NULL },
+   { SETS_BASE, '-', 'f', "field"              , "                             ...                                                                                                                                       .                          .                                                             ", 0, NULL, NULL },
+   { SETS_BASE, ':', 's', "space"              , "         .....                  .                                                                                                                                                        .                                                                      ", 0, NULL, NULL },
+   { SETS_BASE, '-', 'w', "word"               , "                                                ..........       ..........................    . ..........................                                                                                                                                     ", 0, NULL, NULL },
+   /*--------  type  type  ---name-------------   ∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~ΩÄÅÇÉÑÖÜáàâäãåçéèêëíìîïñóòôöõúùûü†°¢£§•¶ß®©™´¨≠ÆØ∞±≤≥¥µ∂∑∏π∫ªºΩæø¿¡¬√ƒ≈∆«»… ÀÃÕŒœ–—“”‘’÷◊ÿŸ⁄€‹›ﬁﬂ‡·‚„‰ÂÊÁËÈÍÎÏÌÓÔÒÚÛÙıˆ˜¯˘˙˚¸˝˛ˇ  */
+   { SETS_BASE, ':', 'd', "digit"              , "                                                ..........                                                                                                                                                                                                      ", 0, NULL, NULL },
+   { SETS_BASE, ':', 'l', "lower"              , "                                                                                                 ..........................                                                                                                                                     ", 0, NULL, NULL },
+   { SETS_BASE, ':', 'u', "upper"              , "                                                                 ..........................                                                                                                                                                                     ", 0, NULL, NULL },
+   { SETS_BASE, '-', 'g', "greek"              , "                                                                                                                                                                                                                                        ........................", 0, NULL, NULL },
    /*---(categories)-----------*/
-   /*type abbr  ---name-------------   0123456789abcdef0123456789abcde  !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~Ω                                 °¢£§•¶ß®©™´¨≠ÆØ∞±≤≥¥µ∂∑∏π∫ªºΩæø¿¡¬√ƒ≈∆«»… ÀÃÕŒœ–—“”‘’÷◊ÿŸ⁄€‹›ﬁﬂ‡·‚„‰ÂÊÁËÈÍÎÏÌÓÔÒÚÛÙıˆ˜¯˘˙˚¸˝˛ˇ  */
-   { '-', '-', "dotta"              , " ......... .  ........................................................................................................................................................ ........................................................................................." },
-   { ':', 'a', "alpha"              , "                                                                 ..........................      ..........................                                                                                                                                     " },
-   { ':', '-', "alnum"              , "                                                ..........       ..........................      ..........................                                                                                                                                     " },
-   { ':', 'p', "punct"              , "                                 ...............          .......                          ......                          ....                                                                                                                                 " },
-   { '-', 'q', "rpunc"              , "                                ..      ..  . .           ..   .                           . .                             . .                                                                                                                                  " },
-   { ':', 'x', "xdigi"              , "                                                ..........       ......                          ......                                                                                                                                                         " },
-   /*type abbr  ---name-------------   0123456789abcdef0123456789abcde  !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~Ω                                 °¢£§•¶ß®©™´¨≠ÆØ∞±≤≥¥µ∂∑∏π∫ªºΩæø¿¡¬√ƒ≈∆«»… ÀÃÕŒœ–—“”‘’÷◊ÿŸ⁄€‹›ﬁﬂ‡·‚„‰ÂÊÁËÈÍÎÏÌÓÔÒÚÛÙıˆ˜¯˘˙˚¸˝˛ˇ  */
-   { ':', '-', "graph"              , "                                 ..............................................................................................                                  ..............................................................................................." },
-   { ':', '-', "print"              , "                                ...............................................................................................                                  ..............................................................................................." },
-   { ':', 'c', "cntrl"              , " ...............................                                                                                               .                                                                                                                                " },
-   { ':', '-', "blank"              , "         .                      .                                                                                                                                                        .                                                                      " },
+   /*--------  type  type  ---name-------------   ∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~ΩÄÅÇÉÑÖÜáàâäãåçéèêëíìîïñóòôöõúùûü†°¢£§•¶ß®©™´¨≠ÆØ∞±≤≥¥µ∂∑∏π∫ªºΩæø¿¡¬√ƒ≈∆«»… ÀÃÕŒœ–—“”‘’÷◊ÿŸ⁄€‹›ﬁﬂ‡·‚„‰ÂÊÁËÈÍÎÏÌÓÔÒÚÛÙıˆ˜¯˘˙˚¸˝˛ˇ  */
+   { SETS_BASE, '-', '-', "dotta"              , " ......... .  ........................................................................................................................................................ .........................................................................................", 0, NULL, NULL },
+   { SETS_BASE, ':', 'a', "alpha"              , "                                                                 ..........................      ..........................                                                                                                                                     ", 0, NULL, NULL },
+   { SETS_BASE, ':', '-', "alnum"              , "                                                ..........       ..........................      ..........................                                                                                                                                     ", 0, NULL, NULL },
+   { SETS_BASE, ':', 'p', "punct"              , "                                 ...............          .......                          ......                          ....                                                                                                                                 ", 0, NULL, NULL },
+   { SETS_BASE, '-', 'q', "rpunc"              , "                                ..      ..  . .           ..   .                           . .                             . .                                                                                                                                  ", 0, NULL, NULL },
+   { SETS_BASE, ':', 'x', "xdigi"              , "                                                ..........       ......                          ......                                                                                                                                                         ", 0, NULL, NULL },
+   /*--------  type  type  ---name-------------   ∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~ΩÄÅÇÉÑÖÜáàâäãåçéèêëíìîïñóòôöõúùûü†°¢£§•¶ß®©™´¨≠ÆØ∞±≤≥¥µ∂∑∏π∫ªºΩæø¿¡¬√ƒ≈∆«»… ÀÃÕŒœ–—“”‘’÷◊ÿŸ⁄€‹›ﬁﬂ‡·‚„‰ÂÊÁËÈÍÎÏÌÓÔÒÚÛÙıˆ˜¯˘˙˚¸˝˛ˇ  */
+   { SETS_BASE, ':', '-', "graph"              , "                                 ..............................................................................................                                  ...............................................................................................", 0, NULL, NULL },
+   { SETS_BASE, ':', '-', "print"              , "                                ...............................................................................................                                  ...............................................................................................", 0, NULL, NULL },
+   { SETS_BASE, ':', 'c', "cntrl"              , " ...............................                                                                                               .                                                                                                                                ", 0, NULL, NULL },
+   { SETS_BASE, ':', '-', "blank"              , "         .                      .                                                                                                                                                        .                                                                      ", 0, NULL, NULL },
    /*---(reversed)-------------*/
-   { '-', 'W', "word (not)"         , " ...............................................          .......                          .... .                          .....                        ................................................................................                        " },
-   { '-', 'D', "digit (not)"        , " ...............................................          ......................................................................................................................................................................................................" },
-   { '-', 'S', "space (not)"        , " ........     .................. ........................................................................................................................................................ ......................................................................" },
-   { '-', 'F', "field (not)"        , " ............................   ....................................................................................................................................... .......................... ............................................................." },
-   { '-', 'G', "greek (not)"        , " ...............................................................................................................................                        ................................................................................                        " },
-   /*---(specialty)------------*/
-   /*type abbr  ---name-------------   0123456789abcdef0123456789abcde  !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~Ω                                 °¢£§•¶ß®©™´¨≠ÆØ∞±≤≥¥µ∂∑∏π∫ªºΩæø¿¡¬√ƒ≈∆«»… ÀÃÕŒœ–—“”‘’÷◊ÿŸ⁄€‹›ﬁﬂ‡·‚„‰ÂÊÁËÈÍÎÏÌÓÔÒÚÛÙıˆ˜¯˘˙˚¸˝˛ˇ  */
-   { ' ', '-', ""                   , "                                                                                                                                                                                                                                                                " },
-   /*---(new ones)-------------*/
-   /*type abbr  ---name-------------   0123456789abcdef0123456789abcde  !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~Ω                                 °¢£§•¶ß®©™´¨≠ÆØ∞±≤≥¥µ∂∑∏π∫ªºΩæø¿¡¬√ƒ≈∆«»… ÀÃÕŒœ–—“”‘’÷◊ÿŸ⁄€‹›ﬁﬂ‡·‚„‰ÂÊÁËÈÍÎÏÌÓÔÒÚÛÙıˆ˜¯˘˙˚¸˝˛ˇ  */
-   { ' ', '-', ""                   , "                                                                                                                                                                                                                                                                " },
+   /*--------  type  type  ---name-------------   ∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~ΩÄÅÇÉÑÖÜáàâäãåçéèêëíìîïñóòôöõúùûü†°¢£§•¶ß®©™´¨≠ÆØ∞±≤≥¥µ∂∑∏π∫ªºΩæø¿¡¬√ƒ≈∆«»… ÀÃÕŒœ–—“”‘’÷◊ÿŸ⁄€‹›ﬁﬂ‡·‚„‰ÂÊÁËÈÍÎÏÌÓÔÒÚÛÙıˆ˜¯˘˙˚¸˝˛ˇ  */
+   { SETS_BASE, '-', 'W', "word (not)"         , " ...............................................          .......                          .... .                          .............................................................................................................                        ", 0, NULL, NULL },
+   { SETS_BASE, '-', 'D', "digit (not)"        , " ...............................................          ......................................................................................................................................................................................................", 0, NULL, NULL },
+   { SETS_BASE, '-', 'S', "space (not)"        , " ........     .................. ........................................................................................................................................................ ......................................................................", 0, NULL, NULL },
+   { SETS_BASE, '-', 'F', "field (not)"        , " ............................   ....................................................................................................................................... .......................... .............................................................", 0, NULL, NULL },
+   { SETS_BASE, '-', 'G', "greek (not)"        , " .......................................................................................................................................................................................................................................                        ", 0, NULL, NULL },
    /*---(done)-----------------*/
-   {  0 , '-', ""                   , "                                                                                                                                                                                                                                                                " },
+   { 0        ,  0 , 0  , NULL                 , NULL                                                                                                                                                                                                                                                              , 0, NULL, NULL },
 };
 static int         s_nset      = 0;
 static char        s_allowed   [LEN_HUND] = "";
@@ -79,6 +67,178 @@ static int         s_mapcount  =  0;
 
 
 
+static tSETS      *s_head     = NULL;        /* head of list                 */
+static tSETS      *s_tail     = NULL;        /* tail of list                 */
+static tSETS      *s_curr     = NULL;        /* curent cursor                */
+static int         s_count    =    0;        /* count of sets                */
+
+
+static      char       *s_full      = "∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑ !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ΩÄÅÇÉÑÖÜáàâäãåçéèêëíìîïñóòôöõúùûü†°¢£§•¶ß®©™´¨≠ÆØ∞±≤≥¥µ∂∑∏π∫ªºΩæø¿¡¬√ƒ≈∆«»… ÀÃÕŒœ–—“”‘’÷◊ÿŸ⁄€‹›ﬁﬂ‡·‚„‰ÂÊÁËÈÍÎÏÌÓÔÒÚÛÙıˆ˜¯˘˙˚¸˝˛ˇ";
+
+static      char        s_print     [LEN_RECD] = "";
+
+
+
+/*====================------------------------------------====================*/
+/*===----                       allocation/memory                      ----===*/
+/*====================------------------------------------====================*/
+static void  o___SUPPORT_________o () { return; }
+
+char*
+yregex_sets__memory     (void *a_cur)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   int         n           =    0;
+   tSETS      *x_cur       = NULL;
+   /*---(cast)---------------------------*/
+   x_cur = (tSETS *) a_cur;
+   /*---(defense)------------------------*/
+   if (x_cur == NULL) {
+      strlcpy (s_print, "n/a", LEN_RECD);
+      return s_print;
+   }
+   /*---(defense)------------------------*/
+   strlcpy (s_print, "Â__.___.__Ê", LEN_RECD);
+   ++n;  if (x_cur->type        != '-')         s_print [n] = 'X';
+   ++n;  if (x_cur->abbr        != '-')         s_print [n] = 'X';
+   ++n;
+   ++n;  if (x_cur->name        != NULL)        s_print [n] = 'X';
+   ++n;  if (x_cur->map         != NULL)        s_print [n] = 'X';
+   ++n;  if (x_cur->count       != 0)           s_print [n] = 'X';
+   ++n;
+   ++n;  if (x_cur->m_prev      != NULL)        s_print [n] = 'X';
+   ++n;  if (x_cur->m_next      != NULL)        s_print [n] = 'X';
+   return s_print;
+}
+
+char
+yregex_sets__wipe       (void *a_cur)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   tSETS      *x_cur       = NULL;
+   /*---(cast)---------------------------*/
+   x_cur = (tSETS *) a_cur;
+   /*---(wipe)---------------------------*/
+   x_cur->type     = '-';
+   x_cur->abbr     = '-';
+   x_cur->name     = NULL;
+   x_cur->map      = NULL;
+   x_cur->count    = 0;
+   x_cur->m_prev   = NULL;
+   x_cur->m_next   = NULL;
+   /*---(complete)-----------------------*/
+   return 0;
+}
+
+
+
+/*====================------------------------------------====================*/
+/*===----                       allocation/memory                      ----===*/
+/*====================------------------------------------====================*/
+static void  o___MEMORY__________o () { return; }
+
+char
+yregex_sets__new        (void **a_new)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   char        rc          =    0;
+   tSETS      *x_new       = NULL;
+   int         x_tries     =    0;
+   /*---(header)-------------------------*/
+   DEBUG_DATA   yLOG_senter  (__FUNCTION__);
+   /*---(check return)-------------------*/
+   DEBUG_DATA   yLOG_spoint  (a_new);
+   --rce;  if (a_new == NULL) {
+      DEBUG_DATA   yLOG_sexitr  (__FUNCTION__, rce);
+      return rce;
+   }
+   DEBUG_DATA   yLOG_spoint  (*a_new);
+   --rce;  if (*a_new != NULL) {
+      DEBUG_DATA   yLOG_snote   ("already set");
+      DEBUG_DATA   yLOG_sexitr  (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(default)------------------------*/
+   *a_new = NULL;
+   /*---(allocate)-----------------------*/
+   while (x_new == NULL) {
+      ++x_tries;
+      x_new = malloc (sizeof (tSETS));
+      if (x_tries > 3)   break;
+   }
+   DEBUG_DATA   yLOG_sint    (x_tries);
+   DEBUG_DATA   yLOG_spoint  (x_new);
+   --rce;  if (x_new == NULL) {
+      DEBUG_DATA   yLOG_sexitr  (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(wipe, attach, and increment)----*/
+   yregex_sets__wipe (x_new);
+   if    (s_tail == NULL) {
+      DEBUG_DATA   yLOG_snote   ("first entry");
+      s_head = x_new;
+   } else {
+      DEBUG_DATA   yLOG_snote   ("append to tail");
+      x_new->m_prev  = s_tail;
+      s_tail->m_next = x_new;
+   }
+   s_tail = x_new;
+   ++s_count;
+   /*---(save return)--------------------*/
+   *a_new = x_new;
+   /*---(complete)-----------------------*/
+   DEBUG_DATA   yLOG_sexit   (__FUNCTION__);
+   return rc;
+}
+
+char
+yregex_sets__free       (void **a_old)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   tSETS      *x_old       = NULL;
+   /*---(header)-------------------------*/
+   DEBUG_DATA   yLOG_senter  (__FUNCTION__);
+   /*---(check return)-------------------*/
+   DEBUG_DATA   yLOG_spoint  (a_old);
+   --rce;  if (a_old == NULL) {
+      DEBUG_DATA   yLOG_sexitr  (__FUNCTION__, rce);
+      return rce;
+   }
+   DEBUG_DATA   yLOG_spoint  (*a_old);
+   --rce;  if (*a_old == NULL) {
+      DEBUG_DATA   yLOG_snote   ("never set");
+      DEBUG_DATA   yLOG_sexitr  (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(simplify)-----------------------*/
+   x_old = (tSETS *) *a_old;
+   /*---(detach and decrement)-----------*/
+   if (x_old->m_next != NULL) x_old->m_next->m_prev   = x_old->m_prev;
+   else                       s_tail                  = x_old->m_prev;
+   if (x_old->m_prev != NULL) x_old->m_prev->m_next   = x_old->m_next;
+   else                       s_head                  = x_old->m_next;
+   --s_count;
+   DEBUG_DATA   yLOG_sint    (s_count);
+   /*---(gound links)--------------------*/
+   x_old->m_prev = NULL;
+   x_old->m_next = NULL;
+   /*---(free and ground)----------------*/
+   if (x_old->source != SETS_BASE && x_old->name != NULL)   free (x_old->name);
+   x_old->name = NULL;
+   if (x_old->source != SETS_BASE && x_old->map  != NULL)   free (x_old->map );
+   x_old->map  = NULL;
+   free (*a_old);
+   /*---(ground)-------------------------*/
+   *a_old = NULL;
+   /*---(complete)-----------------------*/
+   DEBUG_DATA   yLOG_sexit   (__FUNCTION__);
+   return 0;
+}
+
+
+
 /*====================------------------------------------====================*/
 /*===----                        program level                         ----===*/
 /*====================------------------------------------====================*/
@@ -87,194 +247,110 @@ static void      o___PROGRAM_________________o (void) {;}
 char         /*-> tbd --------------------------------[ leaf   [fz.531.021.10]*/ /*-[02.0000.01#.!]-*/ /*-[--.---.---.--]-*/
 yregex_sets_prep     (void)
 {
+   yregex_sets__purge ();
+   yregex_sets__base  ();
+   return 0;
+}
+
+char
+yregex_sets_init        (void)
+{
    /*---(locals)-----------+-----+-----+-*/
-   int         i           =    0;
-   int         j           =    0;
-   char        t           [LEN_LABEL];
+   int         n           =    0;
    /*---(header)-------------------------*/
-   DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
-   /*---(initialize sets)----------------*/
+   DEBUG_DATA   yLOG_enter   (__FUNCTION__);
+   /*---(ground everything)--------------*/
+   s_head  =  s_tail = s_curr = NULL;
+   s_count = 0;
+   /*---(complete)-----------------------*/
+   DEBUG_DATA   yLOG_exit    (__FUNCTION__);
+   return 0;
+}
+
+char
+yregex_sets__purge      (void)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   tSETS      *x_curr      = NULL;
+   int         n           =    0;
+   /*---(header)-------------------------*/
+   DEBUG_DATA   yLOG_enter   (__FUNCTION__);
+   /*---(walk level)---------------------*/
+   x_curr = s_head;
+   while (x_curr != NULL) {
+      yregex_sets__free (&x_curr);
+      x_curr = s_head;
+   }
+   /*---(ground everything)--------------*/
+   s_head  =  s_tail = s_curr = NULL;
+   s_count = 0;
+   /*---(complete)-----------------------*/
+   DEBUG_DATA   yLOG_exit    (__FUNCTION__);
+   return 0;
+}
+
+char
+yregex_sets_wrap        (void)
+{
+   DEBUG_DATA   yLOG_enter   (__FUNCTION__);
+   yregex_sets__purge ();
+   yregex_sets_init ();
+   DEBUG_DATA   yLOG_exit    (__FUNCTION__);
+   return 0;
+}
+
+
+
+/*====================------------------------------------====================*/
+/*===----                       creating new sets                      ----===*/
+/*====================------------------------------------====================*/
+static void      o___CREATE__________________o (void) {;}
+
+char
+yregex_sets__base       (void)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   char        rc          =    0;
+   int         i           =    0;
+   tSETS      *x_new       = NULL;
+   char        t           [LEN_LABEL];
+   int         j           =    0;
+   /*---(defense)------------------------*/
+   if (s_head != NULL)   return 0;
+   /*---(header)-------------------------*/
+   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
+   /*---(prepare)------------------------*/
    strlcpy (s_allowed, "", LEN_HUND);
-   s_nset = 0;
+   /*---(walk base)----------------------*/
    for (i = 0; i < MAX_SETS; ++i) {
+      /*---(check for end)---------------*/
+      if (s_sets [i].abbr == 0)  break;
+      /*---(add a new one)---------------*/
+      x_new = NULL;
+      rc = yregex_sets__new (&x_new);
+      if (x_new == NULL)  continue;
+      /*---(populate)--------------------*/
+      x_new->source   = s_sets [i].source;
+      x_new->type     = s_sets [i].type;
+      x_new->abbr     = s_sets [i].abbr;
+      x_new->name     = s_sets [i].name;
+      x_new->map      = s_sets [i].map;
+      /*---(count included)--------------*/
+      for (j = 0; j < LEN_MAP; ++j) {
+         if (x_new->map [j] == 0)    break;
+         if (x_new->map [j] == '.')  ++(x_new->count);
+      }
       /*---(allowed abbr)----------------*/
-      if (s_sets [i].abbr != '-') {
+      if (x_new->abbr != '-') {
          sprintf (t, "%c", s_sets [i].abbr);
          strlcat (s_allowed, t, LEN_HUND);
       }
-      /*---(count)-----------------------*/
-      if (s_sets [i].type != 0   && s_sets [i].type != ' ') {
-         ++s_nset;
-         continue;
-      }
-      /*---(added ones)------------------*/
-      s_sets [i].type     = 0;
-      strlcpy (s_sets [i].name, "", LEN_NAME);
-      for (j = 0; j < 256;  ++j)   s_sets [i].map [j] = ' ';
-      s_sets [i].map [256] = 0;
       /*---(done)------------------------*/
    }
-   DEBUG_YREGEX  yLOG_snote   (s_allowed);
-   DEBUG_YREGEX  yLOG_sint    (s_nset);
-   /*---(complete)-----------------------*/
-   DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
-   return 0;
-}
-
-
-
-/*====================------------------------------------====================*/
-/*===----                        finding sets                          ----===*/
-/*====================------------------------------------====================*/
-static void      o___FINDING_________________o (void) {;}
-
-char         /*-> tbd --------------------------------[ leaf   [fc.632.122.40]*/ /*-[01.0000.01#.8]-*/ /*-[--.---.---.--]-*/
-yregex_sets__by_abbr    (cchar a_abbr)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   uchar       x_set       =   -1;
-   int         i           =    0;
-   char       *x_valid     = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-   /*---(header)-------------------------*/
-   DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
-   DEBUG_YREGEX  yLOG_sint    (a_abbr);
-   /*---(defense)------------------------*/
-   --rce;  if (a_abbr == 0) {
-      DEBUG_YREGEX  yLOG_snote   ("can not be null");
-      DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
-      return rce;
-   }
-   --rce;  if (strchr (x_valid, a_abbr) == NULL) {
-      DEBUG_YREGEX  yLOG_snote   ("abbr must be [A-Za-z]");
-      DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
-      return rce;
-   }
-   DEBUG_YREGEX  yLOG_schar   (a_abbr);
-   DEBUG_YREGEX  yLOG_sint    (s_nset);
-   /*---(walk through sets)--------------*/
-   DEBUG_YREGEX  yLOG_snote   ("searching");
-   for (i = 0; i < s_nset; ++i) {
-      if (s_sets [i].type == 0     )  break;
-      if (s_sets [i].abbr == '-'   )  continue;
-      if (s_sets [i].abbr == ' '   )  continue;
-      if (s_sets [i].abbr != a_abbr)  continue;
-      DEBUG_YREGEX  yLOG_snote   ("found");
-      DEBUG_YREGEX  yLOG_sint    (i);
-      DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
-      return i;
-   }
-   /*---(complete)-----------------------*/
-   DEBUG_YREGEX  yLOG_snote   ("not found");
-   DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
-   return 0;
-}
-
-char         /*-> tbd --------------------------------[ leaf   [fe.A53.145.A0]*/ /*-[01.0000.02#.E]-*/ /*-[--.---.---.--]-*/
-yregex_sets__by_name    (cchar *a_name)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   uchar       x_set       =   -1;
-   int         x_len       =    0;
-   int         i           =    0;
-   /*---(header)-------------------------*/
-   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
-   DEBUG_YREGEX  yLOG_point   ("a_name"    , a_name);
-   /*---(defense)------------------------*/
-   --rce;  if (a_name == NULL) {
-      DEBUG_YREGEX  yLOG_snote   ("can not be null");
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   DEBUG_YREGEX  yLOG_info    ("a_name"    , a_name);
-   x_len = strllen (a_name, LEN_NAME);
-   DEBUG_YREGEX  yLOG_value   ("x_len"     , x_len);
-   --rce;  if (x_len <= 4) {
-      DEBUG_YREGEX  yLOG_note    ("too short");
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   --rce;  if (x_len >= 6) {
-      DEBUG_YREGEX  yLOG_note    ("too long");
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   /*---(walk)---------------------------*/
-   for (i = 0; i < s_nset; ++i) {
-      if (s_sets [i].type ==  0 )                break;
-      if (s_sets [i].type == ' ')                continue;
-      if (s_sets [i].name [0] != a_name [0])     continue;
-      if (s_sets [i].name [1] != a_name [1])     continue;
-      if (s_sets [i].name [2] != a_name [2])     continue;
-      if (s_sets [i].name [3] != a_name [3])     continue;
-      if (s_sets [i].name [4] != a_name [4])     continue;
-      DEBUG_YREGEX  yLOG_value   ("found"     , i);
-      DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
-      return i;
-   }
-   DEBUG_YREGEX  yLOG_note    ("not found");
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
-   return 0;
-}
-
-char         /*-> tbd --------------------------------[ leaf   [fe.833.044.30]*/ /*-[01.0000.01#.!]-*/ /*-[--.---.---.--]-*/
-yregex_sets__by_map     (void)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   uchar       x_set       =   -1;
-   int         x_len       =    0;
-   int         i           =    0;
-   /*---(header)-------------------------*/
-   DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
-   /*---(defense)------------------------*/
-   x_len = strllen (s_map, LEN_MAP );
-   DEBUG_YREGEX  yLOG_sint    (x_len);
-   --rce;  if (x_len <  256) {
-      DEBUG_YREGEX  yLOG_snote   ("too short");
-      DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
-      return rce;
-   }
-   --rce;  if (x_len >  256) {
-      DEBUG_YREGEX  yLOG_snote   ("too long");
-      DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
-      return rce;
-   }
-   /*---(walk)---------------------------*/
-   for (i = 0; i < s_nset; ++i) {
-      if (strcmp (s_sets [i].map, s_map) != 0)   continue;
-      DEBUG_YREGEX  yLOG_snote   ("found");
-      DEBUG_YREGEX  yLOG_sint    (i);
-      DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
-      return i;
-   }
-   DEBUG_YREGEX  yLOG_snote   ("not found");
-   /*---(complete)-----------------------*/
-   DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
-   return 0;
-}
-
-
-
-
-/*====================------------------------------------====================*/
-/*===----                         set mapping                          ----===*/
-/*====================------------------------------------====================*/
-static void      o___MAPPING_________________o (void) {;}
-
-char         /*-> tbd --------------------------------[ leaf   [fz.321.111.00]*/ /*-[00.0000.01#.!]-*/ /*-[--.---.---.--]-*/
-yregex_sets__clear      (char a_unmark)
-{
-   int         i           =    0;
-   /*---(header)-------------------------*/
-   DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
-   s_mapcount = 0;
-   for (i = 0; i < 256; ++i)   s_map [i] = a_unmark;
-   s_map [256] = 0;
-   /*---(complete)-----------------------*/
-   DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
    return 0;
 }
 
@@ -283,8 +359,10 @@ yregex_sets__save       (void)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
+   char        rc          =    0;
    uchar       x_set       =   -1;
    int         x_len       =    0;
+   tSETS      *x_new       = NULL;
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
    /*---(defense)------------------------*/
@@ -306,24 +384,40 @@ yregex_sets__save       (void)
       DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
       return rce;
    }
-   /*---(fill out)-----------------------*/
-   s_sets [s_nset].type     = ' ';
-   s_sets [s_nset].abbr     = '-';
-   s_sets [s_nset].name [0] = 0;
-   strlcpy (s_sets [s_nset].map, s_map, LEN_MAP );
-   /*---(update count)-------------------*/
-   DEBUG_YREGEX  yLOG_sint    (s_nset);
-   ++s_nset;
+   /*---(add a new one)------------------*/
+   rc = yregex_sets__new (&x_new);
+   DEBUG_YREGEX  yLOG_point   ("x_new"     , x_new);
+   --rce;  if (x_new == NULL) {
+      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(populate)-----------------------*/
+   x_new->map      = strdup (s_map);
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
-   return s_nset - 1;
+   return s_count - 1;
+}
+
+char         /*-> tbd --------------------------------[ leaf   [fz.321.111.00]*/ /*-[00.0000.01#.!]-*/ /*-[--.---.---.--]-*/
+yregex_sets__clear      (char a_unmark)
+{
+   int         i           =    0;
+   /*---(header)-------------------------*/
+   DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
+   s_mapcount = 0;
+   for (i = 0; i < 256; ++i)   s_map [i] = a_unmark;
+   s_map [256] = 0;
+   /*---(complete)-----------------------*/
+   DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
+   return 0;
 }
 
 char         /*-> tbd --------------------------------[ ------ [fe.LA5.196.D1]*/ /*-[03.0000.01#.D]-*/ /*-[--.---.---.--]-*/
-yregex_sets__mapper     (int *a_rpos)
+yregex_sets__mapper     (char *a_regex, int *a_rpos)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
+   int         l           =    0;
    int         i           =    0;
    int         j           =    0;
    char        x_bslash    =  '-';
@@ -332,25 +426,38 @@ yregex_sets__mapper     (int *a_rpos)
    uchar       x_ch        =    0;
    char        x_unmark    =  ' ';
    char        x_mark      =  '.';
-   char       *x_ends      = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
-   DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
    /*---(defense)------------------------*/
+   DEBUG_YREGEX  yLOG_point   ("a_regex"   , a_regex);
+   --rce;  if (a_regex == NULL) {
+      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   DEBUG_YREGEX  yLOG_info    ("a_regex"   , a_regex);
+   l = strlen (a_regex);
+   DEBUG_YREGEX  yLOG_value   ("l"         , l);
+   DEBUG_YREGEX  yLOG_point   ("a_rpos"    , a_rpos);
+   --rce;  if (a_rpos == NULL) {
+      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
    --rce;  if (*a_rpos <  0     ) {
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   --rce;  if (*a_rpos >= gre.rlen) {
+   --rce;  if (*a_rpos >= l) {
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   --rce;  if (s_nset  >= MAX_SETS) {
+   --rce;  if (a_regex [*a_rpos] != '[') {
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
+   ++(*a_rpos);
    /*---(defaults)-----------------------*/
-   if (gre.regex [*a_rpos] == '^') {
+   if (a_regex [*a_rpos] == '^') {
       DEBUG_YREGEX  yLOG_note    ("found leading inverse sign");
       x_unmark = '.';
       x_mark   = ' ';
@@ -362,9 +469,9 @@ yregex_sets__mapper     (int *a_rpos)
    yregex_sets__clear (x_unmark);
    /*---(map)----------------------------*/
    DEBUG_YREGEX  yLOG_note    ("walk through regex");
-   --rce;  for (i = *a_rpos; i < gre.rlen; ++i) {
+   --rce;  for (i = *a_rpos; i < l; ++i) {
       /*---(prepare)---------------------*/
-      x_ch  = gre.regex [i];
+      x_ch  = a_regex [i];
       DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
       /*---(backslash)-------------------*/
       if (x_ch == '\\') {
@@ -381,24 +488,35 @@ yregex_sets__mapper     (int *a_rpos)
       }
       /*---(hyphen)----------------------*/
       if (x_ch == '-') {
-         if      (gre.regex [i - 1] == '[') {
+         if      (a_regex [i - 1] == '[') {
             DEBUG_YREGEX  yLOG_note    ("found prefix hyphen, process it");
-         } else if (gre.regex [i + 1] == ']') {
+         } else if (a_regex [i + 1] == ']') {
             DEBUG_YREGEX  yLOG_note    ("found suffix hyphen, process it");
-         } else if (strchr (x_ends, gre.regex [i - 1]) == NULL) {
-            DEBUG_YREGEX  yLOG_note    ("range start not A-Za-z0-9, just a hyphen");
-         } else if (strchr (x_ends, gre.regex [i + 1]) == NULL) {
-            DEBUG_YREGEX  yLOG_note    ("range end not A-Za-z0-9, just a hyphen");
-         } else {
-            DEBUG_YREGEX  yLOG_note    ("found range hyphen");
+         } else if (strchr (YSTR_LOWER , a_regex [i - 1]) != NULL && strchr (YSTR_LOWER , a_regex [i + 1]) != NULL) {
+            DEBUG_YREGEX  yLOG_complex ("range"     , "lower case %c to %c", a_regex [i - 1], a_regex [i + 1]);
+            x_ch    = a_regex [++i];
             x_range = 'y';
-            continue;
+         } else if (strchr (YSTR_UPPER , a_regex [i - 1]) != NULL && strchr (YSTR_UPPER , a_regex [i + 1]) != NULL) {
+            DEBUG_YREGEX  yLOG_complex ("range"     , "upper case %c to %c", a_regex [i - 1], a_regex [i + 1]);
+            x_ch    = a_regex [++i];
+            x_range = 'y';
+         } else if (strchr (YSTR_NUMBER, a_regex [i - 1]) != NULL && strchr (YSTR_NUMBER, a_regex [i + 1]) != NULL) {
+            DEBUG_YREGEX  yLOG_complex ("range"     , "numeric %c to %c", a_regex [i - 1], a_regex [i + 1]);
+            x_ch    = a_regex [++i];
+            x_range = 'y';
+         } else if (strchr (YSTR_GREEK , a_regex [i - 1]) != NULL && strchr (YSTR_GREEK , a_regex [i + 1]) != NULL) {
+            DEBUG_YREGEX  yLOG_complex ("range"     , "greek %c to %c", a_regex [i - 1], a_regex [i + 1]);
+            x_ch    = a_regex [++i];
+            x_range = 'y';
+         } else {
+            DEBUG_YREGEX  yLOG_note    ("range end not A-Za-z0-9Ë-ˇ, just a hyphen");
          }
       }
       /*---(range)-----------------------*/
       if (x_range == 'y') {
          DEBUG_YREGEX  yLOG_note    ("update range");
          DEBUG_YREGEX  yLOG_char    ("x_sch"     , x_sch);
+         DEBUG_YREGEX  yLOG_char    ("x_ch"      , x_ch);
          if  (x_ch < x_sch) {
             DEBUG_YREGEX  yLOG_note    ("backwards ranges are illegal");
             yregex_sets__clear (x_unmark);
@@ -419,7 +537,7 @@ yregex_sets__mapper     (int *a_rpos)
       x_range  = '-';
    }
    /*---(check for runon)----------------*/
-   --rce;  if (i == gre.rlen) {
+   --rce;  if (i == l) {
       yregex_sets__clear (x_unmark);
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
@@ -437,11 +555,201 @@ yregex_sets__mapper     (int *a_rpos)
 
 
 /*====================------------------------------------====================*/
+/*===----                        finding sets                          ----===*/
+/*====================------------------------------------====================*/
+static void      o___FINDING_________________o (void) {;}
+
+char         /*-> tbd --------------------------------[ leaf   [fc.632.122.40]*/ /*-[01.0000.01#.8]-*/ /*-[--.---.---.--]-*/
+yregex_sets__by_index   (cint a_index, tSETS **r_set)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   int         n           =    0;
+   tSETS      *x_curr      = NULL;
+   /*---(header)-------------------------*/
+   DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
+   DEBUG_YREGEX  yLOG_sint    (a_index);
+   /*---(default)------------------------*/
+   if (r_set != NULL)  *r_set = NULL;
+   /*---(defense)------------------------*/
+   DEBUG_YREGEX  yLOG_sint    (s_count);
+   --rce;  if (a_index < 0 || a_index > s_count) {
+      DEBUG_YREGEX  yLOG_snote   ("index out of range");
+      DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(walk through sets)--------------*/
+   DEBUG_YREGEX  yLOG_snote   ("searching");
+   x_curr = s_head;
+   while (x_curr != NULL) {
+      if (n == a_index)   break;
+      ++n;
+      x_curr = x_curr->m_next;
+   }
+   /*---(check)--------------------------*/
+   DEBUG_YREGEX  yLOG_spoint  (x_curr);
+   --rce;  if (x_curr == NULL) {
+      DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(saveback)-----------------------*/
+   DEBUG_YREGEX  yLOG_snote   ("found");
+   if (r_set != NULL)  *r_set = x_curr;
+   /*---(complete)-----------------------*/
+   DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
+   return 0;
+}
+
+int          /*-> tbd --------------------------------[ leaf   [fc.632.122.40]*/ /*-[01.0000.01#.8]-*/ /*-[--.---.---.--]-*/
+yregex_sets__by_abbr    (cchar a_abbr, tSETS **r_set)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   int         n           =    0;
+   char       *x_valid     = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+   tSETS      *x_curr      = NULL;
+   /*---(header)-------------------------*/
+   DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
+   DEBUG_YREGEX  yLOG_sint    (a_abbr);
+   /*---(default)------------------------*/
+   if (r_set != NULL)  *r_set = NULL;
+   /*---(defense)------------------------*/
+   --rce;  if (a_abbr == 0) {
+      DEBUG_YREGEX  yLOG_snote   ("can not be null");
+      DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
+      return rce;
+   }
+   --rce;  if (strchr (x_valid, a_abbr) == NULL) {
+      DEBUG_YREGEX  yLOG_snote   ("abbr must be [A-Za-z]");
+      DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
+      return rce;
+   }
+   DEBUG_YREGEX  yLOG_schar   (a_abbr);
+   DEBUG_YREGEX  yLOG_sint    (s_nset);
+   /*---(walk through sets)--------------*/
+   DEBUG_YREGEX  yLOG_snote   ("searching");
+   x_curr = s_head;
+   while (x_curr != NULL) {
+      if (x_curr->abbr == a_abbr)  break;
+      ++n;
+      x_curr = x_curr->m_next;
+   }
+   /*---(check)--------------------------*/
+   DEBUG_YREGEX  yLOG_spoint  (x_curr);
+   --rce;  if (x_curr == NULL) {
+      DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(saveback)-----------------------*/
+   DEBUG_YREGEX  yLOG_snote   ("found");
+   if (r_set != NULL)  *r_set = x_curr;
+   /*---(complete)-----------------------*/
+   DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
+   return n;
+}
+
+int          /*-> tbd --------------------------------[ leaf   [fe.A53.145.A0]*/ /*-[01.0000.02#.E]-*/ /*-[--.---.---.--]-*/
+yregex_sets__by_name    (cchar *a_name, tSETS **r_set)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   int         x_len       =    0;
+   int         n           =    0;
+   tSETS      *x_curr      = NULL;
+   /*---(header)-------------------------*/
+   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
+   DEBUG_YREGEX  yLOG_point   ("a_name"    , a_name);
+   /*---(default)------------------------*/
+   if (r_set != NULL)  *r_set = NULL;
+   /*---(defense)------------------------*/
+   --rce;  if (a_name == NULL) {
+      DEBUG_YREGEX  yLOG_snote   ("can not be null");
+      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   DEBUG_YREGEX  yLOG_info    ("a_name"    , a_name);
+   x_len = strllen (a_name, LEN_NAME);
+   DEBUG_YREGEX  yLOG_value   ("x_len"     , x_len);
+   --rce;  if (x_len <= 4) {
+      DEBUG_YREGEX  yLOG_note    ("too short");
+      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   --rce;  if (x_len >= 6) {
+      DEBUG_YREGEX  yLOG_note    ("too long");
+      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(walk)---------------------------*/
+   x_curr = s_head;
+   while (x_curr != NULL) {
+      if (strcmp (x_curr->name, a_name) == 0)  break;
+      ++n;
+      x_curr = x_curr->m_next;
+   }
+   /*---(check)--------------------------*/
+   DEBUG_YREGEX  yLOG_spoint  (x_curr);
+   --rce;  if (x_curr == NULL) {
+      DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(saveback)-----------------------*/
+   DEBUG_YREGEX  yLOG_snote   ("found");
+   if (r_set != NULL)  *r_set = x_curr;
+   /*---(complete)-----------------------*/
+   DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
+   return n;
+}
+
+int          /*-> tbd --------------------------------[ leaf   [fe.833.044.30]*/ /*-[01.0000.01#.!]-*/ /*-[--.---.---.--]-*/
+yregex_sets__by_map     (tSETS **r_set)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   uchar       x_set       =   -1;
+   int         x_len       =    0;
+   int         i           =    0;
+   tSETS      *x_curr      = NULL;
+   /*---(header)-------------------------*/
+   DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
+   /*---(defense)------------------------*/
+   x_len = strllen (s_map, LEN_MAP );
+   DEBUG_YREGEX  yLOG_sint    (x_len);
+   --rce;  if (x_len <  256) {
+      DEBUG_YREGEX  yLOG_snote   ("too short");
+      DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
+      return rce;
+   }
+   --rce;  if (x_len >  256) {
+      DEBUG_YREGEX  yLOG_snote   ("too long");
+      DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(walk)---------------------------*/
+   x_curr = s_head;
+   while (x_curr != NULL) {
+      if (strcmp (x_curr->map, s_map) == 0) {
+         DEBUG_YREGEX  yLOG_snote   ("found");
+         DEBUG_YREGEX  yLOG_sint    (i);
+         DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
+         return i;
+      }
+      x_curr = x_curr->m_next;
+   }
+   DEBUG_YREGEX  yLOG_snote   ("not found");
+   /*---(complete)-----------------------*/
+   DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
+   return 0;
+}
+
+
+
+/*====================------------------------------------====================*/
 /*===----                         other elements                       ----===*/
 /*====================------------------------------------====================*/
 static void      o___OTHER___________________o (void) {;}
 
-char         /*-> tbd --------------------------------[ ------ [fe.D55.138.72]*/ /*-[01.0000.01#.A]-*/ /*-[--.---.---.--]-*/
+int          /*-> tbd --------------------------------[ ------ [fe.D55.138.72]*/ /*-[01.0000.01#.A]-*/ /*-[--.---.---.--]-*/
 yregex_sets__standard   (int *a_rpos)
 {
    /*---(locals)-----------+-----+-----+-*/
@@ -486,7 +794,7 @@ yregex_sets__standard   (int *a_rpos)
    /*---(check for set)------------------*/
    sprintf (t, "%-5.5s", gre.regex + *a_rpos + 1);
    DEBUG_YREGEX  yLOG_info    ("name"      , t);
-   x_set = yregex_sets__by_name (t);
+   x_set = yregex_sets__by_name (t, NULL);
    DEBUG_YREGEX  yLOG_value   ("x_set"     , x_set);
    /*---(append set)---------------------*/
    if (x_set > 0) {
@@ -547,7 +855,7 @@ yregex_sets_backslash   (int *a_rpos)
    /*---(check for set)------------------*/
    DEBUG_YREGEX  yLOG_info    ("allowed"   , s_allowed);
    if (strchr (s_allowed, x_ch) != NULL) {
-      x_set = yregex_sets__by_abbr (x_ch);
+      x_set = yregex_sets__by_abbr (x_ch, NULL);
    }
    DEBUG_YREGEX  yLOG_value   ("x_set"     , x_set);
    /*---(append set)---------------------*/
@@ -559,14 +867,14 @@ yregex_sets_backslash   (int *a_rpos)
    /*---(boundaries)---------------------*/
    if (x_ch == 'b') {
       DEBUG_YREGEX  yLOG_note    ("begin word marker");
-      yregex_comp_add ('<', yregex_sets__by_abbr ('w'));
+      yregex_comp_add ('<', yregex_sets__by_abbr ('w', NULL));
       yregex_comp_mod ('<');
       DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
       return 1;
    }
    if (x_ch == 'B') {
       DEBUG_YREGEX  yLOG_note    ("end word marker");
-      yregex_comp_add ('>', yregex_sets__by_abbr ('w'));
+      yregex_comp_add ('>', yregex_sets__by_abbr ('w', NULL));
       yregex_comp_mod ('>');
       DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
       return 1;
@@ -599,7 +907,7 @@ yregex_sets_dot         (int *a_rpos)
       return rce;
    }
    /*---(set)----------------------------*/
-   x_set = yregex_sets__by_name ("dotta");
+   x_set = yregex_sets__by_name ("dotta", NULL);
    yregex_comp_add ('[', x_set);
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
@@ -626,9 +934,8 @@ yregex_sets_comp        (int *a_rpos)
       return rce;
    }
    /*---(advance)------------------------*/
-   ++(*a_rpos);
    DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
-   x_ch   = gre.regex [*a_rpos];
+   x_ch   = gre.regex [*a_rpos + 1];
    DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
    /*---(check standard sets)------------*/
    if (x_ch == ':') {
@@ -642,14 +949,14 @@ yregex_sets_comp        (int *a_rpos)
       }
    }
    /*---(map the set)--------------------*/
-   rc = yregex_sets__mapper  (a_rpos);
+   rc = yregex_sets__mapper  (gre.regex, a_rpos);
    --rce;  if (rc < 0) {
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
    /*---(try to find existing)-----------*/
-   x_set = yregex_sets__by_map  ();
+   x_set = yregex_sets__by_map  (NULL);
    DEBUG_YREGEX  yLOG_value   ("x_set"     , x_set);
    if (x_set > 0) {
       yregex_comp_add ('[', x_set);
@@ -670,29 +977,6 @@ yregex_sets_comp        (int *a_rpos)
    return rce;
 }
 
-char         /*-> tbd --------------------------------[ ------ [fe.D54.156.65]*/ /*-[02.0000.01#.!]-*/ /*-[--.---.---.--]-*/
-yregex_sets_list     (void)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   int         i           =    0;
-   int         j           =    0;
-   for (i = 0; i < s_nset; ++i) {
-      if (s_sets [i].type == 0) break;
-      printf ("re  a  ---name-----  0123456789abcdef0123456789abcdef !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ \n");
-      printf ("%-2d  %c  %-12.12s  ", i, s_sets [i].abbr, s_sets [i].name);
-      for (j =   0; j < 128; ++j) {
-         printf ("%c", s_sets [i].map [j]);
-      }
-      printf ("\n");
-      printf ("                     0123456789abcdef0123456789abcdef °¢£§•¶ß®©™´¨≠ÆØ∞±≤≥¥µ∂∑∏π∫ªºΩæø¿¡¬√ƒ≈∆«»… ÀÃÕŒœ–—“”‘’÷◊ÿŸ⁄€‹›ﬁﬂ‡·‚„‰ÂÊÁËÈÍÎÏÌÓÔÒÚÛÙıˆ˜¯˘˙˚¸˝˛ˇ\n");
-      printf ("                     ");
-      for (j = 128; j < 256; ++j) {
-         printf ("%c", s_sets [i].map [j]);
-      }
-      printf ("\n");
-   }
-   return 0;
-}
 
 
 /*====================------------------------------------====================*/
@@ -711,6 +995,7 @@ yregex_sets_break       (int a_level, int a_rpos, int a_tpos)
    char        x_txtrc     =    0;
    uchar       x_oth       =    0;
    char        x_othrc     =    0;
+   tSETS      *x_curr      = NULL;
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    /*---(prepare)------------------------*/
@@ -720,11 +1005,12 @@ yregex_sets_break       (int a_level, int a_rpos, int a_tpos)
    DEBUG_YREGEX  yLOG_value   ("x_indx"    , x_indx);
    x_txt       = gre.text [a_tpos];
    DEBUG_YREGEX  yLOG_char    ("x_txt"     , x_txt);
-   x_txtrc     = s_sets [x_indx].map [x_txt];
+   rc = yregex_sets__by_index (x_indx, &x_curr);
+   x_txtrc     = x_curr->map [x_txt];
    DEBUG_YREGEX  yLOG_char    ("x_txtrc"   , x_txtrc);
    x_oth       = gre.text [a_tpos - 1];
    DEBUG_YREGEX  yLOG_char    ("x_oth"     , x_oth);
-   x_othrc     = s_sets [x_indx].map [x_oth];
+   x_othrc     = x_curr->map [x_oth];
    DEBUG_YREGEX  yLOG_char    ("x_othrc"   , x_othrc);
    /*---(execute)------------------------*/
    switch (x_reg) {
@@ -791,6 +1077,7 @@ yregex_sets_exec     (int a_level, int a_rpos, int a_tpos)
    uchar       x_reg       =    0;
    int         x_indx      =    0;
    uchar       x_txt       =    0;
+   tSETS      *x_curr      = NULL;
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
    /*---(prepare)------------------------*/
@@ -801,7 +1088,8 @@ yregex_sets_exec     (int a_level, int a_rpos, int a_tpos)
    x_txt       = gre.text [a_tpos];
    DEBUG_YREGEX  yLOG_schar   (x_txt);
    /*---(execute)------------------------*/
-   if (s_sets [x_indx].map [x_txt] == '.')  rc = 1;
+   rc = yregex_sets__by_index (x_indx, &x_curr);
+   if (x_curr->map [x_txt] == '.')  rc = 1;
    DEBUG_YREGEX  yLOG_sint    (rc);
    if (rc > 0)  DEBUG_YREGEX  yLOG_snote   ("pass");
    else         DEBUG_YREGEX  yLOG_snote   ("FAIL");
@@ -817,16 +1105,19 @@ yregex_sets_rule        (char *a_text, int a_set)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
+   char        rc          =    0;
    int         x_len       =    0;
    uchar       x_txt       =    0;
    uchar       x_mark      =    0;
    int         i           =    0;
+   tSETS      *x_curr      = NULL;
    /*---(prepare)------------------------*/
    --rce;  if (a_text == NULL    )  return rce;
    x_len = strllen (a_text, LEN_TEXT);
+   rc = yregex_sets__by_index (a_set, &x_curr);
    for (i = 0; i <= x_len; ++i) {
       x_txt  = a_text [i];
-      x_mark = s_sets [a_set].map [x_txt];
+      x_mark = x_curr->map [x_txt];
       if (x_mark == '.')   return 1;
    }
    /*---(complete)-----------------------*/
@@ -843,12 +1134,14 @@ yregex_sets_rule_rev    (char *a_text, int a_set)
    uchar       x_txt       =    0;
    uchar       x_mark      =    0;
    int         i           =    0;
+   tSETS      *x_curr      = NULL;
    /*---(prepare)------------------------*/
    --rce;  if (a_text == NULL    )  return rce;
    x_len = strllen (a_text, LEN_TEXT);
+   rc = yregex_sets__by_index (a_set, &x_curr);
    for (i = 0; i <= x_len; ++i) {
       x_txt  = a_text [i];
-      x_mark = s_sets [a_set].map [x_txt];
+      x_mark = x_curr->map [x_txt];
       if (x_mark == ' ')   rc = 0;
    }
    /*---(complete)-----------------------*/
@@ -867,24 +1160,48 @@ yregex_sets__unit       (char *a_question, int a_num)
 {
    /*---(locals)-----------+-----+-----+-*/
    int         i           = 0;
-   char        t           [100] = "";
-   char       *x_range     = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ***********************************************************************";
-   char       *x_range2    = " 123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ***********************************************************************";
-   char       *x_range3    = " .123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ**********************************************************************";
+   char        r           [LEN_TERSE] = "";
+   char        s           [LEN_TERSE] = "";
+   char        t           [LEN_HUND]  = "";
    int         c           = 0;
+   int         x_fore      = 0;
+   int         x_back      = 0;
+   tSETS      *x_curr      = NULL;
+   int         n           =    0;
    /*---(initialize)---------------------*/
    strlcpy (unit_answer, "SETS unit, unknown request", 100);
    /*---(mapping)------------------------*/
-   if (strncmp (a_question, "map"       , 20)  == 0) {
-      strlcpy (t, "0123456789abcdef0123456789abcdef", 100);
-      if (a_num < 0 || a_num > 15)
-         snprintf (unit_answer, LEN_TEXT, "SETS map         : %x %3d %2d [%-32.32s]", 0    , s_mapcount, 0, "unknown area");
+   if      (strcmp (a_question, "count"    )      == 0) {
+      x_curr = s_head; while (x_curr != NULL) { ++x_fore; x_curr = x_curr->m_next; }
+      x_curr = s_tail; while (x_curr != NULL) { ++x_back; x_curr = x_curr->m_prev; }
+      snprintf (unit_answer, LEN_RECD, "SETS count       : num=%4d, fore=%4d, back=%4d", s_count, x_fore, x_back);
+   }
+   else if (strcmp (a_question, "list"        )   == 0) {
+      snprintf (unit_answer, LEN_RECD, "SETS list        : num=%4d, head=%-10p, tail=%p", s_count, s_head, s_tail);
+   }
+   else if (strncmp (a_question, "map"       , 20)  == 0) {
+      if (a_num < 0 || a_num > 3)
+         snprintf (unit_answer, LEN_TEXT, "SETS map         : unknown area");
       else {
-         for (i = 0; i < 32; ++i)  if (s_map [a_num * 32 + i] == '.') {
-            t [i] = '_';
-            ++c;
+         for (i = 0; i < 64; ++i) {
+            n = (a_num * 64) + i;
+            if (s_map [n] == '.') {
+               switch (n) {
+               case 127 : t [i] = '¥';  break;
+               case 160 : t [i] = '†';  break;
+               default :  t [i] = s_full [n];  break;
+               }
+               ++c;
+            } else {
+               t [i]     = '∑';
+            }
+            t [i + 1] = '\0';
          }
-         snprintf (unit_answer, LEN_TEXT, "SETS map         : %x %3d %2d [%-32.32s]", a_num * 2, s_mapcount, c, t);
+         if (s_mapcount > 0)  sprintf (r, "%3d", s_mapcount);
+         else                 sprintf (r, "  -");
+         if (c          > 0)  sprintf (s, "%2d", c);
+         else                 sprintf (s, " -");
+         snprintf (unit_answer, LEN_TEXT, "SETS map    (%02x) : %s %sÂ%sÊ", a_num * 64, r, s, t);
       }
    }
    /*---(complete)-----------------------*/

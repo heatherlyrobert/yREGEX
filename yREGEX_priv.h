@@ -33,8 +33,8 @@
 
 #define     P_VERMAJOR  "0.--, preparing for serious use"
 #define     P_VERMINOR  "0.6-, keep advancing"
-#define     P_VERNUM    "0.6e"
-#define     P_VERTXT    "literals and string anchors fully re-tested using malloc"
+#define     P_VERNUM    "0.6d"
+#define     P_VERTXT    "sets adds standards from text-segment!!!  purges properly"
 
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -127,6 +127,18 @@ struct cERROR {
    uchar       len;
    tERROR     *m_prev;
    tERROR     *m_next;
+};
+
+typedef     struct      cSETS       tSETS;
+struct      cSETS {
+   char        source;
+   char        type;
+   char        abbr;
+   char       *name;
+   char       *map;
+   uchar       count;
+   tSETS      *m_prev;
+   tSETS      *m_next;
 };
 
 
@@ -282,17 +294,28 @@ char        yregex_exec__single     (int a_index);
 
 /*345678901-12345678901-12345678901-12345678901-12345678901-12345678901-123456*/
 /*===[[ SETS ]]===============================*/
+/*---(support)--------------*/
+char*       yregex_sets__memory     (void *a_cur);
+char        yregex_sets__wipe       (void *a_cur);
+/*---(memory)---------------*/
+char        yregex_sets__new        (void **a_new);
+char        yregex_sets__free       (void **a_old);
 /*---(program)--------------*/
-char        yregex_sets_prep        (void);
+char        yregex_sets__prep       (void);
+char        yregex_sets_init        (void);
+char        yregex_sets__purge      (void);
+char        yregex_sets_wrap        (void);
 /*---(lookup)---------------*/
-char        yregex_sets__by_abbr    (cchar a_abbr);
-char        yregex_sets__by_name    (cchar *a_name);
-char        yregex_sets__by_map     (void);
-char        yregex_sets__standard   (int *a_rpos);
-/*---(mapping)--------------*/
+char        yregex_sets__by_index   (cint a_index , tSETS **r_set);
+int         yregex_sets__by_abbr    (cchar a_abbr , tSETS **r_set);
+int         yregex_sets__by_name    (cchar *a_name, tSETS **r_set);
+int         yregex_sets__by_map     (tSETS **r_set);
+int         yregex_sets__standard   (int *a_rpos);
+/*---(create)---------------*/
+char        yregex_sets__base       (void);
 char        yregex_sets__clear      (char a_unmark);
 char        yregex_sets__save       (void);
-char        yregex_sets__mapper     (int *a_rpos);
+char        yregex_sets__mapper     (char *a_regex, int *a_rpos);
 /*---(compile)--------------*/
 char        yregex_sets_backslash   (int *a_rpos);
 char        yregex_sets_dot         (int *a_rpos);
