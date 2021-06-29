@@ -15,8 +15,11 @@
 #define     MAX_FIND    1000
 #define     MAX_SUB       11
 
-/*---(struct.re)--------+-----------+-*//*-+----------------------------------*/
 typedef     struct      cFIND       tFIND;
+typedef     struct      cNSUB       tNSUB;
+
+
+/*---(struct.re)--------+-----------+-*//*-+----------------------------------*/
 struct      cFIND {
    /*---(tie to exec)------------*/
    short       ref;                         /* ref from exec                  */
@@ -24,8 +27,8 @@ struct      cFIND {
    short       beg;                         /* starting point                 */
    short       end;                         /* ending point                   */
    short       len;                         /* length                         */
-   char        text        [LEN_TEXT];      /* found text                     */
-   char        quan        [LEN_TEXT];      /* quantifiers                    */
+   char       *text;                        /* found text                     */
+   char       *quan;                        /* quantifiers                    */
    /*---(stats)------------------*/
    short       count;                       /* count of times requested       */
    short       lazy;                        /* count of lazy markers          */
@@ -33,19 +36,218 @@ struct      cFIND {
    short       balance;                     /* greedy/lazy balance            */
    short       score;                       /* calculated score               */
    /*---(subs)-------------------*/
-   struct cSUB {
-      short       beg;
-      short       len;
-      char        text        [LEN_TEXT];
-      char        quan        [LEN_TEXT];
-   }           sub         [MAX_SUB];
+   tNSUB      *subs     [MAX_SUB];
+   /*---(master)-----------------*/
+   tFIND      *m_prev;
+   tFIND      *m_next;
    /*---(done)-------------------*/
 };
+
+
+static struct cNSUB {
+   /*---(data)-------------------*/
+   short       beg;
+   short       len;
+   char       *text;
+   char       *quan;
+   /*---(done)-------------------*/
+};
+
+
 /*---(static.vars)------+-----------+-*//*-+----------------------------------*/
 static      tFIND       s_finds     [MAX_FIND];    /* all finds               */
 static      int         s_nfind     = 0;           /* total number of states  */
-static      int         s_curr      = 0;           /* point to current state  */
 
+
+/*---(static.vars)------+-----------+-*//*-+----------------------------------*/
+static      tFIND      *s_head      = NULL;
+static      tFIND      *s_tail      = NULL;
+static      tFIND      *s_curr      = NULL;
+static      int         s_count     =    0;
+
+
+
+static      char        s_print     [LEN_RECD] = "";
+
+
+
+/*====================------------------------------------====================*/
+/*===----                       allocation/memory                      ----===*/
+/*====================------------------------------------====================*/
+static void  o___SUPPORT_________o () { return; }
+
+char*
+yregex_find__memory     (void *a_cur)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   int         n           =    0;
+   tFIND      *x_cur       = NULL;
+   int         i           =    0;
+   /*---(cast)---------------------------*/
+   x_cur = (tFIND *) a_cur;
+   /*---(defense)------------------------*/
+   if (x_cur == NULL) {
+      strlcpy (s_print, "n/a", LEN_RECD);
+      return s_print;
+   }
+   /*---(defense)------------------------*/
+   strlcpy (s_print, "å_._____.___________.__æ", LEN_RECD);
+   ++n;  if (x_cur->ref         >= 0)           s_print [n] = 'X';
+   ++n;
+   ++n;  if (x_cur->beg         >= 0)           s_print [n] = 'X';
+   ++n;  if (x_cur->end         >= 0)           s_print [n] = 'X';
+   ++n;  if (x_cur->len         >= 0)           s_print [n] = 'X';
+   ++n;  if (x_cur->text        != NULL)        s_print [n] = 'X';
+   ++n;  if (x_cur->quan        != NULL)        s_print [n] = 'X';
+   ++n;
+   for (i = 0; i < MAX_SUB; ++i) {
+      ++n;  if (x_cur->subs [i]    != NULL)     s_print [n] = 'X';
+   }
+   ++n;
+   ++n;  if (x_cur->m_prev      != NULL)        s_print [n] = 'X';
+   ++n;  if (x_cur->m_next      != NULL)        s_print [n] = 'X';
+   return s_print;
+}
+
+char
+yregex_find__wipe       (void *a_cur)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   tFIND      *x_cur       = NULL;
+   int         i           =    0;
+   /*---(cast)---------------------------*/
+   x_cur = (tFIND *) a_cur;
+   /*---(wipe)---------------------------*/
+   x_cur->ref      = -1;
+   x_cur->beg      = -1;
+   x_cur->end      = -1;
+   x_cur->len      = -1;
+   x_cur->text     = NULL;
+   x_cur->quan     = NULL;
+   for (i = 0; i < MAX_SUB; ++i)  x_cur->subs [i] = NULL;
+   x_cur->m_prev   = NULL;
+   x_cur->m_next   = NULL;
+   /*---(complete)-----------------------*/
+   return 0;
+}
+
+
+
+/*====================------------------------------------====================*/
+/*===----                       allocation/memory                      ----===*/
+/*====================------------------------------------====================*/
+static void  o___MEMORY__________o () { return; }
+
+char
+yregex_find__new        (void **a_new)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   char        rc          =    0;
+   tFIND      *x_new       = NULL;
+   int         x_tries     =    0;
+   /*---(header)-------------------------*/
+   DEBUG_DATA   yLOG_senter  (__FUNCTION__);
+   /*---(check return)-------------------*/
+   DEBUG_DATA   yLOG_spoint  (a_new);
+   --rce;  if (a_new == NULL) {
+      DEBUG_DATA   yLOG_sexitr  (__FUNCTION__, rce);
+      return rce;
+   }
+   DEBUG_DATA   yLOG_spoint  (*a_new);
+   --rce;  if (*a_new != NULL) {
+      DEBUG_DATA   yLOG_snote   ("already set");
+      DEBUG_DATA   yLOG_sexitr  (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(default)------------------------*/
+   *a_new = NULL;
+   /*---(allocate)-----------------------*/
+   while (x_new == NULL) {
+      ++x_tries;
+      x_new = malloc (sizeof (tFIND));
+      if (x_tries > 3)   break;
+   }
+   DEBUG_DATA   yLOG_sint    (x_tries);
+   DEBUG_DATA   yLOG_spoint  (x_new);
+   --rce;  if (x_new == NULL) {
+      DEBUG_DATA   yLOG_sexitr  (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(wipe, attach, and increment)----*/
+   yregex_find__wipe (x_new);
+   if    (s_tail == NULL) {
+      DEBUG_DATA   yLOG_snote   ("first entry");
+      s_head = x_new;
+   } else {
+      DEBUG_DATA   yLOG_snote   ("append to tail");
+      x_new->m_prev  = s_tail;
+      s_tail->m_next = x_new;
+   }
+   s_tail = x_new;
+   ++s_count;
+   /*---(save return)--------------------*/
+   *a_new = x_new;
+   /*---(complete)-----------------------*/
+   DEBUG_DATA   yLOG_sexit   (__FUNCTION__);
+   return rc;
+}
+
+char
+yregex_find__free       (void **a_old)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   tFIND      *x_old       = NULL;
+   int         i           =    0;
+   /*---(header)-------------------------*/
+   DEBUG_DATA   yLOG_senter  (__FUNCTION__);
+   /*---(check return)-------------------*/
+   DEBUG_DATA   yLOG_spoint  (a_old);
+   --rce;  if (a_old == NULL) {
+      DEBUG_DATA   yLOG_sexitr  (__FUNCTION__, rce);
+      return rce;
+   }
+   DEBUG_DATA   yLOG_spoint  (*a_old);
+   --rce;  if (*a_old == NULL) {
+      DEBUG_DATA   yLOG_snote   ("never set");
+      DEBUG_DATA   yLOG_sexitr  (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(simplify)-----------------------*/
+   x_old = (tFIND *) *a_old;
+   /*---(detach and decrement)-----------*/
+   if (x_old->m_next != NULL) x_old->m_next->m_prev   = x_old->m_prev;
+   else                       s_tail                  = x_old->m_prev;
+   if (x_old->m_prev != NULL) x_old->m_prev->m_next   = x_old->m_next;
+   else                       s_head                  = x_old->m_next;
+   --s_count;
+   DEBUG_DATA   yLOG_sint    (s_count);
+   /*---(gound links)--------------------*/
+   x_old->m_prev = NULL;
+   x_old->m_next = NULL;
+   /*---(wipe subs)----------------------*/
+   for (i = 0; i < MAX_SUB; ++i) {
+      if (x_old->subs [i] != NULL) {
+         if (x_old->subs [i]->text != NULL)   free (x_old->subs [i]->text);
+         x_old->subs [i]->text = NULL;
+         if (x_old->subs [i]->quan != NULL)   free (x_old->subs [i]->quan);
+         x_old->subs [i]->quan = NULL;
+      }
+      x_old->subs [i] = NULL;
+   }
+   /*---(free and ground)----------------*/
+   if (x_old->text != NULL)   free (x_old->text);
+   x_old->text = NULL;
+   if (x_old->quan != NULL)   free (x_old->quan);
+   x_old->quan = NULL;
+   free (*a_old);
+   /*---(ground)-------------------------*/
+   *a_old = NULL;
+   /*---(complete)-----------------------*/
+   DEBUG_DATA   yLOG_sexit   (__FUNCTION__);
+   return 0;
+}
 
 
 /*====================------------------------------------====================*/
@@ -83,6 +285,29 @@ yregex_find_init        (void)
    return 0;
 }
 
+char
+yregex_find__purge      (void)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   tFIND      *x_curr      = NULL;
+   int         n           =    0;
+   /*---(header)-------------------------*/
+   DEBUG_DATA   yLOG_enter   (__FUNCTION__);
+   /*---(walk level)---------------------*/
+   x_curr = s_head;
+   while (x_curr != NULL) {
+      yregex_find__free (&x_curr);
+      x_curr = s_head;
+   }
+   /*---(ground everything)--------------*/
+   s_head  =  s_tail = s_curr = NULL;
+   s_count = 0;
+   /*---(complete)-----------------------*/
+   DEBUG_DATA   yLOG_exit    (__FUNCTION__);
+   return 0;
+}
+
 
 
 /*====================------------------------------------====================*/
@@ -93,157 +318,157 @@ static void      o___STRUCTURE_______________o (void) {;}
 int
 yregex_find__dup        (cint a_beg, cint a_len)
 {
-   /*---(locals)-----------+-----+-----+-*/
-   int         i           =    0;
-   /*---(check)--------------------------*/
-   for (i = 0; i < s_nfind; ++i) {
-      if (a_beg != s_finds [i].beg)   continue;
-      if (a_len != s_finds [i].len)   continue;
-      return i;
-   }
-   /*---(complete)-----------------------*/
-   return -1;
+   /*> /+---(locals)-----------+-----+-----+-+/                                       <* 
+    *> int         i           =    0;                                                <* 
+    *> /+---(check)--------------------------+/                                       <* 
+    *> for (i = 0; i < s_nfind; ++i) {                                                <* 
+    *>    if (a_beg != s_finds [i].beg)   continue;                                   <* 
+    *>    if (a_len != s_finds [i].len)   continue;                                   <* 
+    *>    return i;                                                                   <* 
+    *> }                                                                              <* 
+    *> /+---(complete)-----------------------+/                                       <* 
+    *> return -1;                                                                     <*/
 }
 
 char
 yregex_find_add         (cint a_ref, cint a_beg, cchar *a_text, cchar *a_quan)
 {
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   int         x_len       =    0;
-   int         i           =    0;
-   int         x_lazy      =    0;
-   int         x_greedy    =    0;
-   int         x_ref       =   -1;
-   /*---(defense)------------------------*/
-   --rce;  if (a_text == NULL)  return rce;
-   --rce;  if (a_quan == NULL)  return rce;
-   /*---(check dups)---------------------*/
-   x_len = strllen (a_text, LEN_TEXT);
-   x_ref = yregex_find__dup (a_beg, x_len);
-   if (x_ref >= 0) {
-      ++(s_finds [x_ref].count);
-      return 0;
-   }
-   /*---(save)---------------------------*/
-   s_finds [s_nfind].ref    = a_ref;
-   s_finds [s_nfind].beg    = a_beg;
-   strlcpy (s_finds [s_nfind].text, a_text, LEN_TEXT);
-   strlcpy (s_finds [s_nfind].quan, a_quan, LEN_TEXT);
-   s_finds [s_nfind].len    = x_len;
-   s_finds [s_nfind].end    = a_beg + x_len + 1;
-   s_finds [s_nfind].count  = 1;
-   /*---(classify)-----------------------*/
-   if (x_len > 0) {
-      for (i = 0; i < x_len; ++i) {
-         if (strchr (G_GREEDY, a_quan [i]) != NULL)  ++x_greedy;
-         if (strchr (G_LAZY  , a_quan [i]) != NULL)  ++x_lazy;
-      }
-   }
-   s_finds [s_nfind].lazy     = x_lazy;
-   s_finds [s_nfind].greedy   = x_greedy;
-   s_finds [s_nfind].balance  = x_greedy - x_lazy;
-   s_finds [s_nfind].score    = 0;
-   /*---(link)---------------------------*/
-   s_curr = s_nfind;
-   /*---(update)-------------------------*/
-   ++s_nfind;
-   /*---(complete)-----------------------*/
-   return 0;
+   /*> /+---(locals)-----------+-----+-----+-+/                                       <* 
+    *> char        rce         =  -10;                                                <* 
+    *> int         x_len       =    0;                                                <* 
+    *> int         i           =    0;                                                <* 
+    *> int         x_lazy      =    0;                                                <* 
+    *> int         x_greedy    =    0;                                                <* 
+    *> int         x_ref       =   -1;                                                <* 
+    *> /+---(defense)------------------------+/                                       <* 
+    *> --rce;  if (a_text == NULL)  return rce;                                       <* 
+    *> --rce;  if (a_quan == NULL)  return rce;                                       <* 
+    *> /+---(check dups)---------------------+/                                       <* 
+    *> x_len = strllen (a_text, LEN_TEXT);                                            <* 
+    *> x_ref = yregex_find__dup (a_beg, x_len);                                       <* 
+    *> if (x_ref >= 0) {                                                              <* 
+    *>    ++(s_finds [x_ref].count);                                                  <* 
+    *>    return 0;                                                                   <* 
+    *> }                                                                              <* 
+    *> /+---(save)---------------------------+/                                       <* 
+    *> s_finds [s_nfind].ref    = a_ref;                                              <* 
+    *> s_finds [s_nfind].beg    = a_beg;                                              <* 
+    *> strlcpy (s_finds [s_nfind].text, a_text, LEN_TEXT);                            <* 
+    *> strlcpy (s_finds [s_nfind].quan, a_quan, LEN_TEXT);                            <* 
+    *> s_finds [s_nfind].len    = x_len;                                              <* 
+    *> s_finds [s_nfind].end    = a_beg + x_len + 1;                                  <* 
+    *> s_finds [s_nfind].count  = 1;                                                  <* 
+    *> /+---(classify)-----------------------+/                                       <* 
+    *> if (x_len > 0) {                                                               <* 
+    *>    for (i = 0; i < x_len; ++i) {                                               <* 
+    *>       if (strchr (G_GREEDY, a_quan [i]) != NULL)  ++x_greedy;                  <* 
+    *>       if (strchr (G_LAZY  , a_quan [i]) != NULL)  ++x_lazy;                    <* 
+    *>    }                                                                           <* 
+    *> }                                                                              <* 
+    *> s_finds [s_nfind].lazy     = x_lazy;                                           <* 
+    *> s_finds [s_nfind].greedy   = x_greedy;                                         <* 
+    *> s_finds [s_nfind].balance  = x_greedy - x_lazy;                                <* 
+    *> s_finds [s_nfind].score    = 0;                                                <* 
+    *> /+---(link)---------------------------+/                                       <* 
+    *> s_curr = s_nfind;                                                              <* 
+    *> /+---(update)-------------------------+/                                       <* 
+    *> ++s_nfind;                                                                     <* 
+    *> /+---(complete)-----------------------+/                                       <* 
+    *> return 0;                                                                      <*/
 }
 
 char
 yregex_find_addsub      (cint a_ref, cint a_num, short a_beg, cchar *a_text, cchar *a_quan)
 {
-   /*---(locals)-----------+-----+-----+-*/
-   int         i           =    0;
-   int         x_len       =   -1;
-   static int  x_ref       =    0;
-   static int  x_curr      =    0;
-   /*---(find)---------------------------*/
-   if (a_num < 0 || a_num >= MAX_SUB)  return -2;
-   if (a_ref != x_ref) {
-      for (i = 0; i < s_nfind; ++i) {
-         if (s_finds [i].ref != a_ref)  continue;
-         x_ref  = a_ref;
-         x_curr = i;
-         break;
-      }
-   }
-   if (a_ref != x_ref)  return -1;
-   /*---(update)-------------------------*/
-   if (a_beg == -1) {
-      s_finds [x_curr].sub [a_num].beg  = a_beg;
-      s_finds [x_curr].sub [a_num].text [0] = '\0';
-      s_finds [x_curr].sub [a_num].quan [0] = '\0';
-      s_finds [x_curr].sub [a_num].len  = 0;
-   } else {
-      s_finds [x_curr].sub [a_num].beg  = a_beg;
-      if (a_text != NULL)  strlcpy (s_finds [x_curr].sub [a_num].text, a_text, LEN_TEXT);
-      if (a_quan != NULL)  strlcpy (s_finds [x_curr].sub [a_num].quan, a_quan, LEN_TEXT);
-      if (a_text != NULL)  x_len = strllen (a_text, LEN_TEXT);
-      s_finds [x_curr].sub [a_num].len  = x_len;
-   }
-   /*---(complete)-----------------------*/
-   return 0;
+   /*> /+---(locals)-----------+-----+-----+-+/                                                 <* 
+    *> int         i           =    0;                                                          <* 
+    *> int         x_len       =   -1;                                                          <* 
+    *> static int  x_ref       =    0;                                                          <* 
+    *> static int  x_curr      =    0;                                                          <* 
+    *> /+---(find)---------------------------+/                                                 <* 
+    *> if (a_num < 0 || a_num >= MAX_SUB)  return -2;                                           <* 
+    *> if (a_ref != x_ref) {                                                                    <* 
+    *>    for (i = 0; i < s_nfind; ++i) {                                                       <* 
+    *>       if (s_finds [i].ref != a_ref)  continue;                                           <* 
+    *>       x_ref  = a_ref;                                                                    <* 
+    *>       x_curr = i;                                                                        <* 
+    *>       break;                                                                             <* 
+    *>    }                                                                                     <* 
+    *> }                                                                                        <* 
+    *> if (a_ref != x_ref)  return -1;                                                          <* 
+    *> /+---(update)-------------------------+/                                                 <* 
+    *> if (a_beg == -1) {                                                                       <* 
+    *>    s_finds [x_curr].sub [a_num].beg  = a_beg;                                            <* 
+    *>    s_finds [x_curr].sub [a_num].text [0] = '\0';                                         <* 
+    *>    s_finds [x_curr].sub [a_num].quan [0] = '\0';                                         <* 
+    *>    s_finds [x_curr].sub [a_num].len  = 0;                                                <* 
+    *> } else {                                                                                 <* 
+    *>    s_finds [x_curr].sub [a_num].beg  = a_beg;                                            <* 
+    *>    if (a_text != NULL)  strlcpy (s_finds [x_curr].sub [a_num].text, a_text, LEN_TEXT);   <* 
+    *>    if (a_quan != NULL)  strlcpy (s_finds [x_curr].sub [a_num].quan, a_quan, LEN_TEXT);   <* 
+    *>    if (a_text != NULL)  x_len = strllen (a_text, LEN_TEXT);                              <* 
+    *>    s_finds [x_curr].sub [a_num].len  = x_len;                                            <* 
+    *> }                                                                                        <* 
+    *> /+---(complete)-----------------------+/                                                 <* 
+    *> return 0;                                                                                <*/
 }
 
 char
 yregex_find_text        (cint a_ref, char *a_text)
 {
-   /*---(locals)-----------+-----+-----+-*/
-   int         i           =     0;
-   static int  x_ref       =    -1;
-   static int  x_curr      =    -1;
-   /*---(defense)------------------------*/
-   if (a_text == NULL) return 0;
-   /*---(shortcut)-----------------------*/
-   if (x_ref == a_ref) {
-      strlcpy (a_text, s_finds [x_curr].text, LEN_TEXT);
-      return 0;
-   }
-   /*---(prepare)------------------------*/
-   strlcpy (a_text, "", LEN_TEXT);
-   /*---(find)---------------------------*/
-   for (i = 0; i < s_nfind; ++i) {
-      if (s_finds [i].ref != a_ref)  continue;
-      strlcpy (a_text, s_finds [i].text, LEN_TEXT);
-      x_ref  = a_ref;
-      x_curr = i;
-      break;
-   }
-   /*---(complete)-----------------------*/
-   return 0;
+   /*> /+---(locals)-----------+-----+-----+-+/                                       <* 
+    *> int         i           =     0;                                               <* 
+    *> static int  x_ref       =    -1;                                               <* 
+    *> static int  x_curr      =    -1;                                               <* 
+    *> /+---(defense)------------------------+/                                       <* 
+    *> if (a_text == NULL) return 0;                                                  <* 
+    *> /+---(shortcut)-----------------------+/                                       <* 
+    *> if (x_ref == a_ref) {                                                          <* 
+    *>    strlcpy (a_text, s_finds [x_curr].text, LEN_TEXT);                          <* 
+    *>    return 0;                                                                   <* 
+    *> }                                                                              <* 
+    *> /+---(prepare)------------------------+/                                       <* 
+    *> strlcpy (a_text, "", LEN_TEXT);                                                <* 
+    *> /+---(find)---------------------------+/                                       <* 
+    *> for (i = 0; i < s_nfind; ++i) {                                                <* 
+    *>    if (s_finds [i].ref != a_ref)  continue;                                    <* 
+    *>    strlcpy (a_text, s_finds [i].text, LEN_TEXT);                               <* 
+    *>    x_ref  = a_ref;                                                             <* 
+    *>    x_curr = i;                                                                 <* 
+    *>    break;                                                                      <* 
+    *> }                                                                              <* 
+    *> /+---(complete)-----------------------+/                                       <* 
+    *> return 0;                                                                      <*/
 }
 
 int
 yregex_find_count       (void)
 {
-   return s_nfind;
+   /*> return s_nfind;                                                                <*/
 }
 
 char
 yregex_find__listall    (char a_detail)
 {
-   int         i           =     0;
-   int         j           =     0;
-   printf ("num  ---text/quan-----------------------------------\n\n");
-   for (i = 0; i < s_nfind; ++i) {
-      if (s_finds [i].beg < 0) break;
-      printf ("%-4d %-4d  text %-3d[%s]\n", i, s_finds [i].ref, strlen (s_finds [i].text), s_finds [i].text);
-      printf ("     b%-4d quan %-3d[%s]\n", s_finds [i].beg, strlen (s_finds [i].quan), s_finds [i].quan);
-      printf ("     e%-4d l %-3d, g %-3d, b %-3d\n", s_finds [i].end, s_finds [i].lazy, s_finds [i].greedy, s_finds [i].balance);
-      if (a_detail == 'y') {
-         for (j = 0; j < 11; ++j) {
-            if (s_finds [i].sub [j].len >= 0) {
-               printf ("     sub%2d b%-4d text %-3d[%s]\n", j, s_finds [i].sub [j].beg, s_finds [i].sub [j].len, s_finds [i].sub [j].text);
-               printf ("                 quan %-3d[%s]\n",    s_finds [i].sub [j].len, s_finds [i].sub [j].quan);
-            }
-         }
-      }
-      printf ("\n");
-   }
-   return 0;
+   /*> int         i           =     0;                                                                                                           <* 
+    *> int         j           =     0;                                                                                                           <* 
+    *> printf ("num  ---text/quan-----------------------------------\n\n");                                                                       <* 
+    *> for (i = 0; i < s_nfind; ++i) {                                                                                                            <* 
+    *>    if (s_finds [i].beg < 0) break;                                                                                                         <* 
+    *>    printf ("%-4d %-4d  text %-3d[%s]\n", i, s_finds [i].ref, strlen (s_finds [i].text), s_finds [i].text);                                 <* 
+    *>    printf ("     b%-4d quan %-3d[%s]\n", s_finds [i].beg, strlen (s_finds [i].quan), s_finds [i].quan);                                    <* 
+    *>    printf ("     e%-4d l %-3d, g %-3d, b %-3d\n", s_finds [i].end, s_finds [i].lazy, s_finds [i].greedy, s_finds [i].balance);             <* 
+    *>    if (a_detail == 'y') {                                                                                                                  <* 
+    *>       for (j = 0; j < 11; ++j) {                                                                                                           <* 
+    *>          if (s_finds [i].sub [j].len >= 0) {                                                                                               <* 
+    *>             printf ("     sub%2d b%-4d text %-3d[%s]\n", j, s_finds [i].sub [j].beg, s_finds [i].sub [j].len, s_finds [i].sub [j].text);   <* 
+    *>             printf ("                 quan %-3d[%s]\n",    s_finds [i].sub [j].len, s_finds [i].sub [j].quan);                             <* 
+    *>          }                                                                                                                                 <* 
+    *>       }                                                                                                                                    <* 
+    *>    }                                                                                                                                       <* 
+    *>    printf ("\n");                                                                                                                          <* 
+    *> }                                                                                                                                          <* 
+    *> return 0;                                                                                                                                  <*/
 }
 
 char yREGEX_finds (void) { return yregex_find__listall ('y'); }
@@ -251,150 +476,150 @@ char yREGEX_finds (void) { return yregex_find__listall ('y'); }
 int
 yregex_find__solution   (char a_scorer, int a_pos, int  *a_beg, int *a_len, int *a_fbeg, int *a_flen)
 {
-   /*---(locals)-----------+------+----+-*/
-   char        rce         =   -10;
-   int         i           =     0;
-   int         x_pos       =    -1;
-   int         x_best      =    -1;
-   int         x_score     = -100000;
-   int         x_top       = +100000;
-   int         x_left      = +100000;
-   int         x_right     = -100000;
-   /*---(header)-------------------------*/
-   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
-   /*---(default)------------------------*/
-   if (a_beg  != NULL)  *a_beg  = -1;
-   if (a_len  != NULL)  *a_len  = -1;
-   if (a_fbeg != NULL)  *a_fbeg = -1;
-   if (a_flen != NULL)  *a_flen =  0;
-   /*---(defense)------------------------*/
-   DEBUG_YREGEX  yLOG_value   ("a_scorer"  , a_scorer);
-   --rce;  if (a_scorer == 0 || strchr ("$*?+@!~", a_scorer) == NULL) {
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   DEBUG_YREGEX  yLOG_char    ("a_scorer"  , a_scorer);
-   /*---(prepare)------------------------*/
-   DEBUG_YREGEX  yLOG_value   ("a_pos"     , a_pos);
-   --rce;  if (a_pos < 0) {
-      DEBUG_YREGEX  yLOG_note    ("reset a negative position");
-      switch (a_scorer) {
-      case '$' :             a_pos = 0;         break;
-      case '?' : case '!' :  a_pos = 0;         break;
-      case '+' : case '~' :  a_pos = +100000;   break;
-      case '*' : case '@' :  a_pos = 0;         break;
-      }
-      DEBUG_YREGEX  yLOG_value   ("a_pos"     , a_pos);
-   }
-   /*---(find outer bounds)--------------*/
-   DEBUG_YREGEX  yLOG_note    ("find outermost acceptable boundaries");
-   for (i = 0; i < s_nfind; ++i) {
-      /*---(first left)------------------*/
-      x_pos = s_finds [i].beg;
-      if (x_pos >= a_pos && x_pos < x_left )  x_left  = x_pos;
-      /*---(then right)------------------*/
-      x_pos = s_finds [i].end;
-      if (x_pos <= a_pos && x_pos > x_right)  x_right = x_pos;
-      /*---(done)------------------------*/
-   }
-   DEBUG_YREGEX  yLOG_value   ("x_left"    , x_left);
-   DEBUG_YREGEX  yLOG_value   ("x_right"   , x_right);
-   /*---(set boundaries)-----------------*/
-   DEBUG_YREGEX  yLOG_note    ("reset acceptable boundaries based on scorer");
-   switch (a_scorer) {
-   case '$' : case '*' : case '@' : x_left  = x_right = -1; break;
-   case '?' : case '!' :                      x_right = -1; break;
-   case '+' : case '~' :            x_left  =           -1; break;
-   }
-   DEBUG_YREGEX  yLOG_value   ("x_left"    , x_left);
-   DEBUG_YREGEX  yLOG_value   ("x_right"   , x_right);
-   /*---(set initial score)--------------*/
-   DEBUG_YREGEX  yLOG_note    ("set top score based on scorer");
-   switch (a_scorer) {
-   case '$' : case '*' : case '+' : case '?' :  x_top = -100000;  break;
-   case '@' : case '~' : case '!' :             x_top = +100000;  break;
-   }
-   DEBUG_YREGEX  yLOG_value   ("x_top"     , x_top);
-   /*---(locate)-------------------------*/
-   for (i = 0; i < s_nfind; ++i) {
-      DEBUG_YREGEX  yLOG_complex ("match"     , "%3d, %3d, %3d", i, s_finds [i].beg, s_finds [i].end);
-      /*---(filter)----------------------*/
-      if (x_left  >= 0 && s_finds [i].beg != x_left ) {
-         DEBUG_YREGEX  yLOG_note    ("does not match left side, skip");
-         continue;
-      }
-      if (x_right >= 0 && s_finds [i].end != x_right) {
-         DEBUG_YREGEX  yLOG_note    ("does not match right side, skip");
-         continue;
-      }
-      /*---(gather)----------------------*/
-      if (a_scorer == '$')  x_score  = s_finds [i].balance;
-      else                  x_score  = s_finds [i].greedy + s_finds [i].lazy;
-      DEBUG_YREGEX  yLOG_value   ("x_score"   , x_score);
-      DEBUG_YREGEX  yLOG_value   ("x_top"     , x_top);
-      /*---(filter, too)-----------------*/
-      switch (a_scorer) {
-      case '$' : case '*' : case '+' : case '?' :
-         if (x_score <= x_top) {
-            DEBUG_YREGEX  yLOG_note    ("greedy and score is less than top, skip");
-            continue;
-         }
-         break;
-      case '@' : case '~' : case '!' :
-         if (x_score >= x_top) {
-            DEBUG_YREGEX  yLOG_note    ("lazy and score is more than top, skip");
-            continue;
-         }
-         break;
-      }
-      /*---(update)----------------------*/
-      DEBUG_YREGEX  yLOG_note    ("new best match");
-      x_top   = x_score;
-      x_best  = i;
-   }
-   /*---(return)-------------------------*/
-   DEBUG_YREGEX  yLOG_note    ("set return variables");
-   if (a_beg  != NULL)  *a_beg  = s_finds [x_best].beg;
-   if (a_len  != NULL)  *a_len  = s_finds [x_best].len;
-   if (a_fbeg != NULL)  *a_fbeg = s_finds [x_best].sub [10].beg;
-   if (a_flen != NULL)  *a_flen = s_finds [x_best].sub [10].len;
-   /*---(complete)-----------------------*/
-   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
-   return x_best;
+   /*> /+---(locals)-----------+------+----+-+/                                                              <* 
+    *> char        rce         =   -10;                                                                      <* 
+    *> int         i           =     0;                                                                      <* 
+    *> int         x_pos       =    -1;                                                                      <* 
+    *> int         x_best      =    -1;                                                                      <* 
+    *> int         x_score     = -100000;                                                                    <* 
+    *> int         x_top       = +100000;                                                                    <* 
+    *> int         x_left      = +100000;                                                                    <* 
+    *> int         x_right     = -100000;                                                                    <* 
+    *> /+---(header)-------------------------+/                                                              <* 
+    *> DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);                                                            <* 
+    *> /+---(default)------------------------+/                                                              <* 
+    *> if (a_beg  != NULL)  *a_beg  = -1;                                                                    <* 
+    *> if (a_len  != NULL)  *a_len  = -1;                                                                    <* 
+    *> if (a_fbeg != NULL)  *a_fbeg = -1;                                                                    <* 
+    *> if (a_flen != NULL)  *a_flen =  0;                                                                    <* 
+    *> /+---(defense)------------------------+/                                                              <* 
+    *> DEBUG_YREGEX  yLOG_value   ("a_scorer"  , a_scorer);                                                  <* 
+    *> --rce;  if (a_scorer == 0 || strchr ("$*?+@!~", a_scorer) == NULL) {                                  <* 
+    *>    DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);                                                    <* 
+    *>    return rce;                                                                                        <* 
+    *> }                                                                                                     <* 
+    *> DEBUG_YREGEX  yLOG_char    ("a_scorer"  , a_scorer);                                                  <* 
+    *> /+---(prepare)------------------------+/                                                              <* 
+    *> DEBUG_YREGEX  yLOG_value   ("a_pos"     , a_pos);                                                     <* 
+    *> --rce;  if (a_pos < 0) {                                                                              <* 
+    *>    DEBUG_YREGEX  yLOG_note    ("reset a negative position");                                          <* 
+    *>    switch (a_scorer) {                                                                                <* 
+    *>    case '$' :             a_pos = 0;         break;                                                   <* 
+    *>    case '?' : case '!' :  a_pos = 0;         break;                                                   <* 
+    *>    case '+' : case '~' :  a_pos = +100000;   break;                                                   <* 
+    *>    case '*' : case '@' :  a_pos = 0;         break;                                                   <* 
+    *>    }                                                                                                  <* 
+    *>    DEBUG_YREGEX  yLOG_value   ("a_pos"     , a_pos);                                                  <* 
+    *> }                                                                                                     <* 
+    *> /+---(find outer bounds)--------------+/                                                              <* 
+    *> DEBUG_YREGEX  yLOG_note    ("find outermost acceptable boundaries");                                  <* 
+    *> for (i = 0; i < s_nfind; ++i) {                                                                       <* 
+    *>    /+---(first left)------------------+/                                                              <* 
+    *>    x_pos = s_finds [i].beg;                                                                           <* 
+    *>    if (x_pos >= a_pos && x_pos < x_left )  x_left  = x_pos;                                           <* 
+    *>    /+---(then right)------------------+/                                                              <* 
+    *>    x_pos = s_finds [i].end;                                                                           <* 
+    *>    if (x_pos <= a_pos && x_pos > x_right)  x_right = x_pos;                                           <* 
+    *>    /+---(done)------------------------+/                                                              <* 
+    *> }                                                                                                     <* 
+    *> DEBUG_YREGEX  yLOG_value   ("x_left"    , x_left);                                                    <* 
+    *> DEBUG_YREGEX  yLOG_value   ("x_right"   , x_right);                                                   <* 
+    *> /+---(set boundaries)-----------------+/                                                              <* 
+    *> DEBUG_YREGEX  yLOG_note    ("reset acceptable boundaries based on scorer");                           <* 
+    *> switch (a_scorer) {                                                                                   <* 
+    *> case '$' : case '*' : case '@' : x_left  = x_right = -1; break;                                       <* 
+    *> case '?' : case '!' :                      x_right = -1; break;                                       <* 
+    *> case '+' : case '~' :            x_left  =           -1; break;                                       <* 
+    *> }                                                                                                     <* 
+    *> DEBUG_YREGEX  yLOG_value   ("x_left"    , x_left);                                                    <* 
+    *> DEBUG_YREGEX  yLOG_value   ("x_right"   , x_right);                                                   <* 
+    *> /+---(set initial score)--------------+/                                                              <* 
+    *> DEBUG_YREGEX  yLOG_note    ("set top score based on scorer");                                         <* 
+    *> switch (a_scorer) {                                                                                   <* 
+    *> case '$' : case '*' : case '+' : case '?' :  x_top = -100000;  break;                                 <* 
+    *> case '@' : case '~' : case '!' :             x_top = +100000;  break;                                 <* 
+    *> }                                                                                                     <* 
+    *> DEBUG_YREGEX  yLOG_value   ("x_top"     , x_top);                                                     <* 
+    *> /+---(locate)-------------------------+/                                                              <* 
+    *> for (i = 0; i < s_nfind; ++i) {                                                                       <* 
+    *>    DEBUG_YREGEX  yLOG_complex ("match"     , "%3d, %3d, %3d", i, s_finds [i].beg, s_finds [i].end);   <* 
+    *>    /+---(filter)----------------------+/                                                              <* 
+    *>    if (x_left  >= 0 && s_finds [i].beg != x_left ) {                                                  <* 
+    *>       DEBUG_YREGEX  yLOG_note    ("does not match left side, skip");                                  <* 
+    *>       continue;                                                                                       <* 
+   *>    }                                                                                                  <* 
+      *>    if (x_right >= 0 && s_finds [i].end != x_right) {                                                  <* 
+         *>       DEBUG_YREGEX  yLOG_note    ("does not match right side, skip");                                 <* 
+            *>       continue;                                                                                       <* 
+            *>    }                                                                                                  <* 
+            *>    /+---(gather)----------------------+/                                                              <* 
+            *>    if (a_scorer == '$')  x_score  = s_finds [i].balance;                                              <* 
+            *>    else                  x_score  = s_finds [i].greedy + s_finds [i].lazy;                            <* 
+            *>    DEBUG_YREGEX  yLOG_value   ("x_score"   , x_score);                                                <* 
+            *>    DEBUG_YREGEX  yLOG_value   ("x_top"     , x_top);                                                  <* 
+            *>    /+---(filter, too)-----------------+/                                                              <* 
+            *>    switch (a_scorer) {                                                                                <* 
+               *>    case '$' : case '*' : case '+' : case '?' :                                                        <* 
+                  *>       if (x_score <= x_top) {                                                                         <* 
+                     *>          DEBUG_YREGEX  yLOG_note    ("greedy and score is less than top, skip");                      <* 
+                        *>          continue;                                                                                    <* 
+                        *>       }                                                                                               <* 
+                        *>       break;                                                                                          <* 
+                        *>    case '@' : case '~' : case '!' :                                                                   <* 
+                        *>       if (x_score >= x_top) {                                                                         <* 
+                           *>          DEBUG_YREGEX  yLOG_note    ("lazy and score is more than top, skip");                        <* 
+                              *>          continue;                                                                                    <* 
+                              *>       }                                                                                               <* 
+                              *>       break;                                                                                          <* 
+                              *>    }                                                                                                  <* 
+                              *>    /+---(update)----------------------+/                                                              <* 
+                              *>    DEBUG_YREGEX  yLOG_note    ("new best match");                                                     <* 
+                              *>    x_top   = x_score;                                                                                 <* 
+                              *>    x_best  = i;                                                                                       <* 
+                              *> }                                                                                                     <* 
+                              *> /+---(return)-------------------------+/                                                              <* 
+                              *> DEBUG_YREGEX  yLOG_note    ("set return variables");                                                  <* 
+                              *> if (a_beg  != NULL)  *a_beg  = s_finds [x_best].beg;                                                  <* 
+                              *> if (a_len  != NULL)  *a_len  = s_finds [x_best].len;                                                  <* 
+                              *> if (a_fbeg != NULL)  *a_fbeg = s_finds [x_best].sub [10].beg;                                         <* 
+                              *> if (a_flen != NULL)  *a_flen = s_finds [x_best].sub [10].len;                                         <* 
+                              *> /+---(complete)-----------------------+/                                                              <* 
+                              *> DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);                                                            <* 
+                              *> return x_best;                                                                                        <*/
 }
 
 char
 yREGEX_best          (cchar a_type, cchar a_dir, int  *a_beg, int *a_len, int *a_fbeg, int *a_flen)
 {
-   int         rc          =   0;
-   char        x_scorer    = '-';
-   switch (a_type) {
-   case  YREGEX_BEST   :
-      x_scorer = '$';
-      break;
-   case  YREGEX_GREEDY :
-      switch (a_dir) {
-      case YREGEX_MOST  : x_scorer = '*'; break;
-      case YREGEX_LEFT  : x_scorer = '?'; break;
-      case YREGEX_RIGHT : x_scorer = '+'; break;
-      default           : return -1;      break;
-      }
-      break;
-   case  YREGEX_LAZY   :
-      switch (a_dir) {
-      case YREGEX_MOST  : x_scorer = '@'; break;
-      case YREGEX_LEFT  : x_scorer = '!'; break;
-      case YREGEX_RIGHT : x_scorer = '~'; break;
-      default           : return -1;      break;
-      }
-      break;
-   default :
-      return -1;
-      break;
-   }
-   rc = yregex_find__solution (x_scorer, -1, a_beg, a_len, a_fbeg, a_flen);
-   if (rc < 0)  return -1;
-   return 0;
+   /*> int         rc          =   0;                                                 <* 
+    *> char        x_scorer    = '-';                                                 <* 
+    *> switch (a_type) {                                                              <* 
+    *> case  YREGEX_BEST   :                                                          <* 
+    *>    x_scorer = '$';                                                             <* 
+    *>    break;                                                                      <* 
+    *> case  YREGEX_GREEDY :                                                          <* 
+    *>    switch (a_dir) {                                                            <* 
+    *>    case YREGEX_MOST  : x_scorer = '*'; break;                                  <* 
+    *>    case YREGEX_LEFT  : x_scorer = '?'; break;                                  <* 
+    *>    case YREGEX_RIGHT : x_scorer = '+'; break;                                  <* 
+    *>    default           : return -1;      break;                                  <* 
+    *>    }                                                                           <* 
+    *>    break;                                                                      <* 
+    *> case  YREGEX_LAZY   :                                                          <* 
+    *>    switch (a_dir) {                                                            <* 
+    *>    case YREGEX_MOST  : x_scorer = '@'; break;                                  <* 
+    *>    case YREGEX_LEFT  : x_scorer = '!'; break;                                  <* 
+    *>    case YREGEX_RIGHT : x_scorer = '~'; break;                                  <* 
+    *>    default           : return -1;      break;                                  <* 
+    *>    }                                                                           <* 
+    *>    break;                                                                      <* 
+    *> default :                                                                      <* 
+    *>    return -1;                                                                  <* 
+    *>    break;                                                                      <* 
+    *> }                                                                              <* 
+    *> rc = yregex_find__solution (x_scorer, -1, a_beg, a_len, a_fbeg, a_flen);       <* 
+    *> if (rc < 0)  return -1;                                                        <* 
+    *> return 0;                                                                      <*/
 }
 
 static char   s_method   = YREGEX_GREEDY;
@@ -405,108 +630,108 @@ static int    s_pos      =   0;
 int
 yregex_find__target     (char a_dir, int a_pos)
 {
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   int         i           =    0;
-   int         x_orig      =    0;
-   int         x_targ      =    0;
-   int         x_pos       =    0;
-   /*---(header)-------------------------*/
-   DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
-   DEBUG_YREGEX  yLOG_schar   (a_dir);
-   DEBUG_YREGEX  yLOG_sint    (a_pos);
-   /*---(find next right)----------------*/
-   if (strchr ("[>", a_dir) != NULL) {
-      DEBUG_YREGEX  yLOG_snote   ("right");
-      x_orig = x_targ = +100000;
-      if (a_pos == -1)  a_pos = -x_orig;
-      for (i = 0; i < s_nfind; ++i) {
-         x_pos = s_finds [i].beg;
-         if (x_pos < a_pos)            continue;
-         if (x_pos > x_targ)           continue;
-         DEBUG_YREGEX  yLOG_sint    (i);
-         DEBUG_YREGEX  yLOG_sint    (x_targ);
-         x_targ = x_pos;
-      }
-   }
-   /*---(find next left)-----------------*/
-   else if (strchr ("<]", a_dir) != NULL) {
-      DEBUG_YREGEX  yLOG_snote   ("left");
-      x_orig = x_targ = -100000;
-      if (a_pos == -1)  a_pos = -x_orig;
-      for (i = 0; i < s_nfind; ++i) {
-         x_pos = s_finds [i].beg;
-         if (x_pos > a_pos)            continue;
-         if (x_pos < x_targ)           continue;
-         x_targ = x_pos;
-         DEBUG_YREGEX  yLOG_sint    (i);
-         DEBUG_YREGEX  yLOG_sint    (x_targ);
-      }
-   }
-   /*---(output)-------------------------*/
-   else {
-      DEBUG_YREGEX  yLOG_snote   ("direction unknown");
-      DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
-   }
-   /*---(output)-------------------------*/
-   --rce;  if (x_targ == x_orig) {
-      DEBUG_YREGEX  yLOG_snote   ("FAILED");
-      DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
-      return rce;
-   }
-   /*---(complete)-----------------------*/
-   DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
-   return x_targ;
+   /*> /+---(locals)-----------+-----+-----+-+/                                       <* 
+    *> char        rce         =  -10;                                                <* 
+    *> int         i           =    0;                                                <* 
+    *> int         x_orig      =    0;                                                <* 
+    *> int         x_targ      =    0;                                                <* 
+    *> int         x_pos       =    0;                                                <* 
+    *> /+---(header)-------------------------+/                                       <* 
+    *> DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);                                     <* 
+    *> DEBUG_YREGEX  yLOG_schar   (a_dir);                                            <* 
+    *> DEBUG_YREGEX  yLOG_sint    (a_pos);                                            <* 
+    *> /+---(find next right)----------------+/                                       <* 
+    *> if (strchr ("[>", a_dir) != NULL) {                                            <* 
+    *>    DEBUG_YREGEX  yLOG_snote   ("right");                                       <* 
+    *>    x_orig = x_targ = +100000;                                                  <* 
+    *>    if (a_pos == -1)  a_pos = -x_orig;                                          <* 
+    *>    for (i = 0; i < s_nfind; ++i) {                                             <* 
+    *>       x_pos = s_finds [i].beg;                                                 <* 
+    *>       if (x_pos < a_pos)            continue;                                  <* 
+    *>       if (x_pos > x_targ)           continue;                                  <* 
+    *>       DEBUG_YREGEX  yLOG_sint    (i);                                          <* 
+    *>       DEBUG_YREGEX  yLOG_sint    (x_targ);                                     <* 
+    *>       x_targ = x_pos;                                                          <* 
+    *>    }                                                                           <* 
+    *> }                                                                              <* 
+    *> /+---(find next left)-----------------+/                                       <* 
+    *> else if (strchr ("<]", a_dir) != NULL) {                                       <* 
+    *>    DEBUG_YREGEX  yLOG_snote   ("left");                                        <* 
+    *>    x_orig = x_targ = -100000;                                                  <* 
+    *>    if (a_pos == -1)  a_pos = -x_orig;                                          <* 
+    *>    for (i = 0; i < s_nfind; ++i) {                                             <* 
+    *>       x_pos = s_finds [i].beg;                                                 <* 
+    *>       if (x_pos > a_pos)            continue;                                  <* 
+    *>       if (x_pos < x_targ)           continue;                                  <* 
+    *>       x_targ = x_pos;                                                          <* 
+    *>       DEBUG_YREGEX  yLOG_sint    (i);                                          <* 
+    *>       DEBUG_YREGEX  yLOG_sint    (x_targ);                                     <* 
+    *>    }                                                                           <* 
+    *> }                                                                              <* 
+    *> /+---(output)-------------------------+/                                       <* 
+    *> else {                                                                         <* 
+    *>    DEBUG_YREGEX  yLOG_snote   ("direction unknown");                           <* 
+    *>    DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);                             <* 
+    *> }                                                                              <* 
+    *> /+---(output)-------------------------+/                                       <* 
+    *> --rce;  if (x_targ == x_orig) {                                                <* 
+    *>    DEBUG_YREGEX  yLOG_snote   ("FAILED");                                      <* 
+    *>    DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);                             <* 
+    *>    return rce;                                                                 <* 
+    *> }                                                                              <* 
+    *> /+---(complete)-----------------------+/                                       <* 
+    *> DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);                                     <* 
+    *> return x_targ;                                                                 <*/
 }
 
 int
 yregex_find__score      (char a_method, int a_pos)
 {
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   int         i           =    0;
-   int         x_pos       =    0;
-   int         x_score     =    0;
-   int         x_top       =    0;
-   int         x_best      =   -1;
-   /*---(header)-------------------------*/
-   DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
-   DEBUG_YREGEX  yLOG_schar   (a_method);
-   DEBUG_YREGEX  yLOG_sint    (a_pos);
-   /*---(prepare)------------------------*/
-   switch (a_method) {
-   case YREGEX_LAZY :  x_top = +100000;  break;
-   default          :  x_top = -100000;  break;
-   }
-   /*---(find next left)-----------------*/
-   for (i = 0; i < s_nfind; ++i) {
-      /*---(filter position)-------------*/
-      x_pos = s_finds [i].beg;
-      if (x_pos != a_pos)           continue;
-      /*---(score)-----------------------*/
-      if (s_method == YREGEX_BEST)    x_score  = s_finds [i].balance;
-      else                            x_score  = s_finds [i].greedy + s_finds [i].lazy;
-      /*---(filter score)----------------*/
-      switch (s_method) {
-      case YREGEX_GREEDY : case YREGEX_BEST :
-         if (x_score <= x_top)  continue;
-         break;
-      case YREGEX_LAZY   :
-         if (x_score >= x_top)  continue;
-         break;
-      }
-      /*---(update)----------------------*/
-      x_top  = x_score;
-      x_best = i;
-      DEBUG_YREGEX  yLOG_sint    (x_top);
-      /*---(done)------------------------*/
-   }
-   /*---(save values)--------------------*/
-   s_index = x_best;
-   s_pos   = x_pos;
-   /*---(complete)-----------------------*/
-   DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
-   return x_best;
+   /*> /+---(locals)-----------+-----+-----+-+/                                               <* 
+    *> char        rce         =  -10;                                                        <* 
+    *> int         i           =    0;                                                        <* 
+    *> int         x_pos       =    0;                                                        <* 
+    *> int         x_score     =    0;                                                        <* 
+    *> int         x_top       =    0;                                                        <* 
+    *> int         x_best      =   -1;                                                        <* 
+    *> /+---(header)-------------------------+/                                               <* 
+    *> DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);                                             <* 
+    *> DEBUG_YREGEX  yLOG_schar   (a_method);                                                 <* 
+    *> DEBUG_YREGEX  yLOG_sint    (a_pos);                                                    <* 
+    *> /+---(prepare)------------------------+/                                               <* 
+    *> switch (a_method) {                                                                    <* 
+    *> case YREGEX_LAZY :  x_top = +100000;  break;                                           <* 
+    *> default          :  x_top = -100000;  break;                                           <* 
+    *> }                                                                                      <* 
+    *> /+---(find next left)-----------------+/                                               <* 
+    *> for (i = 0; i < s_nfind; ++i) {                                                        <* 
+    *>    /+---(filter position)-------------+/                                               <* 
+    *>    x_pos = s_finds [i].beg;                                                            <* 
+    *>    if (x_pos != a_pos)           continue;                                             <* 
+    *>    /+---(score)-----------------------+/                                               <* 
+    *>    if (s_method == YREGEX_BEST)    x_score  = s_finds [i].balance;                     <* 
+    *>    else                            x_score  = s_finds [i].greedy + s_finds [i].lazy;   <* 
+    *>    /+---(filter score)----------------+/                                               <* 
+    *>    switch (s_method) {                                                                 <* 
+    *>    case YREGEX_GREEDY : case YREGEX_BEST :                                             <* 
+    *>       if (x_score <= x_top)  continue;                                                 <* 
+    *>       break;                                                                           <* 
+    *>    case YREGEX_LAZY   :                                                                <* 
+    *>       if (x_score >= x_top)  continue;                                                 <* 
+    *>       break;                                                                           <* 
+    *>    }                                                                                   <* 
+    *>    /+---(update)----------------------+/                                               <* 
+    *>    x_top  = x_score;                                                                   <* 
+    *>    x_best = i;                                                                         <* 
+    *>    DEBUG_YREGEX  yLOG_sint    (x_top);                                                 <* 
+    *>    /+---(done)------------------------+/                                               <* 
+    *> }                                                                                      <* 
+    *> /+---(save values)--------------------+/                                               <* 
+    *> s_index = x_best;                                                                      <* 
+    *> s_pos   = x_pos;                                                                       <* 
+    *> /+---(complete)-----------------------+/                                               <* 
+    *> DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);                                             <* 
+    *> return x_best;                                                                         <*/
 }
 
 char
@@ -521,68 +746,68 @@ yREGEX_method           (char a_type)
 char
 yREGEX_cursor           (char a_dir, int *a_beg, int *a_len, int *a_fbeg, int *a_flen)
 {
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   int         x_pos       =    0;
-   int         x_best      =    0;
-   /*---(header)-------------------------*/
-   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
-   DEBUG_YREGEX  yLOG_char    ("s_method"  , s_method);
-   DEBUG_YREGEX  yLOG_value   ("s_index"   , s_index);
-   /*---(default)------------------------*/
-   if (a_beg  != NULL)  *a_beg  = -1;
-   if (a_len  != NULL)  *a_len  = -1;
-   if (a_fbeg != NULL)  *a_fbeg = -1;
-   if (a_flen != NULL)  *a_flen =  0;
-   /*---(defense)------------------------*/
-   DEBUG_YREGEX  yLOG_value   ("a_dir"     , a_dir);
-   --rce;  if (a_dir == 0 || strchr ("[>.<]", a_dir) == NULL) {
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   DEBUG_YREGEX  yLOG_char    ("a_dir"     , a_dir);
-   --rce;  if (s_index < 0 && strchr ("><.", a_dir) != NULL) {
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   /*---(current)------------------------*/
-   --rce;  if (a_dir == '.') {
-      DEBUG_YREGEX  yLOG_note    ("seeking current value (.)");
-      if (a_beg  != NULL)  *a_beg  = s_finds [s_index].beg;
-      if (a_len  != NULL)  *a_len  = s_finds [s_index].len;
-      if (a_fbeg != NULL)  *a_fbeg = s_finds [s_index].sub [10].beg;
-      if (a_flen != NULL)  *a_flen = s_finds [s_index].sub [10].len;
-      DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
-      return 0;
-   }
-   /*---(update position)----------------*/
-   x_pos = s_pos;
-   switch (a_dir) {
-   case '[' : x_pos = -1;  break;
-   case '<' :  --x_pos;    break;
-   case '>' :  ++x_pos;    break;
-   case ']' : x_pos = -1;  break;
-   }
-   /*---(find solution)------------------*/
-   DEBUG_YREGEX  yLOG_value   ("x_pos"     , x_pos);
-   x_pos = yregex_find__target (a_dir, x_pos);
-   DEBUG_YREGEX  yLOG_value   ("x_targ"    , x_pos);
-   --rce;  if (x_pos < 0) {
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   x_best = yregex_find__score (s_method, x_pos);
-   DEBUG_YREGEX  yLOG_value   ("x_best"    , x_best);
-   /*---(update)-------------------------*/
-   s_index = x_best;
-   s_pos   = x_pos;
-   if (a_beg  != NULL)  *a_beg  = s_finds [s_index].beg;
-   if (a_len  != NULL)  *a_len  = s_finds [s_index].len;
-   if (a_fbeg != NULL)  *a_fbeg = s_finds [s_index].sub [10].beg;
-   if (a_flen != NULL)  *a_flen = s_finds [s_index].sub [10].len;
-   /*---(complete)-----------------------*/
-   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
-   return 0;
+   /*> /+---(locals)-----------+-----+-----+-+/                                       <* 
+    *> char        rce         =  -10;                                                <* 
+    *> int         x_pos       =    0;                                                <* 
+    *> int         x_best      =    0;                                                <* 
+    *> /+---(header)-------------------------+/                                       <* 
+    *> DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);                                     <* 
+    *> DEBUG_YREGEX  yLOG_char    ("s_method"  , s_method);                           <* 
+    *> DEBUG_YREGEX  yLOG_value   ("s_index"   , s_index);                            <* 
+    *> /+---(default)------------------------+/                                       <* 
+    *> if (a_beg  != NULL)  *a_beg  = -1;                                             <* 
+    *> if (a_len  != NULL)  *a_len  = -1;                                             <* 
+    *> if (a_fbeg != NULL)  *a_fbeg = -1;                                             <* 
+    *> if (a_flen != NULL)  *a_flen =  0;                                             <* 
+    *> /+---(defense)------------------------+/                                       <* 
+    *> DEBUG_YREGEX  yLOG_value   ("a_dir"     , a_dir);                              <* 
+    *> --rce;  if (a_dir == 0 || strchr ("[>.<]", a_dir) == NULL) {                   <* 
+    *>    DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);                             <* 
+    *>    return rce;                                                                 <* 
+    *> }                                                                              <* 
+    *> DEBUG_YREGEX  yLOG_char    ("a_dir"     , a_dir);                              <* 
+    *> --rce;  if (s_index < 0 && strchr ("><.", a_dir) != NULL) {                    <* 
+    *>    DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);                             <* 
+    *>    return rce;                                                                 <* 
+    *> }                                                                              <* 
+    *> /+---(current)------------------------+/                                       <* 
+    *> --rce;  if (a_dir == '.') {                                                    <* 
+    *>    DEBUG_YREGEX  yLOG_note    ("seeking current value (.)");                   <* 
+    *>    if (a_beg  != NULL)  *a_beg  = s_finds [s_index].beg;                       <* 
+    *>    if (a_len  != NULL)  *a_len  = s_finds [s_index].len;                       <* 
+    *>    if (a_fbeg != NULL)  *a_fbeg = s_finds [s_index].sub [10].beg;              <* 
+    *>    if (a_flen != NULL)  *a_flen = s_finds [s_index].sub [10].len;              <* 
+    *>    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);                                  <* 
+    *>    return 0;                                                                   <* 
+    *> }                                                                              <* 
+    *> /+---(update position)----------------+/                                       <* 
+    *> x_pos = s_pos;                                                                 <* 
+    *> switch (a_dir) {                                                               <* 
+    *> case '[' : x_pos = -1;  break;                                                 <* 
+    *> case '<' :  --x_pos;    break;                                                 <* 
+    *> case '>' :  ++x_pos;    break;                                                 <* 
+    *> case ']' : x_pos = -1;  break;                                                 <* 
+    *> }                                                                              <* 
+    *> /+---(find solution)------------------+/                                       <* 
+    *> DEBUG_YREGEX  yLOG_value   ("x_pos"     , x_pos);                              <* 
+    *> x_pos = yregex_find__target (a_dir, x_pos);                                    <* 
+    *> DEBUG_YREGEX  yLOG_value   ("x_targ"    , x_pos);                              <* 
+    *> --rce;  if (x_pos < 0) {                                                       <* 
+    *>    DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);                             <* 
+    *>    return rce;                                                                 <* 
+    *> }                                                                              <* 
+    *> x_best = yregex_find__score (s_method, x_pos);                                 <* 
+    *> DEBUG_YREGEX  yLOG_value   ("x_best"    , x_best);                             <* 
+    *> /+---(update)-------------------------+/                                       <* 
+    *> s_index = x_best;                                                              <* 
+    *> s_pos   = x_pos;                                                               <* 
+    *> if (a_beg  != NULL)  *a_beg  = s_finds [s_index].beg;                          <* 
+    *> if (a_len  != NULL)  *a_len  = s_finds [s_index].len;                          <* 
+    *> if (a_fbeg != NULL)  *a_fbeg = s_finds [s_index].sub [10].beg;                 <* 
+    *> if (a_flen != NULL)  *a_flen = s_finds [s_index].sub [10].len;                 <* 
+    *> /+---(complete)-----------------------+/                                       <* 
+    *> DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);                                     <* 
+    *> return 0;                                                                      <*/
 }
 
 
@@ -596,11 +821,22 @@ char*
 yregex_find__unit    (char *a_question, int a_num)
 {
    /*---(locals)-----------+------+----+-*/
+   int         x_fore      = 0;
+   int         x_back      = 0;
+   tFIND      *x_curr      = NULL;
    int         x_find      =     0;
    /*---(initialize)---------------------*/
    strlcpy (unit_answer, "FIND__unit, unknown request", 100);
    /*---(mapping)------------------------*/
-   if (strncmp (a_question, "match"     , 20)  == 0) {
+   if      (strcmp (a_question, "count"    )      == 0) {
+      x_curr = s_head; while (x_curr != NULL) { ++x_fore; x_curr = x_curr->m_next; }
+      x_curr = s_tail; while (x_curr != NULL) { ++x_back; x_curr = x_curr->m_prev; }
+      snprintf (unit_answer, LEN_RECD, "FIND count       : num=%4d, fore=%4d, back=%4d", s_count, x_fore, x_back);
+   }
+   else if (strcmp (a_question, "list"        )   == 0) {
+      snprintf (unit_answer, LEN_RECD, "FIND list        : num=%4d, head=%-10p, tail=%p", s_count, s_head, s_tail);
+   }
+   else if (strncmp (a_question, "match"     , 20)  == 0) {
       if (a_num >= s_nfind)  snprintf (unit_answer, LEN_TEXT, "FIND match  (%2d) : %3d %3d[%-.40s]", a_num, -1, -1, "");
       else                   snprintf (unit_answer, LEN_TEXT, "FIND match  (%2d) : %3d %3d[%-.40s]", a_num, s_finds [a_num].beg, s_finds [a_num].len, s_finds [a_num].text);
    }

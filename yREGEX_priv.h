@@ -33,8 +33,8 @@
 
 #define     P_VERMAJOR  "0.--, preparing for serious use"
 #define     P_VERMINOR  "0.6-, keep advancing"
-#define     P_VERNUM    "0.6e"
-#define     P_VERTXT    "all basic set logic tested, need to complete with yEXEC execution support"
+#define     P_VERNUM    "0.6f"
+#define     P_VERTXT    "detailed compilation grouping broken out and unit tested, NICE!!"
 
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -104,7 +104,7 @@ typedef   unsigned char  uchar;
 #define     TYPE_QUANS   "*+?@~!"
 #define     MAX_QUAN       255
 #define     TYPE_GROUP   "()|"
-#define     GROUP_FOCUS    999
+#define     GROUP_FOCUS    0
 
 
 #define     G_ANCHOR     "^$<>"
@@ -115,6 +115,12 @@ typedef   unsigned char  uchar;
 #define     G_MANY       "*@"
 #define     G_PREFIX     "*?!@"
 
+
+#define     HAND_LIT    'L'
+#define     HAND_ANC    'A'
+#define     HAND_GRP    'G'
+#define     HAND_PAS    '+'
+#define     HAND_BAD    'x'
 
 
 typedef    struct   cERROR   tERROR;
@@ -141,34 +147,44 @@ struct      cSETS {
    tSETS      *m_next;
 };
 
+#define     MAX_STACK  100
 
 /*---(struct.re)--------+-----------+-*//*-+----------------------------------*/
 #define     MAX_REGEX   20
 typedef     struct      cREGEX      tREGEX;
 struct      cREGEX {
-   /*---(source text)--------------------*/
+   /*---(source text)-------*/
    uchar       text        [LEN_TEXT ];    /* text source                     */
    int         tlen;                       /* length of source text           */
-   /*---(solution scorer)----------------*/
+   /*---(solution scorer)---*/
    char        scorer;                     /* solution scoring algorithm      */
-   /*---(original regex)-----------------*/
+   /*---(original regex)----*/
    uchar       orig        [LEN_REGEX];    /* original regex                  */
    int         olen;                       /* length of original regex        */
-   /*---(original regex)-----------------*/
+   /*---(original regex)----*/
    uchar       regex       [LEN_REGEX];    /* regex source                    */
    int         rlen;                       /* length of source regex          */
-   /*---(compiled regex)-----------------*/
+   /*---(compiled regex)----*/
    char        ready;                      /* compilied correctly and ready   */
    uchar       comp        [LEN_REGEX];    /* compilied regex chars           */
    int         indx        [LEN_REGEX];    /* compilied regex group/set index */
    uchar       mods        [LEN_REGEX];    /* compilied regex modifier        */
    int         jump        [LEN_REGEX];    /* compilied regex group jumps     */
    int         clen;                       /* compliled regex length          */
-   char        groups      [LEN_LABEL];    /* marks for named groups          */
-   int         gbegs       [LEN_LABEL];    /* actual group beginnings         */
-   int         gends       [LEN_LABEL];    /* actual group endings            */
+   /*---(group)-------------*/
+   char        g_mrk       [LEN_LABEL];    /* marks for named groups          */
+   int         g_beg       [LEN_LABEL];    /* actual group beginnings         */
+   int         g_end       [LEN_LABEL];    /* actual group endings            */
+   int         g_stk       [MAX_STACK];
+   char        g_lvl;
+   int         g_cnt;
+   int         g_nam;
+   int         g_hid;
+   int         g_mul;
+   char        g_foc;
+   /*---(done)--------------*/
 };
-extern      tREGEX      gre;
+extern      tREGEX      myREGEX;
 
 
 extern char  g_found   [LEN_TEXT];
@@ -206,11 +222,24 @@ char        yregex_comp__literal    (int *a_rpos);
 char        yregex_comp__quan_simp  (int *a_rpos);
 char        yregex_comp__quan_comp  (int *a_rpos);
 /*---(groups)---------------*/
-int         yregex_comp__group_beg  (int  a_rpos);
-int         yregex_comp__group_end  (int  a_rpos);
 char        yregex_comp__extended   (void);
 /*---(unittest)-------------*/
 char*       yregex_comp__unit       (char *a_question, int a_num);
+
+
+
+/*345678901-12345678901-12345678901-12345678901-12345678901-12345678901-123456*/
+/*---(program)--------------*/
+char        yregex_group_init       (void);
+char        yregex_group__purge     (void);
+char        yregex_group_wrap       (void);
+/*---(compile)--------------*/
+char        yregex_group__open      (int *a_rpos);
+char        yregex_group__branch    (int *a_rpos);
+char        yregex_group__close     (int *a_rpos);
+char        yregex_group__fix       (int a_grp);
+/*---(execute)--------------*/
+char        yregex_group_endpoints  (int a_cur, int *a_beg, int *a_end);
 
 
 
@@ -348,8 +377,15 @@ char        yregex_pats_comp        (void);
 
 /*345678901-12345678901-12345678901-12345678901-12345678901-12345678901-123456*/
 /*===[[ FIND ]]===============================*/
+/*---(support)--------------*/
+char*       yregex_find__memory     (void *a_cur);
+char        yregex_find__wipe       (void *a_cur);
+/*---(memory)---------------*/
+char        yregex_find__new        (void **a_new);
+char        yregex_find__free       (void **a_old);
 /*---(program)--------------*/
 char        yregex_find_init        (void);
+char        yregex_find__purge      (void);
 /*---(structure)------------*/
 char        yregex_find_add         (cint a_ref, cint a_beg, cchar *a_text, cchar *a_quan);
 char        yregex_find_addsub      (cint a_ref, cint a_num, short a_beg, cchar *a_text, cchar *a_quan);

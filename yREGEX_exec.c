@@ -64,15 +64,15 @@ yregex_exec__prep    (cchar *a_source)
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   rc = strlcpy (gre.text, a_source , LEN_TEXT);
+   rc = strlcpy (myREGEX.text, a_source , LEN_TEXT);
    DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
    --rce;  if (rc     <  0   ) {
       DEBUG_YREGEX  yLOG_note    ("truncated copy");
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   gre.tlen = strllen (gre.text , LEN_TEXT);
-   DEBUG_YREGEX  yLOG_value   ("gre.tlen"  , gre.tlen);
+   myREGEX.tlen = strllen (myREGEX.text , LEN_TEXT);
+   DEBUG_YREGEX  yLOG_value   ("myREGEX.tlen"  , myREGEX.tlen);
    /*---(state settings)-----------------*/
    s_nstate = 0;
    s_curr   = 0;
@@ -104,18 +104,18 @@ yregex_exec__group      (int a_level, int a_rpos, int a_tpos)
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    DEBUG_YREGEX  yLOG_complex ("header"    , "level %-3d, rpos %-3d, tpos %-3d", a_level, a_rpos, a_tpos);
    /*---(prepare)------------------------*/
-   x_end       = yregex_comp__group_end (a_rpos);
+   yregex_group_endpoints (a_rpos, NULL, &x_end);
    DEBUG_YREGEX  yLOG_value   ("x_end"     , x_end);
-   x_mod       = gre.mods [x_end];
+   x_mod       = myREGEX.mods [x_end];
    DEBUG_YREGEX  yLOG_char    ("x_mod"     , x_mod);
-   x_ndiv      = gre.mods [a_rpos] - '0';
+   x_ndiv      = myREGEX.mods [a_rpos] - '0';
    DEBUG_YREGEX  yLOG_value   ("x_ndiv"    , x_ndiv);
    /*---(launch each branch)-------------*/
    for (i = 0; i <= x_ndiv; ++i) {
-      x_type  = gre.comp [a_rpos + x_offset];
+      x_type  = myREGEX.comp [a_rpos + x_offset];
       DEBUG_YREGEX  yLOG_complex ("branch"    , "lvl %d, rpos %2d, type %c, off %2d, r+o %2d", i + 1, a_rpos, x_type, x_offset, a_rpos + x_offset + 1);
       if (strchr ("(|", x_type) != NULL) yregex_exec_push (a_level, a_rpos + x_offset + 1, a_tpos, -1);
-      x_offset += gre.jump [a_rpos + x_offset];
+      x_offset += myREGEX.jump [a_rpos + x_offset];
    }
    /*---(launch without)-----------------*/
    if (strchr (G_ZERO, x_mod) != NULL) {
@@ -137,7 +137,7 @@ yregex_exec__anchor         (int a_level, int a_rpos, int a_tpos)
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    DEBUG_YREGEX  yLOG_complex ("header"    , "level %-3d, rpos %-3d, tpos %-3d", a_level, a_rpos, a_tpos);
    /*---(prepare)------------------------*/
-   x_ch        = gre.comp [a_rpos];
+   x_ch        = myREGEX.comp [a_rpos];
    DEBUG_YREGEX  yLOG_char    ("x_chr"     , x_ch);
    /*---(handle)-------------------------*/
    switch (x_ch) {
@@ -151,7 +151,7 @@ yregex_exec__anchor         (int a_level, int a_rpos, int a_tpos)
       rc = 1;
       break;
    case '$' :   /* end of line       */
-      if (a_tpos < gre.tlen){
+      if (a_tpos < myREGEX.tlen){
          DEBUG_YREGEX  yLOG_note    ("FAILED, not at EOL");
          DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
          return 0;
@@ -181,9 +181,9 @@ yregex_exec__literal    (int a_level, int a_rpos, int a_tpos)
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    DEBUG_YREGEX  yLOG_complex ("header"    , "level %-3d, rpos %-3d, tpos %-3d", a_level, a_rpos, a_tpos);
    /*---(prepare)------------------------*/
-   x_reg       = gre.comp [a_rpos];
+   x_reg       = myREGEX.comp [a_rpos];
    DEBUG_YREGEX  yLOG_char    ("x_reg"     , x_reg);
-   x_txt       = gre.text [a_tpos];
+   x_txt       = myREGEX.text [a_tpos];
    DEBUG_YREGEX  yLOG_char    ("x_txt"     , x_txt);
    /*---(test)---------------------------*/
    if (x_reg == x_txt) {
@@ -265,17 +265,17 @@ yREGEX_dump          (void)
       if (s_states [i].prev == i)  c = 0;
       if ((c %  5) == 0)   printf ("\n");
       if ((c % 45) == 0)   printf ("prev  refn  beg  lvl  --  rps  reg  ind  mod  jmp  --  tps  txt  --  rdy  retn  --  found\n\n");
-      if (gre.comp [s_states [i].rpos] >= 32)  sprintf (x_reg, "  %c", gre.comp [s_states [i].rpos]);
+      if (myREGEX.comp [s_states [i].rpos] >= 32)  sprintf (x_reg, "  %c", myREGEX.comp [s_states [i].rpos]);
       else                                     strlcpy (x_reg, "nul", 5);
-      if (gre.mods [s_states [i].rpos] >= 32)  sprintf (x_mod, "  %c", gre.mods [s_states [i].rpos]);
+      if (myREGEX.mods [s_states [i].rpos] >= 32)  sprintf (x_mod, "  %c", myREGEX.mods [s_states [i].rpos]);
       else                                     strlcpy (x_mod, "nul", 5);
-      if (gre.text [s_states [i].tpos] >= 32)  sprintf (x_txt, "  %c", gre.text [s_states [i].tpos]);
+      if (myREGEX.text [s_states [i].tpos] >= 32)  sprintf (x_txt, "  %c", myREGEX.text [s_states [i].tpos]);
       else                                     strlcpy (x_txt, "nul", 5);
       yregex_find_text (i, t);
       printf ("%4d  %4d  %3d  %3d  --  %3d  %s  %3d  %s  %3d  --  %3d  %s  --    %c   %3d  --  %s\n",
             s_states [i].prev, i, s_states [i].begin ,s_states [i].level,
             s_states [i].rpos, x_reg,
-            gre.indx [s_states [i].rpos], x_mod, gre.jump [s_states [i].rpos],
+            myREGEX.indx [s_states [i].rpos], x_mod, myREGEX.jump [s_states [i].rpos],
             s_states [i].tpos, x_txt,
             s_states [i].ready, s_states [i].rc,
             t);
@@ -297,17 +297,17 @@ yregex_exec_list     (void)
       if (s_states [i].ready != 'W') continue;
       if ((c %  5) == 0)   printf ("\n");
       if ((c % 45) == 0)   printf ("prev  refn  beg  lvl  --  rps  reg  ind  mod  jmp  --  tps  txt  --  rdy  retn  --  found\n\n");
-      if (gre.comp [s_states [i].rpos] >= 32)  sprintf (x_reg, "  %c", gre.comp [s_states [i].rpos]);
+      if (myREGEX.comp [s_states [i].rpos] >= 32)  sprintf (x_reg, "  %c", myREGEX.comp [s_states [i].rpos]);
       else                                     strlcpy (x_reg, "nul", 5);
-      if (gre.mods [s_states [i].rpos] >= 32)  sprintf (x_mod, "  %c", gre.mods [s_states [i].rpos]);
+      if (myREGEX.mods [s_states [i].rpos] >= 32)  sprintf (x_mod, "  %c", myREGEX.mods [s_states [i].rpos]);
       else                                     strlcpy (x_mod, "nul", 5);
-      if (gre.text [s_states [i].tpos] >= 32)  sprintf (x_txt, "  %c", gre.text [s_states [i].tpos]);
+      if (myREGEX.text [s_states [i].tpos] >= 32)  sprintf (x_txt, "  %c", myREGEX.text [s_states [i].tpos]);
       else                                     strlcpy (x_txt, "nul", 5);
       yregex_find_text (i, t);
       printf ("%4d  %4d  %3d  %3d  --  %3d  %s  %3d  %s  %3d  --  %3d  %s  --    %c   %3d  --  %s\n",
             s_states [i].prev, i, s_states [i].begin ,s_states [i].level,
             s_states [i].rpos, x_reg,
-            gre.indx [s_states [i].rpos], x_mod, gre.jump [s_states [i].rpos],
+            myREGEX.indx [s_states [i].rpos], x_mod, myREGEX.jump [s_states [i].rpos],
             s_states [i].tpos, x_txt,
             s_states [i].ready, s_states [i].rc,
             t);
@@ -319,7 +319,7 @@ yregex_exec_list     (void)
 int
 yregex_exec_index            (int a_index)
 {
-   return gre.indx [s_states [a_index].rpos];
+   return myREGEX.indx [s_states [a_index].rpos];
 }
 
 
@@ -368,20 +368,20 @@ yregex_exec_found_NEW   (int a_index)
       s_states [i].ready = '+';
       /*---(get  solution)---------------*/
       x_rpos = s_states [i].rpos;
-      x_reg  = gre.comp [x_rpos];
+      x_reg  = myREGEX.comp [x_rpos];
       /*---(text)---------------------------*/
       x_tpos = s_states [i].tpos;
-      x_ch   = gre.text [x_tpos];
-      x_indx = gre.indx [x_rpos] - 1;
+      x_ch   = myREGEX.text [x_tpos];
+      x_indx = myREGEX.indx [x_rpos] - 1;
       if (x_indx == 998)  x_indx = 10;
-      x_mod  = gre.mods [x_rpos];
+      x_mod  = myREGEX.mods [x_rpos];
       /*---(handle grouping)----------------*/
       switch (x_reg) {
       case ')' : case '|' :
-         gre.gends [x_indx] = x_tpos - 1;
+         myREGEX.g_end [x_indx] = x_tpos - 1;
          break;
       case '(' :
-         gre.gbegs [x_indx] = x_tpos;
+         myREGEX.g_beg [x_indx] = x_tpos;
          break;
       default  :
          x_text [x_tpos] = x_ch;
@@ -391,17 +391,17 @@ yregex_exec_found_NEW   (int a_index)
    }
    /*---(fill groups)--------------------*/
    for (i = 0; i <= 10; ++i) {
-      /*> printf ("%2d %c\n", i, gre.groups [i]);                                     <*/
-      if (gre.groups [i] == ' ') {
+      /*> printf ("%2d %c\n", i, myREGEX.g_mrk [i]);                                     <*/
+      if (myREGEX.g_mrk [i] == ' ') {
          yregex_find_addsub (a_index, i, -1    , ""    , ""    );
          continue;
       }
-      x_len = gre.gends [i] - gre.gbegs [i] + 1;
-      strlcpy (t, x_text + gre.gbegs [i], x_len + 1);
-      strlcpy (q, x_quan + gre.gbegs [i], x_len + 1);
-      /*> printf ("   %3d %3d %3d [%s] [%s]\n", gre.gbegs [i], gre.gends [i], x_len, t, q);   <*/
+      x_len = myREGEX.g_end [i] - myREGEX.g_beg [i] + 1;
+      strlcpy (t, x_text + myREGEX.g_beg [i], x_len + 1);
+      strlcpy (q, x_quan + myREGEX.g_beg [i], x_len + 1);
+      /*> printf ("   %3d %3d %3d [%s] [%s]\n", myREGEX.g_beg [i], myREGEX.g_end [i], x_len, t, q);   <*/
       if (i == 0)  yregex_find_add (a_index, s_states [a_index].begin, t, q);
-      yregex_find_addsub (a_index, i, gre.gbegs [i], t, q);
+      yregex_find_addsub (a_index, i, myREGEX.g_beg [i], t, q);
    }
    /*---(complete)-----------------------*/
    return 0;
@@ -437,12 +437,12 @@ yregex_exec_sub         (int a_index, int a_paren)
    if (rc >= S_SUB_AFTER)                return rc;
    /*---(text)---------------------------*/
    x_tpos = s_states [a_index].tpos;
-   x_ch   = gre.text [x_tpos];
+   x_ch   = myREGEX.text [x_tpos];
    /*---(quantifiers)--------------------*/
    x_rpos = s_states [a_index].rpos;
-   x_reg  = gre.comp [x_rpos];
-   x_indx = gre.indx [x_rpos];
-   x_mod  = gre.mods [x_rpos];
+   x_reg  = myREGEX.comp [x_rpos];
+   x_indx = myREGEX.indx [x_rpos];
+   x_mod  = myREGEX.mods [x_rpos];
    /*> printf ("   rpos %-2d, reg %c, indx %-2d, mod %c, rc %-2d\n", x_rpos, x_reg, x_indx, x_mod, rc);   <*/
    /*---(check for close)----------------*/
    if (strchr ("|)", x_reg) != NULL  && x_indx == a_paren) {
@@ -494,9 +494,9 @@ yregex_exec_tpos        (int a_index, int a_paren, int *a_tbeg, int *a_tend)
    x_tpos = s_states [a_index].tpos;
    /*---(quantifiers)--------------------*/
    x_rpos = s_states [a_index].rpos;
-   x_reg  = gre.comp [x_rpos];
-   x_indx = gre.indx [x_rpos];
-   x_mod  = gre.mods [x_rpos];
+   x_reg  = myREGEX.comp [x_rpos];
+   x_indx = myREGEX.indx [x_rpos];
+   x_mod  = myREGEX.mods [x_rpos];
    /*> printf ("   tpos %-2d, rpos %-2d, reg %c, indx %-2d, mod %c\n", x_tpos, x_rpos, x_reg, x_indx, x_mod);   <*/
    /*---(check for last marker)----------*/
    if (strchr ("|)", x_reg) != NULL && x_indx == a_paren) {
@@ -548,12 +548,12 @@ yregex_exec__found      (int a_index)
    s_states [a_index].ready = '+';
    /*---(text)---------------------------*/
    x_tpos = s_states [a_index].tpos;
-   x_ch   = gre.text [x_tpos];
+   x_ch   = myREGEX.text [x_tpos];
    /*---(quantifiers)--------------------*/
    x_rpos = s_states [a_index].rpos;
-   x_reg  = gre.comp [x_rpos];
-   x_indx = gre.indx [x_rpos];
-   x_mod  = gre.mods [x_rpos];
+   x_reg  = myREGEX.comp [x_rpos];
+   x_indx = myREGEX.indx [x_rpos];
+   x_mod  = myREGEX.mods [x_rpos];
    /*---(find start of rules)------------*/
    if (x_reg == ';' && x_indx > 0) {
       return 1;
@@ -587,8 +587,8 @@ yregex_exec_launcher    (short a_level, short a_rpos, short a_tpos, char a_rc)
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    DEBUG_YREGEX  yLOG_complex ("header"    , "level %-3d, rpos %-3d, tpos %-3d, rc %-3d", a_level, a_rpos, a_tpos, a_rc);
    /*---(prepare)------------------------*/
-   x_reg       = gre.comp [a_rpos];
-   x_mod       = gre.mods [a_rpos];
+   x_reg       = myREGEX.comp [a_rpos];
+   x_mod       = myREGEX.mods [a_rpos];
    DEBUG_YREGEX  yLOG_char    ("x_mod"     , x_mod);
    /*---(back launch some)---------------*/
    if (x_reg != ';' && strchr (G_ZERO, x_mod) != NULL) {
@@ -621,11 +621,10 @@ yregex_exec__branch     (int a_level, int a_rpos, int a_tpos)
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    DEBUG_YREGEX  yLOG_complex ("header"    , "level %-3d, rpos %-3d, tpos %-3d", a_level, a_rpos, a_tpos);
    /*---(prepare)------------------------*/
-   x_mod       = gre.mods [a_rpos];
+   x_mod       = myREGEX.mods [a_rpos];
    DEBUG_YREGEX  yLOG_char    ("x_mod"     , x_mod);
    /*---(locations)----------------------*/
-   x_beg       = yregex_comp__group_beg (a_rpos);
-   x_end       = yregex_comp__group_end (a_rpos);
+   yregex_group_endpoints (a_rpos, &x_beg, &x_end);
    DEBUG_YREGEX  yLOG_value   ("x_beg"     , x_beg);
    DEBUG_YREGEX  yLOG_value   ("x_end"     , x_end);
    /*---(always launch if successful)----*/
@@ -661,9 +660,9 @@ yregex_exec__single     (int a_index)
    x_level = s_states [a_index].level;
    x_rpos  = s_states [a_index].rpos;
    x_tpos  = s_states [a_index].tpos;
-   x_ch    = gre.comp [s_states [a_index].rpos];
-   x_indx  = gre.indx [s_states [a_index].rpos];
-   x_mod   = gre.mods [s_states [a_index].rpos];
+   x_ch    = myREGEX.comp [s_states [a_index].rpos];
+   x_indx  = myREGEX.indx [s_states [a_index].rpos];
+   x_mod   = myREGEX.mods [s_states [a_index].rpos];
    x_tmax  = s_states [a_index].tmax;
    DEBUG_YREGEX  yLOG_complex ("header"    , "level %-3d, rpos %-3d, tpos %-3d, tmax %-3d", x_level, x_rpos, x_tpos, x_tmax);
    /*---(check for null)-----------------*/
@@ -675,7 +674,7 @@ yregex_exec__single     (int a_index)
        *> rc = yregex_exec__found (a_index);                                                          <* 
        *> yregex_find_add (a_index, s_states [a_index].begin, g_found, g_quans);                      <* 
        *> for (i = 1; i <= 10; ++i) {                                                                 <* 
-       *>    if (gre.groups [i - 1] == ' ') {                                                         <* 
+       *>    if (myREGEX.g_mrk [i - 1] == ' ') {                                                         <* 
        *>       yregex_find_addsub (a_index, i - 1, -1    , ""    , ""    );                          <* 
        *>    }                                                                                        <* 
        *>    else {                                                                                   <* 
@@ -684,7 +683,7 @@ yregex_exec__single     (int a_index)
        *>       else                   yregex_find_addsub (a_index, i - 1, g_subb, g_subf, g_subq);   <* 
        *>    }                                                                                        <* 
        *> }                                                                                           <* 
-       *> if (gre.groups [10] == ' ') {                                                               <* 
+       *> if (myREGEX.g_mrk [10] == ' ') {                                                               <* 
        *>    yregex_find_addsub (a_index, i - 1, -1    , ""    , ""    );                             <* 
        *> } else {                                                                                    <* 
        *>    rc = yregex_exec_sub (a_index, GROUP_FOCUS);                                             <* 
@@ -771,8 +770,8 @@ yregex_exec_driver   (char a_type, cchar *a_source)
    }
    /*---(parse)--------------------------*/
    DEBUG_YREGEX  yLOG_info    ("a_source"  , a_source);
-   DEBUG_YREGEX  yLOG_value   ("gre.tlen"  , gre.tlen);
-   for (s_begin = 0; s_begin < gre.tlen; ++s_begin) {
+   DEBUG_YREGEX  yLOG_value   ("myREGEX.tlen"  , myREGEX.tlen);
+   for (s_begin = 0; s_begin < myREGEX.tlen; ++s_begin) {
       DEBUG_YREGEX  yLOG_value   ("BEGIN AT"  , s_begin);
       s_curr = s_nstate;
       yregex_exec_push (0, 0, s_begin, 0);

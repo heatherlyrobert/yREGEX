@@ -5,7 +5,7 @@
 
 
 /*---(main data structure)------------*/
-tREGEX      gre;
+tREGEX      myREGEX;
 
 
 
@@ -41,30 +41,30 @@ yREGEX_clear            (void)
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    /*---(comparison text)----------------*/
-   strlcpy (gre.text , ""       , LEN_TEXT);
-   gre.tlen = 0;
+   strlcpy (myREGEX.text , ""       , LEN_TEXT);
+   myREGEX.tlen = 0;
    /*---(scorer)-------------------------*/
-   gre.scorer = '?';
+   myREGEX.scorer = '?';
    /*---(original)-----------------------*/
-   strlcpy (gre.orig , ""       , LEN_REGEX);
-   gre.olen = 0;
+   strlcpy (myREGEX.orig , ""       , LEN_REGEX);
+   myREGEX.olen = 0;
    /*---(regex)--------------------------*/
-   strlcpy (gre.regex, ""       , LEN_REGEX);
-   gre.rlen = 0;
+   strlcpy (myREGEX.regex, ""       , LEN_REGEX);
+   myREGEX.rlen = 0;
    /*---(initialize compiled)------------*/
    for (i = 0; i < LEN_REGEX; ++i) {
-      gre.comp [i] =   0;
-      gre.indx [i] =   0;
-      gre.mods [i] =   0;
-      gre.jump [i] =   0;
+      myREGEX.comp [i] =   0;
+      myREGEX.indx [i] =   0;
+      myREGEX.mods [i] =   0;
+      myREGEX.jump [i] =   0;
    }
-   gre.clen = 0;
+   myREGEX.clen = 0;
    /*---(initialize grouping)------------*/
-   strlcpy (gre.groups, "               ", LEN_LABEL);
+   strlcpy (myREGEX.g_mrk, "               ", LEN_LABEL);
    /*---(initialize sets)----------------*/
    yregex_sets_prep ();
    yregex_rule_init ();
-   gre.ready = '-';
+   myREGEX.ready = '-';
    /*---(initialize sets)----------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
    return 0;

@@ -42,13 +42,6 @@
 
 
 /*---(group shared variables)---------*/
-#define     MAX_STACK  100
-static int         s_gstack    [MAX_STACK];
-static char        s_glevel          =    0;
-static int         s_ggroup          =    0;
-static int         s_ghidden         =   10;
-static int         s_gmulti          =  100;
-static char        s_gfocus          =  '-';  /* focus group used (y/-)      */
 
 
 
@@ -78,11 +71,11 @@ yregex_comp__prep    (cchar *a_regex)
    }
    /*---(check scorer)-------------------*/
    if (strchr (G_PREFIX, a_regex [0]) != NULL) {
-      gre.scorer = a_regex [0];
-      rc = snprintf (gre.orig , LEN_REGEX, "(%s)", a_regex + 1);
+      myREGEX.scorer = a_regex [0];
+      rc = snprintf (myREGEX.orig , LEN_REGEX, "(%s)", a_regex + 1);
    } else {
-      gre.scorer = '?';
-      rc = snprintf (gre.orig , LEN_REGEX, "(%s)", a_regex);
+      myREGEX.scorer = '?';
+      rc = snprintf (myREGEX.orig , LEN_REGEX, "(%s)", a_regex);
    }
    /*---(copy regex)---------------------*/
    DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
@@ -92,34 +85,35 @@ yregex_comp__prep    (cchar *a_regex)
       return rce;
    }
    /*---(translate extended chars)-------*/
-   DEBUG_YREGEX  yLOG_info    ("before"    , gre.orig);
-   gre.olen = strllen (gre.orig  , LEN_REGEX);
-   DEBUG_YREGEX  yLOG_value   ("gre.olen"  , gre.olen);
+   DEBUG_YREGEX  yLOG_info    ("before"    , myREGEX.orig);
+   myREGEX.olen = strllen (myREGEX.orig  , LEN_REGEX);
+   DEBUG_YREGEX  yLOG_value   ("myREGEX.olen"  , myREGEX.olen);
    yregex_comp__extended ();
-   DEBUG_YREGEX  yLOG_info    ("gre.orig"  , gre.orig);
-   gre.olen = strllen (gre.orig  , LEN_REGEX);
-   DEBUG_YREGEX  yLOG_value   ("gre.olen"  , gre.olen);
+   DEBUG_YREGEX  yLOG_info    ("myREGEX.orig"  , myREGEX.orig);
+   myREGEX.olen = strllen (myREGEX.orig  , LEN_REGEX);
+   DEBUG_YREGEX  yLOG_value   ("myREGEX.olen"  , myREGEX.olen);
    /*---(copy regex)---------------------*/
-   strlcpy  (gre.regex, gre.orig , LEN_REGEX);
-   gre.rlen = gre.olen;
+   strlcpy  (myREGEX.regex, myREGEX.orig , LEN_REGEX);
+   myREGEX.rlen = myREGEX.olen;
    /*---(initialize compiled)------------*/
    for (i = 0; i < LEN_REGEX; ++i) {
-      gre.comp [i] =   0;
-      gre.indx [i] =   0;
-      gre.mods [i] =   0;
-      gre.jump [i] =   0;
+      myREGEX.comp [i] =   0;
+      myREGEX.indx [i] =   0;
+      myREGEX.mods [i] =   0;
+      myREGEX.jump [i] =   0;
    }
-   gre.clen = 0;
+   myREGEX.clen = 0;
    /*---(initialize grouping)------------*/
-   s_glevel   =  0;
-   s_ggroup   =  0;
-   s_ghidden  = 10;
-   s_gfocus   = '-';
-   strlcpy (gre.groups, "               ", LEN_LABEL);
+   yregex_group_init ();
+   /*> myREGEX.g_lvl   =  0;                                                          <* 
+    *> myREGEX.g_cnt   =  0;                                                          <* 
+    *> myREGEX.g_hid  = 10;                                                           <* 
+    *> myREGEX.g_foc   = '-';                                                         <* 
+    *> strlcpy (myREGEX.g_mrk, "               ", LEN_LABEL);                         <*/
    /*---(initialize sets)----------------*/
    yregex_sets_prep ();
    yregex_rule_init ();
-   gre.ready = '-';
+   myREGEX.ready = '-';
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
    return 0;
@@ -139,13 +133,13 @@ yregex_comp_add         (cchar a_comp, cint a_indx)
    DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
    DEBUG_YREGEX  yLOG_schar   (a_comp);
    DEBUG_YREGEX  yLOG_sint    (a_indx);
-   DEBUG_YREGEX  yLOG_sint    (gre.clen);
-   gre.comp [gre.clen] = a_comp;
-   gre.indx [gre.clen] = a_indx;
-   gre.mods [gre.clen] = ' ';
-   gre.jump [gre.clen] = 0;
-   ++gre.clen;
-   DEBUG_YREGEX  yLOG_sint    (gre.clen);
+   DEBUG_YREGEX  yLOG_sint    (myREGEX.clen);
+   myREGEX.comp [myREGEX.clen] = a_comp;
+   myREGEX.indx [myREGEX.clen] = a_indx;
+   myREGEX.mods [myREGEX.clen] = ' ';
+   myREGEX.jump [myREGEX.clen] = 0;
+   ++myREGEX.clen;
+   DEBUG_YREGEX  yLOG_sint    (myREGEX.clen);
    DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
    return 0;
 }
@@ -156,8 +150,8 @@ yregex_comp_mod         (cchar a_mod)
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
    DEBUG_YREGEX  yLOG_schar   (a_mod);
-   gre.mods [gre.clen - 1] = a_mod;
-   DEBUG_YREGEX  yLOG_sint    (gre.clen - 1);
+   myREGEX.mods [myREGEX.clen - 1] = a_mod;
+   DEBUG_YREGEX  yLOG_sint    (myREGEX.clen - 1);
    DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
    return 0;
 }
@@ -167,45 +161,46 @@ yregex_comp__dup_one        (void)
 {
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
-   DEBUG_YREGEX  yLOG_schar   (gre.comp [gre.clen - 1]);
-   DEBUG_YREGEX  yLOG_sint    (gre.indx [gre.clen - 1]);
-   DEBUG_YREGEX  yLOG_sint    (gre.clen);
-   gre.comp [gre.clen] = gre.comp [gre.clen - 1];
-   gre.indx [gre.clen] = gre.indx [gre.clen - 1];
-   gre.mods [gre.clen] = gre.mods [gre.clen - 1];
-   gre.jump [gre.clen] = gre.jump [gre.clen - 1];
-   ++gre.clen;
-   DEBUG_YREGEX  yLOG_sint    (gre.clen);
+   DEBUG_YREGEX  yLOG_schar   (myREGEX.comp [myREGEX.clen - 1]);
+   DEBUG_YREGEX  yLOG_sint    (myREGEX.indx [myREGEX.clen - 1]);
+   DEBUG_YREGEX  yLOG_sint    (myREGEX.clen);
+   myREGEX.comp [myREGEX.clen] = myREGEX.comp [myREGEX.clen - 1];
+   myREGEX.indx [myREGEX.clen] = myREGEX.indx [myREGEX.clen - 1];
+   myREGEX.mods [myREGEX.clen] = myREGEX.mods [myREGEX.clen - 1];
+   myREGEX.jump [myREGEX.clen] = myREGEX.jump [myREGEX.clen - 1];
+   ++myREGEX.clen;
+   DEBUG_YREGEX  yLOG_sint    (myREGEX.clen);
    DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
    return 0;
 }
 
 char         /*-> tbd --------------------------------[ leaf   [fz.632.201.00]*/ /*-[00.0000.06#.!]-*/ /*-[--.---.---.--]-*/
-yregex_comp__dup_group      (void)
+yregex_comp__dup_group  (void)
 {
    int         x_beg       = 0;
    int         x_end       = 0;
    int         i           = 0;
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
-   DEBUG_YREGEX  yLOG_value   ("gre.clen"  , gre.clen);
-   x_end = gre.clen - 1;
-   x_beg = yregex_comp__group_beg (x_end);
+   DEBUG_YREGEX  yLOG_value   ("myREGEX.clen"  , myREGEX.clen);
+   x_end = myREGEX.clen - 1;
+   yregex_group_endpoints (x_end, &x_beg, NULL);
    DEBUG_YREGEX  yLOG_value   ("x_beg"     , x_beg);
    DEBUG_YREGEX  yLOG_value   ("x_end"     , x_end);
    for (i = x_beg; i <= x_end; ++i) {
       DEBUG_YREGEX  yLOG_value   ("pos"       , i);
-      yregex_comp_add (gre.comp [i], gre.indx [i]);
-      if (strchr ("(|)", gre.comp [i]) != NULL)  gre.indx [gre.clen - 1] = s_gmulti;
-      yregex_comp_mod (gre.mods [i]);
-      gre.jump [gre.clen - 1] = gre.jump [i];
+      yregex_comp_add (myREGEX.comp [i], myREGEX.indx [i]);
+      if (strchr ("(|)", myREGEX.comp [i]) != NULL)  myREGEX.indx [myREGEX.clen - 1] = myREGEX.g_mul;
+      yregex_comp_mod (myREGEX.mods [i]);
+      myREGEX.jump [myREGEX.clen - 1] = myREGEX.jump [i];
    }
-   ++s_gmulti;
-   DEBUG_YREGEX  yLOG_value   ("s_gmulti"  , s_gmulti);
-   DEBUG_YREGEX  yLOG_value   ("gre.clen"  , gre.clen);
+   ++myREGEX.g_mul;
+   DEBUG_YREGEX  yLOG_value   ("myREGEX.g_mul", myREGEX.g_mul);
+   DEBUG_YREGEX  yLOG_value   ("myREGEX.clen"  , myREGEX.clen);
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
    return 0;
 }
+
 
 
 /*====================------------------------------------====================*/
@@ -224,7 +219,7 @@ yregex_comp__literal        (int *a_rpos)
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
    /*---(check)--------------------------*/
-   x_ch  = gre.regex [*a_rpos];
+   x_ch  = myREGEX.regex [*a_rpos];
    DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
    rc = yregex_comp_add  (x_ch, 0);
    DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
@@ -260,8 +255,8 @@ yregex_comp__quan_simp  (int *a_rpos)
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
-   x_mod  = gre.regex [*a_rpos];
-   x_pch  = gre.regex [*a_rpos - 1];
+   x_mod  = myREGEX.regex [*a_rpos];
+   x_pch  = myREGEX.regex [*a_rpos - 1];
    DEBUG_YREGEX  yLOG_value   ("x_mod"     , x_mod);
    DEBUG_YREGEX  yLOG_value   ("x_pch"     , x_pch);
    /*---(handle shared)------------------*/
@@ -307,36 +302,36 @@ yregex_comp__quan_comp   (int *a_rpos)
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
-   x_ch   = gre.regex [*a_rpos];
+   x_ch   = myREGEX.regex [*a_rpos];
    DEBUG_YREGEX  yLOG_char    ("x_ch"      , x_ch);
    --rce;  if (x_ch != '{') {
       DEBUG_YREGEX  yLOG_note    ("does not start with a {");
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   x_pch  = gre.regex [*a_rpos - 1];
+   x_pch  = myREGEX.regex [*a_rpos - 1];
    /*---(check for lazy modifier)--------*/
-   x_mod  = gre.regex [++(*a_rpos)];
+   x_mod  = myREGEX.regex [++(*a_rpos)];
    DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
    DEBUG_YREGEX  yLOG_char    ("x_mod"     , x_mod);
    if (x_mod == '-') {
       DEBUG_YREGEX  yLOG_note    ("found lazy modifer");
       x_lazy = 'y';
-      x_mod   = gre.regex [++(*a_rpos)];
+      x_mod   = myREGEX.regex [++(*a_rpos)];
       DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
       DEBUG_YREGEX  yLOG_char    ("x_mod"     , x_mod);
    }
    /*---(walk modifier)------------------*/
    while (1) {
       DEBUG_YREGEX  yLOG_value   ("x_len"     , x_len);
-      if (*a_rpos >= gre.rlen) {
+      if (*a_rpos >= myREGEX.rlen) {
          DEBUG_YREGEX  yLOG_note    ("hit end of string");
          break;
       }
       if (x_mod == '}') {
          DEBUG_YREGEX  yLOG_note    ("found end of modifier");
          if (x_len > 0) {
-            sprintf (t, "%*.*s", x_len, x_len, gre.regex + *a_rpos - x_len);
+            sprintf (t, "%*.*s", x_len, x_len, myREGEX.regex + *a_rpos - x_len);
             DEBUG_YREGEX  yLOG_info    ("t"         , t);
             x_max = atoi (t);
          } else {
@@ -353,14 +348,14 @@ yregex_comp__quan_comp   (int *a_rpos)
             x_min = 0;
          } else {
             DEBUG_YREGEX  yLOG_note    ("found real min specifier");
-            sprintf (t, "%*.*s", x_len, x_len, gre.regex + *a_rpos - x_len);
+            sprintf (t, "%*.*s", x_len, x_len, myREGEX.regex + *a_rpos - x_len);
             DEBUG_YREGEX  yLOG_info    ("t"         , t);
             x_min = atoi (t);
          }
          x_len = -1; /* don't count comma */
          DEBUG_YREGEX  yLOG_value   ("x_min"     , x_min);
       }
-      x_mod   = gre.regex [++(*a_rpos)];
+      x_mod   = myREGEX.regex [++(*a_rpos)];
       ++x_len;
       DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
       DEBUG_YREGEX  yLOG_char    ("x_mod"     , x_mod);
@@ -417,182 +412,6 @@ yregex_comp__quan_comp   (int *a_rpos)
 
 
 /*====================------------------------------------====================*/
-/*===----                         group handling                       ----===*/
-/*====================------------------------------------====================*/
-static void      o___GROUPS__________________o (void) {;}
-
-int
-yregex_comp__group_beg  (int a_rpos)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   int         x_lvl       =    0;
-   int         i           =    0;
-   /*---(prepare)------------------------*/
-   x_lvl       = gre.indx [a_rpos];
-   for (i = a_rpos - 1; i >= 0; --i) {
-      if (gre.indx [i] != x_lvl)  continue;
-      if (gre.comp [i] != '('  )  continue;
-      return i;
-   }
-   return -1;
-}
-
-int
-yregex_comp__group_end  (int a_rpos)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   int         x_lvl       =    0;
-   int         i           =    0;
-   /*---(prepare)------------------------*/
-   if (gre.comp [a_rpos] == ')')  return a_rpos;
-   /*---(prepare)------------------------*/
-   x_lvl       = gre.indx [a_rpos];
-   for (i = a_rpos + 1; i < gre.clen; ++i) {
-      if (gre.indx [i] != x_lvl)  continue;
-      if (gre.comp [i] != ')'  )  continue;
-      return i;
-   }
-   return -1;
-}
-
-char         /*-> tbd --------------------------------[ leaf   [fc.741.141.50]*/ /*-[03.0000.01#.!]-*/ /*-[--.---.---.--]-*/
-yregex_comp__group_fix  (cint a_grp)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   int         i           =    0;
-   int         x_ch        =  ' ';
-   int         x_indx      =    0;
-   int         x_jump      =    0;
-   int         x_or        =    0;
-   /*---(header)-------------------------*/
-   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
-   DEBUG_YREGEX  yLOG_value   ("a_grp"     , a_grp);
-   DEBUG_YREGEX  yLOG_value   ("gre.clen"  , gre.clen);
-   /*---(track backwards)----------------*/
-   for (i = gre.clen - 1; i >= 0; --i) {
-      /*---(prepare)---------------------*/
-      x_ch   = gre.comp [i];
-      x_indx = gre.indx [i];
-      /*> DEBUG_YREGEX  yLOG_char    ("x_ch"      , x_ch);                            <*/
-      /*> DEBUG_YREGEX  yLOG_value   ("x_indx"    , x_indx);                          <*/
-      /*> DEBUG_YREGEX  yLOG_value   ("x_jump"    , x_jump);                          <*/
-      /*---(branch)----------------------*/
-      if (x_indx == a_grp && x_ch == '|') {
-         gre.jump [i] = x_jump;
-         x_jump =  0;
-         ++x_or;
-      }
-      /*---(start)--------------------*/
-      else if (x_indx == a_grp && x_ch == '(') {
-         gre.jump [i] = x_jump;
-         gre.mods [i] = '0' + x_or;
-         break;
-      }
-      /*---(otherwise)----------------*/
-      ++x_jump;
-      /*---(done)---------------------*/
-   }
-   /*---(complete)-----------------------*/
-   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
-   return 1;
-}
-
-char         /*-> tbd --------------------------------[ ------ [fe.B53.141.32]*/ /*-[02.0000.01#.!]-*/ /*-[--.---.---.--]-*/
-yregex_comp__group      (int *a_rpos)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   char        rc          =   -1;
-   uchar       x_ch        =  ' ';
-   uchar       x_nch       =  ' ';
-   int         x_grp       =    0;
-   /*---(header)-------------------------*/
-   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
-   x_ch   = gre.regex [*a_rpos];
-   x_nch  = gre.regex [*a_rpos + 1];
-   DEBUG_YREGEX  yLOG_complex ("position"  , "pos %2d, ch  %c, nch %c", *a_rpos, x_ch, x_nch);
-   /*---(defense)------------------------*/
-   --rce;  if (*a_rpos == 0 && strchr ("#;", x_nch) != NULL){
-      DEBUG_YREGEX  yLOG_note    ("prefix hash (#) or semi (;), not really group");
-      x_nch = '?';
-   }
-   /*---(check)--------------------------*/
-   switch (x_ch) {
-   case '(' :
-      ++s_glevel;
-      switch (x_nch) {
-      case '#' :
-         x_grp = ++s_ggroup;
-         if (s_ggroup > 10) {
-            DEBUG_YREGEX  yLOG_note    ("group number too high, had to hide");
-            x_grp = ++s_ghidden;
-         } else {
-            DEBUG_YREGEX  yLOG_note    ("open normal group");
-            gre.groups [x_grp - 1] = 'y';
-         }
-         ++*a_rpos;
-         break;
-      case '>' :
-         DEBUG_YREGEX  yLOG_note    ("open primary group");
-         s_gfocus = 'y';
-         x_grp = GROUP_FOCUS;
-         gre.groups [10] = 'F';
-         ++*a_rpos;
-         break;
-      case ';' :
-         DEBUG_YREGEX  yLOG_note    ("open rule group");
-         x_grp = ++s_ghidden;
-         ++*a_rpos;
-         break;
-      default  :
-         if (*a_rpos == 0) {
-            DEBUG_YREGEX  yLOG_note    ("open full regex container");
-            x_grp = ++s_ggroup;
-            gre.groups [x_grp - 1] = '.';
-         } else {
-            DEBUG_YREGEX  yLOG_note    ("open hidden group");
-            x_grp = ++s_ghidden;
-         }
-         break;
-      }
-      rc = yregex_comp_add  ('(', x_grp);
-      s_gstack [s_glevel] = x_grp;
-      break;
-   case '<' :
-      DEBUG_YREGEX  yLOG_note    ("close primary group");
-      x_grp = s_gstack [s_glevel];
-      if (x_grp != GROUP_FOCUS) {
-         DEBUG_YREGEX  yLOG_note    ("primary focus parens do not match");
-         DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
-         return -1;
-      }
-      rc = yregex_comp_add  (')', x_grp);
-      rc = yregex_comp__group_fix  (x_grp);
-      --s_glevel;
-      ++*a_rpos;
-      break;
-   case ')' :
-      DEBUG_YREGEX  yLOG_note    ("close normal/hidden group");
-      x_grp = s_gstack [s_glevel];
-      rc = yregex_comp_add  (x_ch, x_grp);
-      rc = yregex_comp__group_fix  (x_grp);
-      --s_glevel;
-      break;
-   case '|' :
-      DEBUG_YREGEX  yLOG_note    ("divide branches/matches");
-      x_grp = s_gstack [s_glevel];
-      rc = yregex_comp_add  (x_ch, x_grp);
-      break;
-   }
-   DEBUG_YREGEX  yLOG_complex ("current"   , "lvl %2d, nrm %2d, hid %2d, grp %2d", s_glevel, s_ggroup, s_ghidden, x_grp);
-   /*---(complete)-----------------------*/
-   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
-   return 1;
-}
-
-
-
-/*====================------------------------------------====================*/
 /*===----                       extended characters                    ----===*/
 /*====================------------------------------------====================*/
 static void      o___EXTENDED________________o (void) {;}
@@ -606,8 +425,8 @@ yregex_comp__extended   (void)
    char        t           [LEN_REGEX] = "";
    int         x_len       =    0;
    /*---(translate)----------------------*/
-   for (i = 0; i <= gre.olen; ++i) {
-      x_ch = gre.orig [i];
+   for (i = 0; i <= myREGEX.olen; ++i) {
+      x_ch = myREGEX.orig [i];
       switch (x_ch) {
       case G_CHAR_STORAGE : case G_CHAR_BIGDOT  :
       case G_CHAR_HALT    : case G_CHAR_MASK    :  /* just a spacer, not used  */
@@ -679,8 +498,8 @@ yregex_comp__extended   (void)
       }
    }
    /*---(copy over)----------------------*/
-   strlcpy (gre.orig, t, LEN_REGEX);
-   gre.olen = strllen (gre.orig, LEN_REGEX);
+   strlcpy (myREGEX.orig, t, LEN_REGEX);
+   myREGEX.olen = strllen (myREGEX.orig, LEN_REGEX);
    /*---(complete)-----------------------*/
    return 0;
 }
@@ -712,8 +531,8 @@ yREGEX_comp          (cchar *a_regex)
       return rc;
    }
    /*---(translate)----------------------*/
-   DEBUG_YREGEX  yLOG_info    ("tranlated" , gre.orig);
-   DEBUG_YREGEX  yLOG_value   ("gre.olen"  , gre.olen);
+   DEBUG_YREGEX  yLOG_info    ("tranlated" , myREGEX.orig);
+   DEBUG_YREGEX  yLOG_value   ("myREGEX.olen"  , myREGEX.olen);
    /*---(pattern run)--------------------*/
    rc = yregex_pats_comp ();
    DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
@@ -722,15 +541,15 @@ yREGEX_comp          (cchar *a_regex)
       return rc;
    }
    /*---(parse)--------------------------*/
-   DEBUG_YREGEX  yLOG_info    ("gre.regex" , gre.regex);
-   DEBUG_YREGEX  yLOG_value   ("gre.rlen"  , gre.rlen);
-   for (i = 0; i < gre.rlen; ++i) {
+   DEBUG_YREGEX  yLOG_info    ("myREGEX.regex" , myREGEX.regex);
+   DEBUG_YREGEX  yLOG_value   ("myREGEX.rlen"  , myREGEX.rlen);
+   for (i = 0; i < myREGEX.rlen; ++i) {
       /*---(check last run)--------------*/
       if (rc < 0) break;
       DEBUG_YREGEX  yLOG_value   ("LOOP"      , i);
       /*---(prepare)---------------------*/
-      x_ch   = gre.regex [i];
-      x_nch  = gre.regex [i + 1];
+      x_ch   = myREGEX.regex [i];
+      x_nch  = myREGEX.regex [i + 1];
       /*---(backslashed metas)-----------*/
       if (x_ch == G_KEY_BSLASH) {
          DEBUG_YREGEX  yLOG_note    ("handle escaped character");
@@ -746,14 +565,14 @@ yREGEX_comp          (cchar *a_regex)
       /*---(rules handling)--------------*/
       if (x_ch == '(' && x_nch == ';' && i > 0) {
          DEBUG_YREGEX  yLOG_note    ("handle special rules");
-         rc = yregex_comp__group (&i);
+         rc = yregex_group_comp (&i);
          rc = yregex_rule_comp  (&i);
          continue;
       }
       /*---(group handling)--------------*/
       if (strchr (TYPE_GROUP, x_ch) != NULL || (x_ch == '<' && x_nch == ')')) {
          DEBUG_YREGEX  yLOG_note    ("handle grouping");
-         rc = yregex_comp__group (&i);
+         rc = yregex_group_comp (&i);
          if (rc >= 0)  continue;
       }
       /*---(anchors)---------------------*/
@@ -785,8 +604,8 @@ yREGEX_comp          (cchar *a_regex)
       rc = yregex_comp__literal (&i);
    }
    /*---(check for failure)--------------*/
-   gre.ready = 'n';
-   --rce;  if (s_glevel != 0) {
+   myREGEX.ready = 'n';
+   --rce;  if (myREGEX.g_lvl != 0) {
       DEBUG_YREGEX  yLOG_note    ("parenthesis do not balance");
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
@@ -796,7 +615,7 @@ yREGEX_comp          (cchar *a_regex)
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   gre.ready = 'y';
+   myREGEX.ready = 'y';
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
    return 0;
@@ -818,11 +637,11 @@ yregex_comp__unit_map   (char a_type, int a_value)
    char       *x_range     = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ***********************************************************************";
    char       *x_range2    = " 123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ***********************************************************************";
    char       *x_range3    = " .123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ**********************************************************************";
+   char       *x_range4    = " 0123456789.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ**********************************************************************";
    switch (a_type) {
    case '(' :
-      if      (a_value == GROUP_FOCUS)   x_ch = '<';
-      else if (a_value >= 65 )           x_ch = '*';
-      else                               x_ch = x_range3 [a_value];
+      if      (a_value >= 65 )           x_ch = '*';
+      else                               x_ch = x_range4 [a_value];
       break;
    case 'i' :
       if      (a_value >= 65 )           x_ch = '*';
@@ -851,9 +670,9 @@ yregex_comp__unit       (char *a_question, int a_num)
    strlcpy (unit_answer, "COMP__unit, unknown request", 100);
    /*---(core data)----------------------*/
    if        (strncmp (a_question, "regex"     , 20)  == 0) {
-      if (gre.rlen < 100)  sprintf  (t, "%2d", gre.rlen);
+      if (myREGEX.rlen < 100)  sprintf  (t, "%2d", myREGEX.rlen);
       else                 sprintf  (t, "%2s", "++");
-      snprintf (unit_answer, LEN_TEXT, "COMP regex       : %2s [%-45.45s]", t, gre.regex);
+      snprintf (unit_answer, LEN_TEXT, "COMP regex       : %2s [%-45.45s]", t, myREGEX.regex);
    }
    /*---(mapping)------------------------*/
    /*> else if (strncmp (a_question, "map"       , 20)  == 0) {                                                                    <* 
@@ -869,22 +688,22 @@ yregex_comp__unit       (char *a_question, int a_num)
     *> }                                                                                                                           <*/
    /*---(compiled)-----------------------*/
    else if   (strncmp (a_question, "base"      , 20)  == 0) {
-      snprintf (unit_answer, LEN_TEXT, "COMP base        : %2d [%-45.45s]", gre.clen, gre.comp);
+      snprintf (unit_answer, LEN_TEXT, "COMP base        : %2d [%-45.45s]", myREGEX.clen, myREGEX.comp);
    } else if (strncmp (a_question, "indx"      , 20)  == 0) {
       for (i = 0; i < 45; ++i) {
-         if (strchr ("(|&)", gre.comp [i]) != NULL)  t [i] = yregex_comp__unit_map ('(', gre.indx [i]);
-         else                                        t [i] = yregex_comp__unit_map ('i', gre.indx [i]);
+         if (strchr ("(|&)", myREGEX.comp [i]) != NULL)  t [i] = yregex_comp__unit_map ('(', myREGEX.indx [i]);
+         else                                        t [i] = yregex_comp__unit_map ('i', myREGEX.indx [i]);
       }
       t [45] = 0;
-      snprintf (unit_answer, LEN_TEXT, "COMP indx        : %2d [%-45.45s]", gre.clen, t);
+      snprintf (unit_answer, LEN_TEXT, "COMP indx        : %2d [%-45.45s]", myREGEX.clen, t);
    } else if (strncmp (a_question, "mods"      , 20)  == 0) {
-      snprintf (unit_answer, LEN_TEXT, "COMP mods        : %2d [%-45.45s]", gre.clen, gre.mods);
+      snprintf (unit_answer, LEN_TEXT, "COMP mods        : %2d [%-45.45s]", myREGEX.clen, myREGEX.mods);
    } else if (strncmp (a_question, "jump"      , 20)  == 0) {
-      for (i = 0; i < 45; ++i)   t [i] = yregex_comp__unit_map ('j', gre.jump [i]);
+      for (i = 0; i < 45; ++i)   t [i] = yregex_comp__unit_map ('j', myREGEX.jump [i]);
       t [45] = 0;
-      snprintf (unit_answer, LEN_TEXT, "COMP jump        : %2d [%-45.45s]", gre.clen, t);
+      snprintf (unit_answer, LEN_TEXT, "COMP jump        : %2d [%-45.45s]", myREGEX.clen, t);
    } else if (strncmp (a_question, "groups"    , 20)  == 0) {
-      snprintf (unit_answer, LEN_TEXT, "COMP groups      : [%-11.11s]", gre.groups);
+      snprintf (unit_answer, LEN_TEXT, "COMP groups      : [%-11.11s]", myREGEX.g_mrk);
    }
    /*---(complete)-----------------------*/
    return unit_answer;

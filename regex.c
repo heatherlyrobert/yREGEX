@@ -68,8 +68,8 @@ main          (int a_argc, char *a_argv[])
    case 'y'  : case 'f'  :
       rc = yREGEX_comp (s_regex);
       if (s_comp == 'y') {
-         printf ("base   [%-.45s]\n", gre.comp);
-         printf ("mods   [%-.45s]\n", gre.mods);
+         printf ("base   [%-.45s]\n", myREGEX.comp);
+         printf ("mods   [%-.45s]\n", myREGEX.mods);
       }
       break;
    case 'c'  :

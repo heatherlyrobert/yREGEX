@@ -169,18 +169,18 @@ yregex_pats__abbr_ref   (int *a_rpos)
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
-   x_ch   = gre.orig [*a_rpos];
+   x_ch   = myREGEX.orig [*a_rpos];
    DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
    --rce;  if (x_ch != '&') {
       yregex_err_add (__FUNCTION__, a_rpos, "#PAT", 0, 0, "does not lead with a dollar sign");
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   if (*a_rpos > 0)   x_pch  = gre.orig [*a_rpos - 1];
-   if (*a_rpos > 1)   x_ppch = gre.orig [*a_rpos - 2];
+   if (*a_rpos > 0)   x_pch  = myREGEX.orig [*a_rpos - 1];
+   if (*a_rpos > 1)   x_ppch = myREGEX.orig [*a_rpos - 2];
    /*---(find name)----------------------*/
    ++(*a_rpos);
-   x_abbr   = gre.orig [*a_rpos];
+   x_abbr   = myREGEX.orig [*a_rpos];
    /*---(abbreviated name)---------------*/
    DEBUG_YREGEX  yLOG_note    ("using abbreviated name");
    x_pat = yregex_pats__by_abbr (x_abbr);
@@ -188,21 +188,21 @@ yregex_pats__abbr_ref   (int *a_rpos)
    if (x_pat < 0) {
       yregex_err_add (__FUNCTION__, a_rpos, "#PAT", 0, 0, "not a valid pattern abbreviation");
       ++(*a_rpos);
-      strlcat (gre.regex, "#PAT", LEN_REGEX);
+      strlcat (myREGEX.regex, "#PAT", LEN_REGEX);
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    /*---(full name)----------------------*/
    ++(*a_rpos);
-   x_ch   = gre.orig [*a_rpos];
+   x_ch   = myREGEX.orig [*a_rpos];
    if        (x_pch  == '(' && x_ch  == ')') {
-      strlcat (gre.regex, s_pats [x_pat].pat, LEN_REGEX);
+      strlcat (myREGEX.regex, s_pats [x_pat].pat, LEN_REGEX);
    } else if (x_ppch == '(' && x_pch == '#' && x_ch == ')') {
-      strlcat (gre.regex, s_pats [x_pat].pat, LEN_REGEX);
+      strlcat (myREGEX.regex, s_pats [x_pat].pat, LEN_REGEX);
    } else {
-      strlcat (gre.regex, "("               , LEN_REGEX);
-      strlcat (gre.regex, s_pats [x_pat].pat, LEN_REGEX);
-      strlcat (gre.regex, ")"               , LEN_REGEX);
+      strlcat (myREGEX.regex, "("               , LEN_REGEX);
+      strlcat (myREGEX.regex, s_pats [x_pat].pat, LEN_REGEX);
+      strlcat (myREGEX.regex, ")"               , LEN_REGEX);
    }
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
@@ -224,7 +224,7 @@ yregex_pats__named_ref  (int *a_rpos)
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
-   x_ch   = gre.orig [*a_rpos];
+   x_ch   = myREGEX.orig [*a_rpos];
    DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
    --rce;  if (x_ch != '&') {
       yregex_err_add (__FUNCTION__, a_rpos, "#PAT", 0, 0, "does not lead with an ampersand");
@@ -235,7 +235,7 @@ yregex_pats__named_ref  (int *a_rpos)
    /*---(find name)----------------------*/
    ++(*a_rpos);
    --rce;  for (i = 0; i < LEN_NAME; ++i) {
-      x_ch   = gre.orig [*a_rpos + i];
+      x_ch   = myREGEX.orig [*a_rpos + i];
       DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
       if (x_ch == ')')  break;
       x_name [i]     = x_ch;
@@ -262,12 +262,12 @@ yregex_pats__named_ref  (int *a_rpos)
       if (x_pat < 0) {
          yregex_err_add (__FUNCTION__, a_rpos, "#PAT", 0, 0, "not a valid pattern abbreviation");
          ++(*a_rpos);
-         strlcat (gre.regex, "#PAT", LEN_REGEX);
+         strlcat (myREGEX.regex, "#PAT", LEN_REGEX);
          DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
          return rce;
       }
       ++(*a_rpos);
-      strlcat (gre.regex, s_pats [x_pat].pat, LEN_REGEX);
+      strlcat (myREGEX.regex, s_pats [x_pat].pat, LEN_REGEX);
       DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
       return 1;
    }
@@ -279,13 +279,13 @@ yregex_pats__named_ref  (int *a_rpos)
    if (x_pat < 0) {
       yregex_err_add (__FUNCTION__, a_rpos, "#PAT", 0, 0, "not a valid pattern name");
       *a_rpos += x_len;
-      strlcat (gre.regex, "#PAT", LEN_REGEX);
+      strlcat (myREGEX.regex, "#PAT", LEN_REGEX);
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    /*---(full name)----------------------*/
    *a_rpos += x_len;
-   strlcat (gre.regex, s_pats [x_pat].pat, LEN_REGEX);
+   strlcat (myREGEX.regex, s_pats [x_pat].pat, LEN_REGEX);
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
    return 1;
@@ -369,13 +369,13 @@ yregex_pats__save_run   (void)
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    /*---(parse)--------------------------*/
-   DEBUG_YREGEX  yLOG_info    ("gre.orig"  , gre.orig);
-   DEBUG_YREGEX  yLOG_value   ("gre.olen"  , gre.olen);
-   for (i = 0; i < gre.olen; ++i) {
+   DEBUG_YREGEX  yLOG_info    ("myREGEX.orig"  , myREGEX.orig);
+   DEBUG_YREGEX  yLOG_value   ("myREGEX.olen"  , myREGEX.olen);
+   for (i = 0; i < myREGEX.olen; ++i) {
       DEBUG_YREGEX  yLOG_value   ("LOOP"      , i);
       /*---(prepare)---------------------*/
-      x_pch  = gre.orig [i - 1];
-      x_ch   = gre.orig [i];
+      x_pch  = myREGEX.orig [i - 1];
+      x_ch   = myREGEX.orig [i];
       /*---(find beg)--------------------*/
       if (x_pch == '(' && x_ch == '#') {
          DEBUG_YREGEX  yLOG_note    ("found capture group, save pattern");
@@ -384,8 +384,8 @@ yregex_pats__save_run   (void)
          x_end  = -1;
          x_nest = 0;
          /*---(find end)-----------------*/
-         for (j = x_beg; j < gre.olen; ++j) {
-            x_ch  = gre.orig [j];
+         for (j = x_beg; j < myREGEX.olen; ++j) {
+            x_ch  = myREGEX.orig [j];
             switch (x_ch) {
             case '(' :
                ++x_nest;
@@ -401,7 +401,7 @@ yregex_pats__save_run   (void)
          if (x_end >= 0) {
             x_len = x_end - x_beg + 1;
             DEBUG_YREGEX  yLOG_value   ("x_len"     , x_len);
-            sprintf (t, "%-*.*s", x_len, x_len, gre.orig + x_beg);
+            sprintf (t, "%-*.*s", x_len, x_len, myREGEX.orig + x_beg);
             DEBUG_YREGEX  yLOG_info    ("t"         , t);
             yregex_pats__save (t);
          }
@@ -437,58 +437,58 @@ yregex_pats_comp        (void)
    yregex_pats_init  ();
    yregex_pats__save_run ();
    /*---(parse)--------------------------*/
-   DEBUG_YREGEX  yLOG_info    ("gre.orig"  , gre.orig);
-   DEBUG_YREGEX  yLOG_value   ("gre.olen"  , gre.olen);
-   strlcpy (gre.regex , "", LEN_REGEX);
-   for (i = 0; i < gre.olen; ++i) {
+   DEBUG_YREGEX  yLOG_info    ("myREGEX.orig"  , myREGEX.orig);
+   DEBUG_YREGEX  yLOG_value   ("myREGEX.olen"  , myREGEX.olen);
+   strlcpy (myREGEX.regex , "", LEN_REGEX);
+   for (i = 0; i < myREGEX.olen; ++i) {
       DEBUG_YREGEX  yLOG_value   ("LOOP"      , i);
       /*---(prepare)---------------------*/
       x_ppch = x_pch = x_ch = 0;
-      if (i > 1) x_ppch = gre.orig [i - 2];
-      if (i > 0) x_pch  = gre.orig [i - 1];
-      x_ch   = gre.orig [i];
+      if (i > 1) x_ppch = myREGEX.orig [i - 2];
+      if (i > 0) x_pch  = myREGEX.orig [i - 1];
+      x_ch   = myREGEX.orig [i];
       /*---(named pattern)---------------*/
       if (( x_ppch == '(' && x_pch == '#' && x_ch == '&')  ||
             (x_pch == '(' && x_ch  == '&')) {
          DEBUG_YREGEX  yLOG_note    ("found named potenial pattern");
          x_len = i - x_prev;
          DEBUG_YREGEX  yLOG_complex ("stats"     , "beg %3d, end %3d, len %3d", x_prev, i - 1, x_len);
-         sprintf (t, "%-*.*s", x_len, x_len, gre.orig + x_prev);
+         sprintf (t, "%-*.*s", x_len, x_len, myREGEX.orig + x_prev);
          DEBUG_YREGEX  yLOG_info    ("t"         , t);
-         strlcat (gre.regex, t, LEN_REGEX);
-         DEBUG_YREGEX  yLOG_info    ("gre.regex"   , gre.regex);
+         strlcat (myREGEX.regex, t, LEN_REGEX);
+         DEBUG_YREGEX  yLOG_info    ("myREGEX.regex"   , myREGEX.regex);
          rc     = yregex_pats__named_ref (&i);
          x_prev = i;
          DEBUG_YREGEX  yLOG_value   ("x_prev"    , x_prev);
-         DEBUG_YREGEX  yLOG_info    ("gre.regex"   , gre.regex);
-         gre.rlen = strllen (gre.regex, LEN_REGEX);
+         DEBUG_YREGEX  yLOG_info    ("myREGEX.regex"   , myREGEX.regex);
+         myREGEX.rlen = strllen (myREGEX.regex, LEN_REGEX);
       }
       /*---(named pattern)---------------*/
       else if (x_pch != '\\' && x_ch == '&') {
          DEBUG_YREGEX  yLOG_note    ("found abbr pattern");
          x_len = i - x_prev;
          DEBUG_YREGEX  yLOG_complex ("stats"     , "beg %3d, end %3d, len %3d", x_prev, i - 1, x_len);
-         sprintf (t, "%-*.*s", x_len, x_len, gre.orig + x_prev);
+         sprintf (t, "%-*.*s", x_len, x_len, myREGEX.orig + x_prev);
          DEBUG_YREGEX  yLOG_info    ("t"         , t);
-         strlcat (gre.regex, t, LEN_REGEX);
-         DEBUG_YREGEX  yLOG_info    ("gre.regex"   , gre.regex);
+         strlcat (myREGEX.regex, t, LEN_REGEX);
+         DEBUG_YREGEX  yLOG_info    ("myREGEX.regex"   , myREGEX.regex);
          rc     = yregex_pats__abbr_ref (&i);
          x_prev = i;
          DEBUG_YREGEX  yLOG_value   ("x_prev"    , x_prev);
-         DEBUG_YREGEX  yLOG_info    ("gre.regex"   , gre.regex);
-         gre.rlen = strllen (gre.regex, LEN_REGEX);
+         DEBUG_YREGEX  yLOG_info    ("myREGEX.regex"   , myREGEX.regex);
+         myREGEX.rlen = strllen (myREGEX.regex, LEN_REGEX);
       }
       /*---(done)------------------------*/
    }
    /*---(copy last)----------------------*/
    DEBUG_YREGEX  yLOG_complex ("stats"     , "beg %3d", x_prev);
-   sprintf (t, "%s", gre.orig + x_prev);
+   sprintf (t, "%s", myREGEX.orig + x_prev);
    DEBUG_YREGEX  yLOG_info    ("t"         , t);
-   strlcat (gre.regex, t, LEN_REGEX);
-   gre.rlen = strllen (gre.regex, LEN_REGEX);
+   strlcat (myREGEX.regex, t, LEN_REGEX);
+   myREGEX.rlen = strllen (myREGEX.regex, LEN_REGEX);
    /*---(show)---------------------------*/
-   DEBUG_YREGEX  yLOG_info    ("gre.regex"   , gre.regex);
-   DEBUG_YREGEX  yLOG_value   ("gre.rlen"    , gre.rlen);
+   DEBUG_YREGEX  yLOG_info    ("myREGEX.regex"   , myREGEX.regex);
+   DEBUG_YREGEX  yLOG_value   ("myREGEX.rlen"    , myREGEX.rlen);
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
    return 0;

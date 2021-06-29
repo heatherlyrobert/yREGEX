@@ -775,34 +775,34 @@ yregex_sets__standard   (int *a_rpos)
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   DEBUG_YREGEX  yLOG_value   ("gre.rlen"    , gre.rlen);
-   --rce;  if (*a_rpos  >= gre.rlen - 7) {
+   DEBUG_YREGEX  yLOG_value   ("myREGEX.rlen"    , myREGEX.rlen);
+   --rce;  if (*a_rpos  >= myREGEX.rlen - 7) {
       DEBUG_YREGEX  yLOG_note    ("not enough room for full name");
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   --rce;  if (gre.regex [*a_rpos    ] != '[') {
+   --rce;  if (myREGEX.regex [*a_rpos    ] != '[') {
       DEBUG_YREGEX  yLOG_note    ("does not have [ to left");
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   --rce;  if (gre.regex [*a_rpos + 1] != ':') {
+   --rce;  if (myREGEX.regex [*a_rpos + 1] != ':') {
       DEBUG_YREGEX  yLOG_note    ("does not have : at current position");
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   --rce;  if (gre.regex [*a_rpos + 7] != ':') {
+   --rce;  if (myREGEX.regex [*a_rpos + 7] != ':') {
       DEBUG_YREGEX  yLOG_note    ("does not have : near end");
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   --rce;  if (gre.regex [*a_rpos + 8] != ']') {
+   --rce;  if (myREGEX.regex [*a_rpos + 8] != ']') {
       DEBUG_YREGEX  yLOG_note    ("does not have ] at end");
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    /*---(check for set)------------------*/
-   sprintf (t, "%-5.5s", gre.regex + *a_rpos + 2);
+   sprintf (t, "%-5.5s", myREGEX.regex + *a_rpos + 2);
    DEBUG_YREGEX  yLOG_info    ("name"      , t);
    x_set = yregex_sets__by_name (t, NULL);
    DEBUG_YREGEX  yLOG_value   ("x_set"     , x_set);
@@ -843,13 +843,13 @@ yregex_sets_backslash   (int *a_rpos)
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   DEBUG_YREGEX  yLOG_value   ("gre.rlen"  , gre.rlen);
-   --rce;  if (*a_rpos  >= gre.rlen) {
+   DEBUG_YREGEX  yLOG_value   ("myREGEX.rlen"  , myREGEX.rlen);
+   --rce;  if (*a_rpos  >= myREGEX.rlen) {
       DEBUG_YREGEX  yLOG_note    ("current position already past end");
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   x_ch  = gre.regex [*a_rpos];
+   x_ch  = myREGEX.regex [*a_rpos];
    DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
    --rce;  if (x_ch != '\\') {
       DEBUG_YREGEX  yLOG_note    ("does not start with a backslash");
@@ -859,7 +859,7 @@ yregex_sets_backslash   (int *a_rpos)
    /*---(advance)------------------------*/
    ++(*a_rpos);
    DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
-   x_ch   = gre.regex [*a_rpos];
+   x_ch   = myREGEX.regex [*a_rpos];
    DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
    /*---(check for set)------------------*/
    DEBUG_YREGEX  yLOG_info    ("allowed"   , s_allowed);
@@ -908,7 +908,7 @@ yregex_sets_dot         (int *a_rpos)
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
    /*---(defense)------------------------*/
-   x_ch   = gre.regex [*a_rpos];
+   x_ch   = myREGEX.regex [*a_rpos];
    DEBUG_YREGEX  yLOG_char    ("x_ch"      , x_ch);
    --rce;  if (x_ch != '.') {
       DEBUG_YREGEX  yLOG_note    ("not positioned on a dot");
@@ -935,7 +935,7 @@ yregex_sets_comp        (int *a_rpos)
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
-   x_ch   = gre.regex [*a_rpos];
+   x_ch   = myREGEX.regex [*a_rpos];
    DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
    --rce;  if (x_ch != '[') {
       DEBUG_YREGEX  yLOG_note    ("does not start with a [");
@@ -944,7 +944,7 @@ yregex_sets_comp        (int *a_rpos)
    }
    /*---(advance)------------------------*/
    DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
-   x_ch   = gre.regex [*a_rpos + 1];
+   x_ch   = myREGEX.regex [*a_rpos + 1];
    DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
    /*---(check standard sets)------------*/
    if (x_ch == ':') {
@@ -958,7 +958,7 @@ yregex_sets_comp        (int *a_rpos)
       }
    }
    /*---(map the set)--------------------*/
-   rc = yregex_sets__mapper  (gre.regex, a_rpos);
+   rc = yregex_sets__mapper  (myREGEX.regex, a_rpos);
    --rce;  if (rc < 0) {
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
@@ -994,7 +994,7 @@ yregex_sets_comp        (int *a_rpos)
 static void      o___EXECUTE_________________o (void) {;}
 
 char
-yregex_sets_break       (int a_level, int a_rpos, int a_tpos)
+yregex_sets_break       (int a_lvl, int a_rpos, int a_tpos)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rc          =    0;
@@ -1008,16 +1008,16 @@ yregex_sets_break       (int a_level, int a_rpos, int a_tpos)
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    /*---(prepare)------------------------*/
-   x_reg       = gre.comp [a_rpos];
+   x_reg       = myREGEX.comp [a_rpos];
    DEBUG_YREGEX  yLOG_char    ("x_reg"     , x_reg);
-   x_indx      = gre.indx [a_rpos];
+   x_indx      = myREGEX.indx [a_rpos];
    DEBUG_YREGEX  yLOG_value   ("x_indx"    , x_indx);
-   x_txt       = gre.text [a_tpos];
+   x_txt       = myREGEX.text [a_tpos];
    DEBUG_YREGEX  yLOG_char    ("x_txt"     , x_txt);
    rc = yregex_sets__by_index (x_indx, &x_curr);
    x_txtrc     = x_curr->map [x_txt];
    DEBUG_YREGEX  yLOG_char    ("x_txtrc"   , x_txtrc);
-   x_oth       = gre.text [a_tpos - 1];
+   x_oth       = myREGEX.text [a_tpos - 1];
    DEBUG_YREGEX  yLOG_char    ("x_oth"     , x_oth);
    x_othrc     = x_curr->map [x_oth];
    DEBUG_YREGEX  yLOG_char    ("x_othrc"   , x_othrc);
@@ -1026,29 +1026,35 @@ yregex_sets_break       (int a_level, int a_rpos, int a_tpos)
    case '<' :
       if (a_tpos <= 0) {
          DEBUG_YREGEX  yLOG_note    ("BOW at BOL");
+         EXEC__passed (HAND_ANC);
          rc = 1;
          break;
       }
       if (x_othrc == '.' || x_txtrc == ' ') {
          DEBUG_YREGEX  yLOG_note    ("not BOW");
+         EXEC__failed (HAND_ANC);
          DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
          return 0;
       }
       DEBUG_YREGEX  yLOG_note    ("BOW");
+      EXEC__passed (HAND_ANC);
       rc = 1;
       break;
    case '>' :
       if (x_txt == 0) {
          DEBUG_YREGEX  yLOG_note    ("EOW at EOL");
+         EXEC__passed (HAND_ANC);
          rc = 1;
          break;
       }
       if (x_othrc == ' ' || x_txtrc == '.') {
          DEBUG_YREGEX  yLOG_note    ("not EOW");
+         EXEC__failed (HAND_ANC);
          DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
          return 0;
       }
       DEBUG_YREGEX  yLOG_note    ("EOW");
+      EXEC__passed (HAND_ANC);
       rc = 1;
       break;
       /*> case '>' :                                                                     <* 
@@ -1057,7 +1063,7 @@ yregex_sets_break       (int a_level, int a_rpos, int a_tpos)
        *>       rc = 1;                                                                  <* 
        *>       break;                                                                   <* 
        *>    }                                                                           <* 
-       *>    x_oth       = gre.text [a_tpos + 1];                                        <* 
+       *>    x_oth       = myREGEX.text [a_tpos + 1];                                        <* 
        *>    DEBUG_YREGEX  yLOG_char    ("x_oth"     , x_oth);                           <* 
        *>    x_othrc     = s_sets [x_indx].map [x_oth];                                  <* 
        *>    DEBUG_YREGEX  yLOG_char    ("x_othrc"   , x_othrc);                         <* 
@@ -1072,7 +1078,7 @@ yregex_sets_break       (int a_level, int a_rpos, int a_tpos)
    }
    DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
    /*---(prepare next)-------------------*/
-   yregex_exec_launcher (a_level, a_rpos, a_tpos - 1, rc);
+   EXEC__launcher (a_lvl + 1, a_rpos, a_tpos - 1, rc);
    /*---(return)-------------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
    return rc;
@@ -1090,11 +1096,11 @@ yregex_sets_exec     (int a_level, int a_rpos, int a_tpos)
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
    /*---(prepare)------------------------*/
-   x_reg       = gre.comp [a_rpos];
+   x_reg       = myREGEX.comp [a_rpos];
    DEBUG_YREGEX  yLOG_schar   (x_reg);
-   x_indx      = gre.indx [a_rpos];
+   x_indx      = myREGEX.indx [a_rpos];
    DEBUG_YREGEX  yLOG_sint    (x_indx);
-   x_txt       = gre.text [a_tpos];
+   x_txt       = myREGEX.text [a_tpos];
    DEBUG_YREGEX  yLOG_schar   (x_txt);
    /*---(execute)------------------------*/
    rc = yregex_sets__by_index (x_indx, &x_curr);
