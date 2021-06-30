@@ -106,7 +106,7 @@ yregex__unit_quiet      (void)
    yURG_logger (1, x_args);
    yURG_urgs   (1, x_args);
    EXEC_init        ();
-   yregex_err_init  ();
+   yregex_error_init  ();
    yregex_sets_init ();
    return 0;
 }
@@ -119,7 +119,7 @@ yregex__unit_loud       (void)
    yLOG_info   ("yREGEX"  , yREGEX_version   ());
    yURG_urgs   (3, x_args);
    EXEC_init        ();
-   yregex_err_init  ();
+   yregex_error_init  ();
    yregex_sets_init ();
    return 0;
 }
@@ -127,7 +127,7 @@ yregex__unit_loud       (void)
 char         /*-> stop testing -----------------------[ light  [uz.211.001.00]*/ /*-[00.0000.00#.!]-*/ /*-[--.---.---.--]-*/
 yregex__unit_end        (void)
 {
-   yregex_err_wrap  ();
+   yregex_error_wrap  ();
    yregex_sets_wrap ();
    EXEC_wrap        ();
    yLOGS_end        ();

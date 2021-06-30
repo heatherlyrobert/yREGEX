@@ -31,7 +31,7 @@ static      char        s_print     [LEN_RECD] = "";
 static void  o___SUPPORT_________o () { return; }
 
 char*
-yregex_err__memory      (void *a_cur)
+yregex_error__memory    (void *a_cur)
 {
    /*---(locals)-----------+-----+-----+-*/
    int         n           =    0;
@@ -59,7 +59,7 @@ yregex_err__memory      (void *a_cur)
 }
 
 char
-yregex_err__wipe        (void *a_cur)
+yregex_error__wipe      (void *a_cur)
 {
    /*---(locals)-----------+-----+-----+-*/
    tERROR     *x_cur       = NULL;
@@ -86,7 +86,7 @@ yregex_err__wipe        (void *a_cur)
 static void  o___MEMORY__________o () { return; }
 
 char
-yregex_err__new         (void **a_new)
+yregex_error__new       (void **a_new)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -122,7 +122,7 @@ yregex_err__new         (void **a_new)
       return rce;
    }
    /*---(wipe, attach, and increment)----*/
-   yregex_err__wipe (x_new);
+   yregex_error__wipe (x_new);
    if    (s_tail == NULL) {
       DEBUG_DATA   yLOG_snote   ("first entry");
       s_head = x_new;
@@ -141,7 +141,7 @@ yregex_err__new         (void **a_new)
 }
 
 char
-yregex_err__free        (void **a_old)
+yregex_error__free      (void **a_old)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -192,7 +192,7 @@ yregex_err__free        (void **a_old)
 static void  o___PROGRAM_________o () { return; }
 
 char
-yregex_err_init         (void)
+yregex_error_init       (void)
 {
    DEBUG_DATA   yLOG_enter   (__FUNCTION__);
    DEBUG_DATA   yLOG_exit    (__FUNCTION__);
@@ -200,7 +200,7 @@ yregex_err_init         (void)
 }
 
 char
-yregex_err__purge       (void)
+yregex_error__purge     (void)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -211,11 +211,11 @@ yregex_err__purge       (void)
    --rce;
    x_curr = s_head;
    while (x_curr != NULL) {
-      yregex_err__free (&x_curr);
+      yregex_error__free (&x_curr);
       x_curr = s_head;
    }
    /*---(ground everything)--------------*/
-   s_head   = s_tail   = NULL;
+   s_head   = s_tail   = s_curr   = NULL;
    s_count  = 0;
    /*---(complete)-----------------------*/
    DEBUG_DATA   yLOG_exit    (__FUNCTION__);
@@ -223,13 +223,15 @@ yregex_err__purge       (void)
 }
 
 char
-yregex_err_wrap         (void)
+yregex_error_wrap       (void)
 {
    DEBUG_DATA   yLOG_enter   (__FUNCTION__);
-   yregex_err__purge ();
+   yregex_error__purge ();
    DEBUG_DATA   yLOG_exit    (__FUNCTION__);
    return 0;
 }
+
+char yregex_error_reset  (void) { return yregex_error_wrap (); }
 
 
 
@@ -239,7 +241,7 @@ yregex_err_wrap         (void)
 static void  o___CREATE__________o () { return; }
 
 char         /*-> tbd --------------------------------[ leaf   [fz.632.201.00]*/ /*-[00.0000.06#.!]-*/ /*-[--.---.---.--]-*/
-yregex_err_add    (cchar *a_func, cint a_line, cchar *a_mark, cint a_beg, cint a_len, cchar *a_msg)
+yregex_error_add    (cchar *a_func, cint a_line, cchar *a_mark, cint a_beg, cint a_len, cchar *a_msg)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -266,7 +268,7 @@ yregex_err_add    (cchar *a_func, cint a_line, cchar *a_mark, cint a_beg, cint a
    }
    DEBUG_YREGEX  yLOG_info    ("a_msg"     , a_msg);
    /*---(add error)----------------------*/
-   yregex_err__new (&x_new);
+   yregex_error__new (&x_new);
    DEBUG_YREGEX  yLOG_point   ("x_new"     , x_new);
    if (x_new == NULL) {
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
@@ -279,6 +281,8 @@ yregex_err_add    (cchar *a_func, cint a_line, cchar *a_mark, cint a_beg, cint a
    x_new->beg  = a_beg;
    x_new->len  = a_len;
    x_new->msg  = strdup (a_msg);
+   /*---(update current)-----------------*/
+   s_curr = x_new;
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
    return 0;
@@ -292,7 +296,7 @@ yregex_err_add    (cchar *a_func, cint a_line, cchar *a_mark, cint a_beg, cint a
 static void  o___SEARCH__________o () { return; }
 
 char
-yregex_err__by_cursor   (void **r_curr, char a_move)
+yregex_error__by_cursor (void **r_curr, char a_move)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -371,7 +375,7 @@ yregex_err__by_cursor   (void **r_curr, char a_move)
 }
 
 char
-yregex_err__by_index    (void **r_curr, int a_index)
+yregex_error__by_index  (void **r_curr, int a_index)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -436,7 +440,7 @@ yregex_err__by_index    (void **r_curr, int a_index)
 static void  o___UNITTEST________o () { return; }
 
 char*        /*-> unit testing accessor --------------[ ------ [gs.HA0.1B3.K5]*/ /*-[02.0000.00#.#]-*/ /*-[--.---.---.--]-*/
-yregex_err__unit        (char *a_question, int n)
+yregex_error__unit      (char *a_question, int n)
 {
    /*---(locals)-----------+-----+-----+-*/
    int         x_fore      = 0;
@@ -449,26 +453,26 @@ yregex_err__unit        (char *a_question, int n)
    char        u           [LEN_RECD]  = "";
    char        w           [LEN_RECD]  = "";
    /*---(preprare)-----------------------*/
-   strcpy (unit_answer, "ERR              : question not understood");
+   strcpy (unit_answer, "ERROR            : question not understood");
    /*---(dependency list)----------------*/
    if      (strcmp (a_question, "count"    )      == 0) {
       x_err = s_head; while (x_err != NULL) { ++x_fore; x_err = x_err->m_next; }
       x_err = s_tail; while (x_err != NULL) { ++x_back; x_err = x_err->m_prev; }
-      snprintf (unit_answer, LEN_RECD, "ERR count        : num=%4d, fore=%4d, back=%4d", s_count, x_fore, x_back);
+      snprintf (unit_answer, LEN_RECD, "ERROR count      : num=%4d, fore=%4d, back=%4d", s_count, x_fore, x_back);
    }
    else if (strcmp (a_question, "list"        )   == 0) {
-      snprintf (unit_answer, LEN_RECD, "ERR list         : num=%4d, head=%-10p, tail=%p", s_count, s_head, s_tail);
+      snprintf (unit_answer, LEN_RECD, "ERROR list       : num=%4d, head=%-10p, tail=%p", s_count, s_head, s_tail);
    }
    else if (strcmp (a_question, "entry"    )      == 0) {
-      yregex_err__by_index (&x_err, n);
+      yregex_error__by_index (&x_err, n);
       if (x_err != NULL) {
          sprintf (s, "%2dе%.10sж", strlen (x_err->func), x_err->func);
          sprintf (t, "%2dе%.10sж", strlen (x_err->mark), x_err->mark);
-         sprintf (u, "%2dе%.20sж", strlen (x_err->msg) , x_err->msg);
-         snprintf (unit_answer, LEN_RECD, "ERR entry   (%2d) : %-14.14s  %4d  %-14.14s  %3d %3d  %s",
+         sprintf (u, "%2dе%.30sж", strlen (x_err->msg) , x_err->msg);
+         snprintf (unit_answer, LEN_RECD, "ERROR entry (%2d) : %-14.14s  %4d  %-14.14s  %3d %3d  %s",
                n, s, x_err->line, t, x_err->beg, x_err->len, u);
       } else {
-         snprintf (unit_answer, LEN_RECD, "ERR entry   (%2d) :  -еж               -   -еж              -   -   -еж", n);
+         snprintf (unit_answer, LEN_RECD, "ERROR entry (%2d) :  -еж               -   -еж              -   -   -еж", n);
       }
       return unit_answer;
    }

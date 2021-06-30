@@ -4,7 +4,7 @@
 
 /* NEXT STEPS
  *
- * add formal errors (yregex_err_add)
+ * add formal errors (yregex_error_add)
  *
  *
  *
@@ -111,8 +111,9 @@ yregex_comp__prep    (cchar *a_regex)
     *> myREGEX.g_foc   = '-';                                                         <* 
     *> strlcpy (myREGEX.g_mrk, "               ", LEN_LABEL);                         <*/
    /*---(initialize sets)----------------*/
-   yregex_sets_prep ();
-   yregex_rule_init ();
+   yregex_error_reset ();
+   yregex_sets_prep   ();
+   yregex_rule_init   ();
    myREGEX.ready = '-';
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
@@ -374,6 +375,7 @@ yregex_comp__quan_comp   (int *a_rpos)
       if (x_max >= MAX_QUAN) {
          if (x_lazy == 'y')  yregex_comp_mod ('@');
          else                yregex_comp_mod ('*');
+         DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
          return 1;
       }
       if (x_lazy == 'y')  yregex_comp_mod ('!');
@@ -382,6 +384,7 @@ yregex_comp__quan_comp   (int *a_rpos)
          if (x_pch == ')')  yregex_comp__dup_group   ();
          else               yregex_comp__dup_one     ();
       }
+      DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
       return 1;
    }
    /*---(one or more)--------------------*/
@@ -574,12 +577,14 @@ yREGEX_comp          (cchar *a_regex)
          DEBUG_YREGEX  yLOG_note    ("handle grouping");
          rc = yregex_group_comp (&i);
          if (rc >= 0)  continue;
+         if (rc <  0)  break;
       }
       /*---(anchors)---------------------*/
       if (strchr (G_ANCHOR, x_ch) != NULL) {
          DEBUG_YREGEX  yLOG_note    ("handle anchors");
          rc = yregex_comp_add (x_ch, yregex_sets__by_abbr ('w', NULL));
          if (rc >= 0)  continue;
+         if (rc <  0)  break;
       }
       /*---(set handling)----------------*/
       if (x_ch == '[') {

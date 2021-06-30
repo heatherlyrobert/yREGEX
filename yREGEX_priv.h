@@ -33,8 +33,8 @@
 
 #define     P_VERMAJOR  "0.--, preparing for serious use"
 #define     P_VERMINOR  "0.6-, keep advancing"
-#define     P_VERNUM    "0.6f"
-#define     P_VERTXT    "detailed compilation grouping broken out and unit tested, NICE!!"
+#define     P_VERNUM    "0.6g"
+#define     P_VERTXT    "added error checking and reporting to grouping"
 
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -244,22 +244,23 @@ char        yregex_group_endpoints  (int a_cur, int *a_beg, int *a_end);
 
 
 /*---(support)--------------*/
-char*       yregex_err__memory      (void *a_cur);
-char        yregex_err__wipe        (void *a_cur);
+char*       yregex_error__memory    (void *a_cur);
+char        yregex_error__wipe      (void *a_cur);
 /*---(memory)---------------*/
-char        yregex_err__new         (void **a_new);
-char        yregex_err__free        (void **a_old);
+char        yregex_error__new       (void **a_new);
+char        yregex_error__free      (void **a_old);
 /*---(program)--------------*/
-char        yregex_err_init         (void);
-char        yregex_err__purge       (void);
-char        yregex_err_wrap         (void);
+char        yregex_error_init       (void);
+char        yregex_error__purge     (void);
+char        yregex_error_wrap       (void);
+char        yregex_error_reset      (void);
 /*---(create)---------------*/
-char        yregex_err_add          (cchar *a_func, cint a_line, cchar *a_mark, cint a_beg, cint a_len, cchar *a_msg);
+char        yregex_error_add        (cchar *a_func, cint a_line, cchar *a_mark, cint a_beg, cint a_len, cchar *a_msg);
 /*---(search)---------------*/
-char        yregex_err__by_cursor   (void **r_curr, char a_move);
-char        yregex_err__by_index    (void **r_curr, int a_index);
+char        yregex_error__by_cursor (void **r_curr, char a_move);
+char        yregex_error__by_index  (void **r_curr, int a_index);
 /*---(unittest)-------------*/
-char*       yregex_err__unit        (char *a_question, int n);
+char*       yregex_error__unit      (char *a_question, int n);
 /*---(done)-----------------*/
 
 

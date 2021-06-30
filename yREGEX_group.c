@@ -2,17 +2,24 @@
 #include    "yREGEX.h"
 #include    "yREGEX_priv.h"
 
-
 /*
+ * five types of grouping...
  *
- *   base = (
- *   indx = group + 1
+ *   normal     (´´´)               allows quantifiers and simple organization
  *
+ *   branches   (´|´´)  (´´|´´´|´)  logical OR
+ *
+ *   named      (#´´´)   ¸´´´¹      1-9, numbered in order they appear
+ *
+ *   focus      (>´´´<)  ¼´´´½      specific target of regex
+ *
+ *   rule       (;´´´)   º´´´»      post-match filtering
  *
  *
  *
  *
  */
+
 
 
 /*====================------------------------------------====================*/
@@ -141,6 +148,7 @@ yregex_group__open      (int *a_rpos)
          myREGEX.g_mrk [x_grp] = 'y';
       } else {
          DEBUG_YREGEX  yLOG_note    ("group number too high, had to hide");
+         yregex_error_add (__FUNCTION__, __LINE__, "#GRP", *a_rpos, 1, "too many named groups requested");
          x_next = 0;
       }
    }
@@ -185,7 +193,7 @@ yregex_group__branch    (int *a_rpos)
       return rce;
    }
    DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
-   --rce;  if (*a_rpos < 0 || *a_rpos > myREGEX.clen) {
+   --rce;  if (*a_rpos < 0 || *a_rpos > myREGEX.rlen) {
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
@@ -247,15 +255,32 @@ yregex_group__close     (int *a_rpos)
    x_grp = myREGEX.g_stk [myREGEX.g_lvl];
    DEBUG_YREGEX  yLOG_value   ("x_grp"     , x_grp);
    /*---(regex container)----------------*/
-   --rce;  if (myREGEX.g_lvl == 0) {
+   --rce;  if (myREGEX.rlen - 1 == *a_rpos) {
       DEBUG_YREGEX  yLOG_note    ("requested close regex container");
+      if (myREGEX.g_lvl < 0) {
+         yregex_error_add (__FUNCTION__, __LINE__, "#GRP", *a_rpos, 1, "close paren, with no matching open");
+         DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+         return rce;
+      }
+      if (myREGEX.g_lvl > 0) {
+         yregex_error_add (__FUNCTION__, __LINE__, "#GRP", *a_rpos, 1, "some groups remain unclosed");
+         DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+         return rce;
+      }
    }
    /*---(primary group)------------------*/
    else if (x_char == '<') {
       DEBUG_YREGEX  yLOG_note    ("close focus group (>´´´<>");
+      if (myREGEX.g_foc != 'y') {
+         DEBUG_YREGEX  yLOG_note    ("closing unopenned focus group");
+         yregex_error_add (__FUNCTION__, __LINE__, "#GRP", *a_rpos, 2, "focus group never openned");
+         DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
+         return rce;
+      }
       if (x_grp != GROUP_FOCUS) {
          DEBUG_YREGEX  yLOG_note    ("primary focus parens do not match");
-         DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+         yregex_error_add (__FUNCTION__, __LINE__, "#GRP", *a_rpos, 1, "unclosed group inside focus");
+         DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
          return rce;
       }
       x_char = ')';
@@ -264,6 +289,16 @@ yregex_group__close     (int *a_rpos)
    /*---(other groups)-------------------*/
    else if (x_char == ')') {
       DEBUG_YREGEX  yLOG_note    ("close named/normal/hidden group (´´´)");
+      if (myREGEX.g_lvl == 0) {
+         yregex_error_add (__FUNCTION__, __LINE__, "#GRP", *a_rpos, 1, "closed regex container early");
+         DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
+         return rce;
+      }
+      if (x_grp == GROUP_FOCUS) {
+         yregex_error_add (__FUNCTION__, __LINE__, "#GRP", *a_rpos, 1, "unopenned group inside focus");
+         DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
+         return rce;
+      }
    }
    /*---(update)-------------------------*/
    yregex_comp_add   (x_char, x_grp + 1);
@@ -346,12 +381,6 @@ yregex_group_comp       (int *a_rpos)
    x_char = myREGEX.regex [*a_rpos];
    x_next = myREGEX.regex [*a_rpos + 1];
    DEBUG_YREGEX  yLOG_complex ("position"  , "x_char %c, x_next %c", x_char, x_next);
-   /*---(defense)------------------------*/
-   --rce;  if (*a_rpos == 0 && strchr (">#;", x_next) != NULL){
-      DEBUG_YREGEX  yLOG_note    ("prefix greater (>), hash (#), or semi (;), not really group");
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
    /*---(check)--------------------------*/
    switch (x_char) {
    case '(' :
@@ -368,6 +397,21 @@ yregex_group_comp       (int *a_rpos)
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
    return rc;
+}
+
+char
+yregex_group_final      (short a_rpos)
+{
+   char        rce         =  -10;
+   --rce;  if (myREGEX.g_lvl > 0) {
+      yregex_error_add (__FUNCTION__, a_rpos, "#GRP", 0, 0, "too few left parenthesis/groups");
+      return rce;
+   }
+   --rce;  if (myREGEX.g_lvl < 0) {
+      yregex_error_add (__FUNCTION__, a_rpos, "#GRP", 0, 0, "too many right parenthesis/groups");
+      return rce;
+   }
+   return 0;
 }
 
 
