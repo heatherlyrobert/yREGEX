@@ -541,6 +541,7 @@ yREGEX_comp          (cchar *a_regex)
    DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
    if (rc < 0) {
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rc);
+      yregex_error_fancify ();
       return rc;
    }
    /*---(parse)--------------------------*/
@@ -608,6 +609,8 @@ yREGEX_comp          (cchar *a_regex)
       DEBUG_YREGEX  yLOG_note    ("handle character literal");
       rc = yregex_comp__literal (&i);
    }
+   /*---(summarize)----------------------*/
+   yregex_error_fancify ();
    /*---(check for failure)--------------*/
    myREGEX.ready = 'n';
    --rce;  if (myREGEX.g_lvl != 0) {

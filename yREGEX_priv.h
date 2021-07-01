@@ -33,8 +33,8 @@
 
 #define     P_VERMAJOR  "0.--, preparing for serious use"
 #define     P_VERMINOR  "0.6-, keep advancing"
-#define     P_VERNUM    "0.6g"
-#define     P_VERTXT    "added error checking and reporting to grouping"
+#define     P_VERNUM    "0.6h"
+#define     P_VERTXT    "fancify added to errors and tested on all grouping units"
 
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -85,7 +85,8 @@
 #include    <yURG.h>                    /* heatherly urgent processing         */
 #include    <yLOG.h>                    /* heatherly program logger            */
 #include    <ySTR.h>                    /* heatherly string handling           */
-#include    <yDLST_solo.h>              /* heatherly double-doubly linked list */
+#include    <yDLST_solo.h>              /* heatherly linked-list constants     */
+#include    <yCOLOR_solo.h>             /* heatherly color constants           */
 
 
 typedef   unsigned char  uchar;
@@ -115,6 +116,13 @@ typedef   unsigned char  uchar;
 #define     G_MANY       "*@"
 #define     G_PREFIX     "*?!@"
 
+#define     CAT_LIT     "#LIT"
+#define     CAT_GRP     "#GRP"
+#define     CAT_SET     "#SET"
+#define     CAT_RUL     "#RUL"
+#define     CAT_PAT     "#PAT"
+#define     CAT_COMP    "#COM"
+#define     CAT_EXEC    "#EXE"
 
 #define     HAND_LIT    'L'
 #define     HAND_ANC    'A'
@@ -125,12 +133,11 @@ typedef   unsigned char  uchar;
 
 typedef    struct   cERROR   tERROR;
 struct cERROR {
-   char       *func;
-   int         line;
-   char       *mark;
-   char       *msg;
+   char        level;
+   char       *cat;
    uchar       beg;
    uchar       len;
+   char       *msg;
    tERROR     *m_prev;
    tERROR     *m_next;
 };
@@ -255,10 +262,13 @@ char        yregex_error__purge     (void);
 char        yregex_error_wrap       (void);
 char        yregex_error_reset      (void);
 /*---(create)---------------*/
-char        yregex_error_add        (cchar *a_func, cint a_line, cchar *a_mark, cint a_beg, cint a_len, cchar *a_msg);
+char        yregex_error_add        (char a_level, char *a_cat, int a_beg, int a_len, char *a_msg);
 /*---(search)---------------*/
 char        yregex_error__by_cursor (void **r_curr, char a_move);
 char        yregex_error__by_index  (void **r_curr, int a_index);
+/*---(fancy)----------------*/
+char        yregex_error_fancify    (void);
+char        yREGEX_fancy            (char *a_fancy);
 /*---(unittest)-------------*/
 char*       yregex_error__unit      (char *a_question, int n);
 /*---(done)-----------------*/

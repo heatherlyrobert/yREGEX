@@ -22,6 +22,7 @@ typedef   const int      cint;
 char        yREGEX_clear         (void);
 
 char        yREGEX_comp          (cchar *a_regex);
+char        yREGEX_fancy         (char *a_fancy);
 
 char        yREGEX_full          (cchar *a_source);
 char        yREGEX_filter        (cchar *a_source);
