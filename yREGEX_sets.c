@@ -510,6 +510,7 @@ yregex_sets__mapper     (char *a_regex, int *a_rpos)
             x_range = 'y';
          } else {
             DEBUG_YREGEX  yLOG_note    ("range end not A-Za-z0-9è-ÿ, just a hyphen");
+            yregex_error_add ('w', CAT_SET, i, 1, "not a range, just a hyphen");
          }
       }
       /*---(range)-----------------------*/
@@ -519,6 +520,7 @@ yregex_sets__mapper     (char *a_regex, int *a_rpos)
          DEBUG_YREGEX  yLOG_char    ("x_ch"      , x_ch);
          if  (x_ch < x_sch) {
             DEBUG_YREGEX  yLOG_note    ("backwards ranges are illegal");
+            yregex_error_add ('F', CAT_SET, i - 2, 3, "backwards range is illegal");
             yregex_sets__clear (x_unmark);
             DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
             return rce;
@@ -538,6 +540,7 @@ yregex_sets__mapper     (char *a_regex, int *a_rpos)
    }
    /*---(check for runon)----------------*/
    --rce;  if (i == l) {
+      yregex_error_add ('F', CAT_SET, i - 1, 1, "no set end marker, run-on");
       yregex_sets__clear (x_unmark);
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
@@ -937,6 +940,11 @@ yregex_sets_comp        (int *a_rpos)
    DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
    x_ch   = myREGEX.regex [*a_rpos];
    DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
+   --rce;  if (x_ch == ']') {
+      yregex_error_add ('F', CAT_SET, *a_rpos, 1, "closing never openned set");
+      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
    --rce;  if (x_ch != '[') {
       DEBUG_YREGEX  yLOG_note    ("does not start with a [");
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);

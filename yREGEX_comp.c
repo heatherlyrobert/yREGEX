@@ -588,10 +588,11 @@ yREGEX_comp          (cchar *a_regex)
          if (rc <  0)  break;
       }
       /*---(set handling)----------------*/
-      if (x_ch == '[') {
+      if (strchr ("[]", x_ch) != NULL) {
          DEBUG_YREGEX  yLOG_note    ("handle character set");
          rc = yregex_sets_comp (&i);
          if (rc >= 0)  continue;
+         if (rc <  0)  break;
       }
       /*---(quick modifiers)-------------*/
       if (strchr (TYPE_QUANS, x_ch) != NULL) {
@@ -599,7 +600,7 @@ yREGEX_comp          (cchar *a_regex)
          rc = yregex_comp__quan_simp (&i);
          continue;
       }
-      /*---(specific modifiers)----------*/
+      /*---(specific quantifiers)--------*/
       if (x_ch == '{') {
          DEBUG_YREGEX  yLOG_note    ("handle complex modifier");
          rc = yregex_comp__quan_comp (&i);
