@@ -13,7 +13,6 @@
 
 
 
-#define     SETS_BASE   'b'
 
 /*---(struct.re)--------+-----------+-*//*-+----------------------------------*/
 #define     LEN_MAP     270
@@ -23,37 +22,37 @@ static const tSETS s_sets [MAX_SETS] = {
    /*           1234 1234  01234567890123456789   0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef  */
    /*---(metas)----------------*/
    /*--------  type  type  ---name-------------   ∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~ΩÄÅÇÉÑÖÜáàâäãåçéèêëíìîïñóòôöõúùûü†°¢£§•¶ß®©™´¨≠ÆØ∞±≤≥¥µ∂∑∏π∫ªºΩæø¿¡¬√ƒ≈∆«»… ÀÃÕŒœ–—“”‘’÷◊ÿŸ⁄€‹›ﬁﬂ‡·‚„‰ÂÊÁËÈÍÎÏÌÓÔÒÚÛÙıˆ˜¯˘˙˚¸˝˛ˇ  */
-   { SETS_BASE, '-', 'n', "return"             , "          . ..                                                                                                                                                        .                                                                                         ", 0, NULL, NULL },
-   { SETS_BASE, '-', 'e', "escape"             , "                       .                                                                                                                                             .                                                                                          ", 0, NULL, NULL },
-   { SETS_BASE, '-', 't', "tab"                , "         . .                                                                                                                                                               .                                                                                    ", 0, NULL, NULL },
-   { SETS_BASE, '-', 'f', "field"              , "                             ...                                                                                                                                       .                          .                                                             ", 0, NULL, NULL },
-   { SETS_BASE, ':', 's', "space"              , "         .....                  .                                                                                                                                                        .                                                                      ", 0, NULL, NULL },
-   { SETS_BASE, '-', 'w', "word"               , "                                                ..........       ..........................    . ..........................                                                                                                                                     ", 0, NULL, NULL },
+   { BASE_ENTRY, '-', 'n', "return"             , "          . ..                                                                                                                                                        .                                                                                         ", 0, NULL, NULL },
+   { BASE_ENTRY, '-', 'e', "escape"             , "                       .                                                                                                                                             .                                                                                          ", 0, NULL, NULL },
+   { BASE_ENTRY, '-', 't', "tab"                , "         . .                                                                                                                                                               .                                                                                    ", 0, NULL, NULL },
+   { BASE_ENTRY, '-', 'f', "field"              , "                             ...                                                                                                                                       .                          .                                                             ", 0, NULL, NULL },
+   { BASE_ENTRY, ':', 's', "space"              , "         .....                  .                                                                                                                                                        .                                                                      ", 0, NULL, NULL },
+   { BASE_ENTRY, '-', 'w', "word"               , "                                                ..........       ..........................    . ..........................                                                                                                                                     ", 0, NULL, NULL },
    /*--------  type  type  ---name-------------   ∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~ΩÄÅÇÉÑÖÜáàâäãåçéèêëíìîïñóòôöõúùûü†°¢£§•¶ß®©™´¨≠ÆØ∞±≤≥¥µ∂∑∏π∫ªºΩæø¿¡¬√ƒ≈∆«»… ÀÃÕŒœ–—“”‘’÷◊ÿŸ⁄€‹›ﬁﬂ‡·‚„‰ÂÊÁËÈÍÎÏÌÓÔÒÚÛÙıˆ˜¯˘˙˚¸˝˛ˇ  */
-   { SETS_BASE, ':', 'd', "digit"              , "                                                ..........                                                                                                                                                                                                      ", 0, NULL, NULL },
-   { SETS_BASE, ':', 'l', "lower"              , "                                                                                                 ..........................                                                                                                                                     ", 0, NULL, NULL },
-   { SETS_BASE, ':', 'u', "upper"              , "                                                                 ..........................                                                                                                                                                                     ", 0, NULL, NULL },
-   { SETS_BASE, '-', 'g', "greek"              , "                                                                                                                                                                                                                                        ........................", 0, NULL, NULL },
+   { BASE_ENTRY, ':', 'd', "digit"              , "                                                ..........                                                                                                                                                                                                      ", 0, NULL, NULL },
+   { BASE_ENTRY, ':', 'l', "lower"              , "                                                                                                 ..........................                                                                                                                                     ", 0, NULL, NULL },
+   { BASE_ENTRY, ':', 'u', "upper"              , "                                                                 ..........................                                                                                                                                                                     ", 0, NULL, NULL },
+   { BASE_ENTRY, '-', 'g', "greek"              , "                                                                                                                                                                                                                                        ........................", 0, NULL, NULL },
    /*---(categories)-----------*/
    /*--------  type  type  ---name-------------   ∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~ΩÄÅÇÉÑÖÜáàâäãåçéèêëíìîïñóòôöõúùûü†°¢£§•¶ß®©™´¨≠ÆØ∞±≤≥¥µ∂∑∏π∫ªºΩæø¿¡¬√ƒ≈∆«»… ÀÃÕŒœ–—“”‘’÷◊ÿŸ⁄€‹›ﬁﬂ‡·‚„‰ÂÊÁËÈÍÎÏÌÓÔÒÚÛÙıˆ˜¯˘˙˚¸˝˛ˇ  */
-   { SETS_BASE, '-', '-', "dotta"              , " ......... .  ........................................................................................................................................................ .........................................................................................", 0, NULL, NULL },
-   { SETS_BASE, ':', 'a', "alpha"              , "                                                                 ..........................      ..........................                                                                                                                                     ", 0, NULL, NULL },
-   { SETS_BASE, ':', '-', "alnum"              , "                                                ..........       ..........................      ..........................                                                                                                                                     ", 0, NULL, NULL },
-   { SETS_BASE, ':', 'p', "punct"              , "                                 ...............          .......                          ......                          ....                                                                                                                                 ", 0, NULL, NULL },
-   { SETS_BASE, '-', 'q', "rpunc"              , "                                ..      ..  . .           ..   .                           . .                             . .                                                                                                                                  ", 0, NULL, NULL },
-   { SETS_BASE, ':', 'x', "xdigi"              , "                                                ..........       ......                          ......                                                                                                                                                         ", 0, NULL, NULL },
+   { BASE_ENTRY, '-', '-', "dotta"              , " ......... .  ........................................................................................................................................................ .........................................................................................", 0, NULL, NULL },
+   { BASE_ENTRY, ':', 'a', "alpha"              , "                                                                 ..........................      ..........................                                                                                                                                     ", 0, NULL, NULL },
+   { BASE_ENTRY, ':', '-', "alnum"              , "                                                ..........       ..........................      ..........................                                                                                                                                     ", 0, NULL, NULL },
+   { BASE_ENTRY, ':', 'p', "punct"              , "                                 ...............          .......                          ......                          ....                                                                                                                                 ", 0, NULL, NULL },
+   { BASE_ENTRY, '-', 'q', "rpunc"              , "                                ..      ..  . .           ..   .                           . .                             . .                                                                                                                                  ", 0, NULL, NULL },
+   { BASE_ENTRY, ':', 'x', "xdigi"              , "                                                ..........       ......                          ......                                                                                                                                                         ", 0, NULL, NULL },
    /*--------  type  type  ---name-------------   ∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~ΩÄÅÇÉÑÖÜáàâäãåçéèêëíìîïñóòôöõúùûü†°¢£§•¶ß®©™´¨≠ÆØ∞±≤≥¥µ∂∑∏π∫ªºΩæø¿¡¬√ƒ≈∆«»… ÀÃÕŒœ–—“”‘’÷◊ÿŸ⁄€‹›ﬁﬂ‡·‚„‰ÂÊÁËÈÍÎÏÌÓÔÒÚÛÙıˆ˜¯˘˙˚¸˝˛ˇ  */
-   { SETS_BASE, ':', '-', "graph"              , "                                 ..............................................................................................                                  ...............................................................................................", 0, NULL, NULL },
-   { SETS_BASE, ':', '-', "print"              , "                                ...............................................................................................                                  ...............................................................................................", 0, NULL, NULL },
-   { SETS_BASE, ':', 'c', "cntrl"              , " ...............................                                                                                               .                                                                                                                                ", 0, NULL, NULL },
-   { SETS_BASE, ':', '-', "blank"              , "         .                      .                                                                                                                                                        .                                                                      ", 0, NULL, NULL },
+   { BASE_ENTRY, ':', '-', "graph"              , "                                 ..............................................................................................                                  ...............................................................................................", 0, NULL, NULL },
+   { BASE_ENTRY, ':', '-', "print"              , "                                ...............................................................................................                                  ...............................................................................................", 0, NULL, NULL },
+   { BASE_ENTRY, ':', 'c', "cntrl"              , " ...............................                                                                                               .                                                                                                                                ", 0, NULL, NULL },
+   { BASE_ENTRY, ':', '-', "blank"              , "         .                      .                                                                                                                                                        .                                                                      ", 0, NULL, NULL },
    /*---(reversed)-------------*/
    /*--------  type  type  ---name-------------   ∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~ΩÄÅÇÉÑÖÜáàâäãåçéèêëíìîïñóòôöõúùûü†°¢£§•¶ß®©™´¨≠ÆØ∞±≤≥¥µ∂∑∏π∫ªºΩæø¿¡¬√ƒ≈∆«»… ÀÃÕŒœ–—“”‘’÷◊ÿŸ⁄€‹›ﬁﬂ‡·‚„‰ÂÊÁËÈÍÎÏÌÓÔÒÚÛÙıˆ˜¯˘˙˚¸˝˛ˇ  */
-   { SETS_BASE, '-', 'W', "word (not)"         , " ...............................................          .......                          .... .                          .............................................................................................................                        ", 0, NULL, NULL },
-   { SETS_BASE, '-', 'D', "digit (not)"        , " ...............................................          ......................................................................................................................................................................................................", 0, NULL, NULL },
-   { SETS_BASE, '-', 'S', "space (not)"        , " ........     .................. ........................................................................................................................................................ ......................................................................", 0, NULL, NULL },
-   { SETS_BASE, '-', 'F', "field (not)"        , " ............................   ....................................................................................................................................... .......................... .............................................................", 0, NULL, NULL },
-   { SETS_BASE, '-', 'G', "greek (not)"        , " .......................................................................................................................................................................................................................................                        ", 0, NULL, NULL },
+   { BASE_ENTRY, '-', 'W', "word (not)"         , " ...............................................          .......                          .... .                          .............................................................................................................                        ", 0, NULL, NULL },
+   { BASE_ENTRY, '-', 'D', "digit (not)"        , " ...............................................          ......................................................................................................................................................................................................", 0, NULL, NULL },
+   { BASE_ENTRY, '-', 'S', "space (not)"        , " ........     .................. ..................................................................................................................................................... .........................................................................", 0, NULL, NULL },
+   { BASE_ENTRY, '-', 'F', "field (not)"        , " ............................   ......................................................................................................................................  .............................................................. .........................", 0, NULL, NULL },
+   { BASE_ENTRY, '-', 'G', "greek (not)"        , " .......................................................................................................................................................................................................................................                        ", 0, NULL, NULL },
    /*---(done)-----------------*/
    { 0        ,  0 , 0  , NULL                 , NULL                                                                                                                                                                                                                                                              , 0, NULL, NULL },
 };
@@ -137,105 +136,8 @@ yregex_sets__wipe       (void *a_cur)
 /*====================------------------------------------====================*/
 static void  o___MEMORY__________o () { return; }
 
-char
-yregex_sets__new        (void **a_new)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   char        rc          =    0;
-   tSETS      *x_new       = NULL;
-   int         x_tries     =    0;
-   /*---(header)-------------------------*/
-   DEBUG_DATA   yLOG_senter  (__FUNCTION__);
-   /*---(check return)-------------------*/
-   DEBUG_DATA   yLOG_spoint  (a_new);
-   --rce;  if (a_new == NULL) {
-      DEBUG_DATA   yLOG_sexitr  (__FUNCTION__, rce);
-      return rce;
-   }
-   DEBUG_DATA   yLOG_spoint  (*a_new);
-   --rce;  if (*a_new != NULL) {
-      DEBUG_DATA   yLOG_snote   ("already set");
-      DEBUG_DATA   yLOG_sexitr  (__FUNCTION__, rce);
-      return rce;
-   }
-   /*---(default)------------------------*/
-   *a_new = NULL;
-   /*---(allocate)-----------------------*/
-   while (x_new == NULL) {
-      ++x_tries;
-      x_new = malloc (sizeof (tSETS));
-      if (x_tries > 3)   break;
-   }
-   DEBUG_DATA   yLOG_sint    (x_tries);
-   DEBUG_DATA   yLOG_spoint  (x_new);
-   --rce;  if (x_new == NULL) {
-      DEBUG_DATA   yLOG_sexitr  (__FUNCTION__, rce);
-      return rce;
-   }
-   /*---(wipe, attach, and increment)----*/
-   yregex_sets__wipe (x_new);
-   if    (s_tail == NULL) {
-      DEBUG_DATA   yLOG_snote   ("first entry");
-      s_head = x_new;
-   } else {
-      DEBUG_DATA   yLOG_snote   ("append to tail");
-      x_new->m_prev  = s_tail;
-      s_tail->m_next = x_new;
-   }
-   s_tail = x_new;
-   ++s_count;
-   /*---(save return)--------------------*/
-   *a_new = x_new;
-   /*---(complete)-----------------------*/
-   DEBUG_DATA   yLOG_sexit   (__FUNCTION__);
-   return rc;
-}
-
-char
-yregex_sets__free       (void **a_old)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   tSETS      *x_old       = NULL;
-   /*---(header)-------------------------*/
-   DEBUG_DATA   yLOG_senter  (__FUNCTION__);
-   /*---(check return)-------------------*/
-   DEBUG_DATA   yLOG_spoint  (a_old);
-   --rce;  if (a_old == NULL) {
-      DEBUG_DATA   yLOG_sexitr  (__FUNCTION__, rce);
-      return rce;
-   }
-   DEBUG_DATA   yLOG_spoint  (*a_old);
-   --rce;  if (*a_old == NULL) {
-      DEBUG_DATA   yLOG_snote   ("never set");
-      DEBUG_DATA   yLOG_sexitr  (__FUNCTION__, rce);
-      return rce;
-   }
-   /*---(simplify)-----------------------*/
-   x_old = (tSETS *) *a_old;
-   /*---(detach and decrement)-----------*/
-   if (x_old->m_next != NULL) x_old->m_next->m_prev   = x_old->m_prev;
-   else                       s_tail                  = x_old->m_prev;
-   if (x_old->m_prev != NULL) x_old->m_prev->m_next   = x_old->m_next;
-   else                       s_head                  = x_old->m_next;
-   --s_count;
-   DEBUG_DATA   yLOG_sint    (s_count);
-   /*---(gound links)--------------------*/
-   x_old->m_prev = NULL;
-   x_old->m_next = NULL;
-   /*---(free and ground)----------------*/
-   if (x_old->source != SETS_BASE && x_old->name != NULL)   free (x_old->name);
-   x_old->name = NULL;
-   if (x_old->source != SETS_BASE && x_old->map  != NULL)   free (x_old->map );
-   x_old->map  = NULL;
-   free (*a_old);
-   /*---(ground)-------------------------*/
-   *a_old = NULL;
-   /*---(complete)-----------------------*/
-   DEBUG_DATA   yLOG_sexit   (__FUNCTION__);
-   return 0;
-}
+char yregex_sets__new   (void **r_new) { return yregex_share_new  (TYPE_SETS, r_new, &s_head, &s_tail, &s_count); }
+char yregex_sets__free  (void **r_old) { return yregex_share_free (TYPE_SETS, r_old, &s_head, &s_tail, &s_count); }
 
 
 
@@ -244,59 +146,15 @@ yregex_sets__free       (void **a_old)
 /*====================------------------------------------====================*/
 static void      o___PROGRAM_________________o (void) {;}
 
+char yregex_sets_init    (void) { return yregex_share_init  (TYPE_SETS, &s_head, &s_tail, &s_curr, &s_count); }
+char yregex_sets__purge  (void) { return yregex_share_purge (TYPE_SETS, &s_head, &s_tail, &s_curr, &s_count); }
+char yregex_sets_wrap    (void) { return yregex_share_wrap  (TYPE_SETS, &s_head, &s_tail, &s_curr, &s_count); }
+
 char         /*-> tbd --------------------------------[ leaf   [fz.531.021.10]*/ /*-[02.0000.01#.!]-*/ /*-[--.---.---.--]-*/
-yregex_sets_prep     (void)
+yregex_sets_reset    (void)
 {
    yregex_sets__purge ();
    yregex_sets__base  ();
-   return 0;
-}
-
-char
-yregex_sets_init        (void)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   int         n           =    0;
-   /*---(header)-------------------------*/
-   DEBUG_DATA   yLOG_enter   (__FUNCTION__);
-   /*---(ground everything)--------------*/
-   s_head  =  s_tail = s_curr = NULL;
-   s_count = 0;
-   /*---(complete)-----------------------*/
-   DEBUG_DATA   yLOG_exit    (__FUNCTION__);
-   return 0;
-}
-
-char
-yregex_sets__purge      (void)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   tSETS      *x_curr      = NULL;
-   int         n           =    0;
-   /*---(header)-------------------------*/
-   DEBUG_DATA   yLOG_enter   (__FUNCTION__);
-   /*---(walk level)---------------------*/
-   x_curr = s_head;
-   while (x_curr != NULL) {
-      yregex_sets__free (&x_curr);
-      x_curr = s_head;
-   }
-   /*---(ground everything)--------------*/
-   s_head  =  s_tail = s_curr = NULL;
-   s_count = 0;
-   /*---(complete)-----------------------*/
-   DEBUG_DATA   yLOG_exit    (__FUNCTION__);
-   return 0;
-}
-
-char
-yregex_sets_wrap        (void)
-{
-   DEBUG_DATA   yLOG_enter   (__FUNCTION__);
-   yregex_sets__purge ();
-   yregex_sets_init ();
-   DEBUG_DATA   yLOG_exit    (__FUNCTION__);
    return 0;
 }
 
@@ -562,150 +420,13 @@ yregex_sets__mapper     (char *a_regex, int *a_rpos)
 /*====================------------------------------------====================*/
 static void      o___FINDING_________________o (void) {;}
 
-char         /*-> tbd --------------------------------[ leaf   [fc.632.122.40]*/ /*-[01.0000.01#.8]-*/ /*-[--.---.---.--]-*/
-yregex_sets__by_index   (cint a_index, tSETS **r_set)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   int         n           =    0;
-   tSETS      *x_curr      = NULL;
-   /*---(header)-------------------------*/
-   DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
-   DEBUG_YREGEX  yLOG_sint    (a_index);
-   /*---(default)------------------------*/
-   if (r_set != NULL)  *r_set = NULL;
-   /*---(defense)------------------------*/
-   DEBUG_YREGEX  yLOG_sint    (s_count);
-   --rce;  if (a_index < 0 || a_index >= s_count) {
-      DEBUG_YREGEX  yLOG_snote   ("index out of range");
-      DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
-      return rce;
-   }
-   /*---(walk through sets)--------------*/
-   DEBUG_YREGEX  yLOG_snote   ("searching");
-   x_curr = s_head;
-   while (x_curr != NULL) {
-      if (n == a_index)   break;
-      ++n;
-      x_curr = x_curr->m_next;
-   }
-   /*---(check)--------------------------*/
-   DEBUG_YREGEX  yLOG_spoint  (x_curr);
-   --rce;  if (x_curr == NULL) {
-      DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
-      return rce;
-   }
-   /*---(saveback)-----------------------*/
-   DEBUG_YREGEX  yLOG_snote   ("found");
-   if (r_set != NULL)  *r_set = x_curr;
-   /*---(complete)-----------------------*/
-   DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
-   return 0;
-}
-
-int          /*-> tbd --------------------------------[ leaf   [fc.632.122.40]*/ /*-[01.0000.01#.8]-*/ /*-[--.---.---.--]-*/
-yregex_sets__by_abbr    (cchar a_abbr, tSETS **r_set)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   int         n           =    0;
-   char       *x_valid     = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-   tSETS      *x_curr      = NULL;
-   /*---(header)-------------------------*/
-   DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
-   DEBUG_YREGEX  yLOG_sint    (a_abbr);
-   /*---(default)------------------------*/
-   if (r_set != NULL)  *r_set = NULL;
-   /*---(defense)------------------------*/
-   --rce;  if (a_abbr == 0) {
-      DEBUG_YREGEX  yLOG_snote   ("can not be null");
-      DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
-      return rce;
-   }
-   --rce;  if (strchr (x_valid, a_abbr) == NULL) {
-      DEBUG_YREGEX  yLOG_snote   ("abbr must be [A-Za-z]");
-      DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
-      return rce;
-   }
-   DEBUG_YREGEX  yLOG_schar   (a_abbr);
-   DEBUG_YREGEX  yLOG_sint    (s_nset);
-   /*---(walk through sets)--------------*/
-   DEBUG_YREGEX  yLOG_snote   ("searching");
-   x_curr = s_head;
-   while (x_curr != NULL) {
-      if (x_curr->abbr == a_abbr)  break;
-      ++n;
-      x_curr = x_curr->m_next;
-   }
-   /*---(check)--------------------------*/
-   DEBUG_YREGEX  yLOG_spoint  (x_curr);
-   --rce;  if (x_curr == NULL) {
-      DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
-      return rce;
-   }
-   /*---(saveback)-----------------------*/
-   DEBUG_YREGEX  yLOG_snote   ("found");
-   if (r_set != NULL)  *r_set = x_curr;
-   /*---(complete)-----------------------*/
-   DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
-   return n;
-}
-
-int          /*-> tbd --------------------------------[ leaf   [fe.A53.145.A0]*/ /*-[01.0000.02#.E]-*/ /*-[--.---.---.--]-*/
-yregex_sets__by_name    (cchar *a_name, tSETS **r_set)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   int         x_len       =    0;
-   int         n           =    0;
-   tSETS      *x_curr      = NULL;
-   /*---(header)-------------------------*/
-   DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
-   DEBUG_YREGEX  yLOG_spoint  (a_name);
-   /*---(default)------------------------*/
-   if (r_set != NULL)  *r_set = NULL;
-   /*---(defense)------------------------*/
-   --rce;  if (a_name == NULL) {
-      DEBUG_YREGEX  yLOG_snote   ("can not be null");
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   DEBUG_YREGEX  yLOG_snote   (a_name);
-   x_len = strllen (a_name, LEN_NAME);
-   DEBUG_YREGEX  yLOG_sint    (x_len);
-   --rce;  if (x_len <= 4) {
-      DEBUG_YREGEX  yLOG_snote   ("too short");
-      DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
-      return rce;
-   }
-   --rce;  if (x_len >= 7) {
-      DEBUG_YREGEX  yLOG_snote   ("too long");
-      DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
-      return rce;
-   }
-   /*---(walk)---------------------------*/
-   x_curr = s_head;
-   while (x_curr != NULL) {
-      if (strcmp (x_curr->name, a_name) == 0)  break;
-      ++n;
-      x_curr = x_curr->m_next;
-   }
-   /*---(check)--------------------------*/
-   DEBUG_YREGEX  yLOG_spoint  (x_curr);
-   --rce;  if (x_curr == NULL) {
-      DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
-      return rce;
-   }
-   /*---(saveback)-----------------------*/
-   DEBUG_YREGEX  yLOG_snote   ("found");
-   if (r_set != NULL)  *r_set = x_curr;
-   /*---(complete)-----------------------*/
-   DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
-   return n;
-}
+char yregex_sets__by_cursor  (char a_move , tSETS  **r_back) { return yregex_share__by_cursor (TYPE_SETS, &s_head, &s_tail, &s_curr, r_back, a_move); }
+char yregex_sets__by_index   (int a_index , tSETS  **r_back) { return yregex_share__by_index  (TYPE_SETS, &s_head, &s_curr, r_back, a_index); }
+int  yregex_sets__by_abbr    (char a_abbr , tSETS  **r_back) { return yregex_share__by_abbr   (TYPE_SETS, &s_head, r_back, a_abbr); }
+int  yregex_sets__by_name    (char *a_name, tSETS  **r_back) { return yregex_share__by_name   (TYPE_SETS, &s_head, r_back, a_name); }
 
 int          /*-> tbd --------------------------------[ leaf   [fe.833.044.30]*/ /*-[01.0000.01#.!]-*/ /*-[--.---.---.--]-*/
-yregex_sets__by_map     (tSETS **r_set)
+yregex_sets__by_map     (tSETS **r_back)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -716,7 +437,7 @@ yregex_sets__by_map     (tSETS **r_set)
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
    /*---(default)------------------------*/
-   if (r_set != NULL)  *r_set = NULL;
+   if (r_back != NULL)  *r_back = NULL;
    /*---(defense)------------------------*/
    x_len = strllen (s_map, LEN_MAP );
    DEBUG_YREGEX  yLOG_sint    (x_len);
@@ -745,7 +466,7 @@ yregex_sets__by_map     (tSETS **r_set)
    }
    /*---(saveback)-----------------------*/
    DEBUG_YREGEX  yLOG_snote   ("found");
-   if (r_set != NULL)  *r_set = x_curr;
+   if (r_back != NULL)  *r_back = x_curr;
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
    return n;

@@ -12,6 +12,52 @@ struct cSTR {
 static tSTR        s_strs      [MAX_STR];
 static int         s_nstr      = 0;
 
+static      char        s_print     [LEN_RECD] = "";
+
+
+/*====================------------------------------------====================*/
+/*===----                       allocation/memory                      ----===*/
+/*====================------------------------------------====================*/
+static void  o___SUPPORT_________o () { return; }
+
+char*
+yregex_rule__memory     (void *a_cur)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   int         n           =    0;
+   tRULE      *x_cur       = NULL;
+   /*---(cast)---------------------------*/
+   x_cur = (tRULE *) a_cur;
+   /*---(defense)------------------------*/
+   if (x_cur == NULL) {
+      strlcpy (s_print, "n/a", LEN_RECD);
+      return s_print;
+   }
+   /*---(defense)------------------------*/
+   strlcpy (s_print, "å_.__æ", LEN_RECD);
+   ++n;  if (x_cur->str         != NULL)        s_print [n] = 'X';
+   ++n;
+   ++n;  if (x_cur->m_prev      != NULL)        s_print [n] = 'X';
+   ++n;  if (x_cur->m_next      != NULL)        s_print [n] = 'X';
+   return s_print;
+}
+
+char
+yregex_rule__wipe       (void *a_cur)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   tRULE      *x_cur       = NULL;
+   /*---(cast)---------------------------*/
+   x_cur = (tRULE *) a_cur;
+   /*---(wipe)---------------------------*/
+   x_cur->str      = NULL;
+   x_cur->m_prev   = NULL;
+   x_cur->m_next   = NULL;
+   /*---(complete)-----------------------*/
+   return 0;
+}
+
+
 
 
 char

@@ -112,7 +112,8 @@ yregex_comp__prep    (cchar *a_regex)
     *> strlcpy (myREGEX.g_mrk, "               ", LEN_LABEL);                         <*/
    /*---(initialize sets)----------------*/
    yregex_error_reset ();
-   yregex_sets_prep   ();
+   yregex_sets_reset  ();
+   yregex_pats_reset  ();
    yregex_rule_init   ();
    myREGEX.ready = '-';
    /*---(complete)-----------------------*/

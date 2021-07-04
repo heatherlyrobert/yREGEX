@@ -32,47 +32,40 @@ static      char        s_fancy     [LEN_RECD] = "";
 static void  o___SUPPORT_________o () { return; }
 
 char*
-yregex_error__memory    (void *a_cur)
+yregex_error__memory    (tERROR *a_cur)
 {
    /*---(locals)-----------+-----+-----+-*/
    int         n           =    0;
-   tERROR     *x_cur       = NULL;
-   /*---(cast)---------------------------*/
-   x_cur = (tERROR *) a_cur;
    /*---(defense)------------------------*/
-   if (x_cur == NULL) {
+   if (a_cur == NULL) {
       strlcpy (s_print, "n/a", LEN_RECD);
       return s_print;
    }
    /*---(defense)------------------------*/
    strlcpy (s_print, "å_.____.__æ", LEN_RECD);
-   ++n;  if (x_cur->level       != '-')         s_print [n] = 'X';
+   ++n;  if (a_cur->level       != '-')         s_print [n] = 'X';
    ++n;
-   ++n;  if (x_cur->cat         != NULL)        s_print [n] = 'X';
-   ++n;  if (x_cur->beg         >  0)           s_print [n] = 'X';
-   ++n;  if (x_cur->len         >  0)           s_print [n] = 'X';
-   ++n;  if (x_cur->msg         != NULL)        s_print [n] = 'X';
+   ++n;  if (a_cur->cat         != NULL)        s_print [n] = 'X';
+   ++n;  if (a_cur->beg         >  0)           s_print [n] = 'X';
+   ++n;  if (a_cur->len         >  0)           s_print [n] = 'X';
+   ++n;  if (a_cur->msg         != NULL)        s_print [n] = 'X';
    ++n;
-   ++n;  if (x_cur->m_prev      != NULL)        s_print [n] = 'X';
-   ++n;  if (x_cur->m_next      != NULL)        s_print [n] = 'X';
+   ++n;  if (a_cur->m_prev      != NULL)        s_print [n] = 'X';
+   ++n;  if (a_cur->m_next      != NULL)        s_print [n] = 'X';
    return s_print;
 }
 
 char
-yregex_error__wipe      (void *a_cur)
+yregex_error__wipe      (tERROR *a_cur)
 {
-   /*---(locals)-----------+-----+-----+-*/
-   tERROR     *x_cur       = NULL;
-   /*---(cast)---------------------------*/
-   x_cur = (tERROR *) a_cur;
    /*---(wipe)---------------------------*/
-   x_cur->level    =  '-';
-   x_cur->cat      = NULL;
-   x_cur->beg      = 0;
-   x_cur->len      = 0;
-   x_cur->msg      = NULL;
-   x_cur->m_prev   = NULL;
-   x_cur->m_next   = NULL;
+   a_cur->level    =  '-';
+   a_cur->cat      = NULL;
+   a_cur->beg      = 0;
+   a_cur->len      = 0;
+   a_cur->msg      = NULL;
+   a_cur->m_prev   = NULL;
+   a_cur->m_next   = NULL;
    /*---(complete)-----------------------*/
    return 0;
 }
@@ -84,103 +77,8 @@ yregex_error__wipe      (void *a_cur)
 /*====================------------------------------------====================*/
 static void  o___MEMORY__________o () { return; }
 
-char
-yregex_error__new       (void **a_new)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   char        rc          =    0;
-   tERROR     *x_new       = NULL;
-   int         x_tries     =    0;
-   /*---(header)-------------------------*/
-   DEBUG_DATA   yLOG_senter  (__FUNCTION__);
-   /*---(check return)-------------------*/
-   DEBUG_DATA   yLOG_spoint  (a_new);
-   --rce;  if (a_new == NULL) {
-      DEBUG_DATA   yLOG_sexitr  (__FUNCTION__, rce);
-      return rce;
-   }
-   DEBUG_DATA   yLOG_spoint  (*a_new);
-   --rce;  if (*a_new != NULL) {
-      DEBUG_DATA   yLOG_snote   ("already set");
-      DEBUG_DATA   yLOG_sexitr  (__FUNCTION__, rce);
-      return rce;
-   }
-   /*---(default)------------------------*/
-   *a_new = NULL;
-   /*---(allocate)-----------------------*/
-   while (x_new == NULL) {
-      ++x_tries;
-      x_new = malloc (sizeof (tERROR));
-      if (x_tries > 3)   break;
-   }
-   DEBUG_DATA   yLOG_sint    (x_tries);
-   DEBUG_DATA   yLOG_spoint  (x_new);
-   --rce;  if (x_new == NULL) {
-      DEBUG_DATA   yLOG_sexitr  (__FUNCTION__, rce);
-      return rce;
-   }
-   /*---(wipe, attach, and increment)----*/
-   yregex_error__wipe (x_new);
-   if    (s_tail == NULL) {
-      DEBUG_DATA   yLOG_snote   ("first entry");
-      s_head = x_new;
-   } else {
-      DEBUG_DATA   yLOG_snote   ("append to tail");
-      x_new->m_prev  = s_tail;
-      s_tail->m_next = x_new;
-   }
-   s_tail = x_new;
-   ++s_count;
-   /*---(save return)--------------------*/
-   *a_new = x_new;
-   /*---(complete)-----------------------*/
-   DEBUG_DATA   yLOG_sexit   (__FUNCTION__);
-   return rc;
-}
-
-char
-yregex_error__free      (void **a_old)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   tERROR     *x_old       = NULL;
-   /*---(header)-------------------------*/
-   DEBUG_DATA   yLOG_senter  (__FUNCTION__);
-   /*---(check return)-------------------*/
-   DEBUG_DATA   yLOG_spoint  (a_old);
-   --rce;  if (a_old == NULL) {
-      DEBUG_DATA   yLOG_sexitr  (__FUNCTION__, rce);
-      return rce;
-   }
-   DEBUG_DATA   yLOG_spoint  (*a_old);
-   --rce;  if (*a_old == NULL) {
-      DEBUG_DATA   yLOG_snote   ("never set");
-      DEBUG_DATA   yLOG_sexitr  (__FUNCTION__, rce);
-      return rce;
-   }
-   /*---(simplify)-----------------------*/
-   x_old = (tERROR *) *a_old;
-   /*---(detach and decrement)-----------*/
-   if (x_old->m_next != NULL) x_old->m_next->m_prev   = x_old->m_prev;
-   else                       s_tail                  = x_old->m_prev;
-   if (x_old->m_prev != NULL) x_old->m_prev->m_next   = x_old->m_next;
-   else                       s_head                  = x_old->m_next;
-   --s_count;
-   DEBUG_DATA   yLOG_sint    (s_count);
-   /*---(gound links)--------------------*/
-   x_old->m_prev = NULL;
-   x_old->m_next = NULL;
-   /*---(free and ground)----------------*/
-   if (x_old->cat  != NULL)  free (x_old->cat);
-   if (x_old->msg  != NULL)  free (x_old->msg);
-   free (*a_old);
-   /*---(ground)-------------------------*/
-   *a_old = NULL;
-   /*---(complete)-----------------------*/
-   DEBUG_DATA   yLOG_sexit   (__FUNCTION__);
-   return 0;
-}
+char yregex_error__new  (tERROR **r_new) { return yregex_share_new  (TYPE_ERRS, r_new, &s_head, &s_tail, &s_count); }
+char yregex_error__free (tERROR **r_old) { return yregex_share_free (TYPE_ERRS, r_old, &s_head, &s_tail, &s_count); }
 
 
 
@@ -189,49 +87,18 @@ yregex_error__free      (void **a_old)
 /*====================------------------------------------====================*/
 static void  o___PROGRAM_________o () { return; }
 
-char
-yregex_error_init       (void)
-{
-   DEBUG_DATA   yLOG_enter   (__FUNCTION__);
-   DEBUG_DATA   yLOG_exit    (__FUNCTION__);
-   return 0;
-}
+char yregex_error_init   (void) { return yregex_share_init  (TYPE_ERRS, &s_head, &s_tail, &s_curr, &s_count); }
+char yregex_error__purge (void) { return yregex_share_purge (TYPE_ERRS, &s_head, &s_tail, &s_curr, &s_count); }
+char yregex_error_wrap   (void) { return yregex_share_wrap  (TYPE_ERRS, &s_head, &s_tail, &s_curr, &s_count); }
 
 char
-yregex_error__purge     (void)
+yregex_error_reset      (void)
 {
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   tERROR     *x_curr      = NULL;
-   /*---(header)-------------------------*/
-   DEBUG_DATA   yLOG_enter   (__FUNCTION__);
-   /*---(prepare)------------------------*/
-   --rce;
-   x_curr = s_head;
-   while (x_curr != NULL) {
-      yregex_error__free (&x_curr);
-      x_curr = s_head;
-   }
-   /*---(ground everything)--------------*/
-   s_head   = s_tail   = s_curr   = NULL;
-   s_count  = 0;
-   /*---(clear fancy)--------------------*/
+   char        rc          =    0;
+   rc = yregex_error_wrap ();
    strlcpy (s_fancy, "", LEN_RECD);
-   /*---(complete)-----------------------*/
-   DEBUG_DATA   yLOG_exit    (__FUNCTION__);
-   return 0;
+   return rc;
 }
-
-char
-yregex_error_wrap       (void)
-{
-   DEBUG_DATA   yLOG_enter   (__FUNCTION__);
-   yregex_error__purge ();
-   DEBUG_DATA   yLOG_exit    (__FUNCTION__);
-   return 0;
-}
-
-char yregex_error_reset  (void) { return yregex_error_wrap (); }
 
 
 
@@ -288,142 +155,8 @@ yregex_error_add        (char a_level, char *a_cat, int a_beg, int a_len, char *
 /*====================------------------------------------====================*/
 static void  o___SEARCH__________o () { return; }
 
-char
-yregex_error__by_cursor (void **r_curr, char a_move)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   char        rc          =    0;
-   tERROR     *x_curr      = NULL;
-   /*---(header)-------------------------*/
-   DEBUG_NORM   yLOG_senter  (__FUNCTION__);
-   DEBUG_NORM   yLOG_schar   (a_move);
-   /*---(defaults)-----------------------*/
-   if (r_curr != NULL)  *r_curr = NULL;
-   /*---(starting point)-----------------*/
-   x_curr  = s_curr;
-   /*---(defense)------------------------*/
-   DEBUG_NORM   yLOG_spoint  (x_curr);
-   --rce;  if (x_curr == NULL) {
-      /*---(bounce-types)----------------*/
-      switch (a_move) {
-      case YDLST_HEAD : case YDLST_DHEAD : case YDLST_NEXT :
-         x_curr = s_head;
-         break;
-      case YDLST_TAIL : case YDLST_DTAIL : case YDLST_PREV :
-         x_curr = s_tail;
-         break;
-      }
-      /*---(bounce types)----------------*/
-      DEBUG_NORM    yLOG_spoint  (x_curr);
-      if (x_curr == NULL) {
-         DEBUG_NORM    yLOG_sexitr  (__FUNCTION__, rce);
-         return rce;
-      }
-   }
-   /*---(switch)-------------------------*/
-   --rce;  switch (a_move) {
-   case YDLST_HEAD : case YDLST_DHEAD :
-      x_curr = s_head;
-      break;
-   case YDLST_PREV : case YDLST_DPREV :
-      x_curr = x_curr->m_prev;
-      break;
-   case YDLST_CURR : case YDLST_DCURR :
-      break;
-   case YDLST_NEXT : case YDLST_DNEXT :
-      x_curr = x_curr->m_next;
-      break;
-   case YDLST_TAIL : case YDLST_DTAIL :
-      x_curr = s_tail;
-      break;
-   default         :
-      DEBUG_NORM   yLOG_sexitr  (__FUNCTION__, rce);
-      return rce;
-   }
-   DEBUG_NORM   yLOG_spoint  (x_curr);
-   /*---(check end)----------------------*/
-   --rce;  if (x_curr == NULL) {
-      /*---(bounce off ends)-------------*/
-      if (a_move == YDLST_PREV)  x_curr  = s_head;
-      if (a_move == YDLST_NEXT)  x_curr  = s_tail;
-      /*---(no bounce)-------------------*/
-      if (x_curr == NULL) {
-         s_curr = x_curr;
-         DEBUG_NORM    yLOG_sexitr  (__FUNCTION__, rce);
-         return rce;
-      }
-      /*---(mark trouble)----------------*/
-      DEBUG_NORM    yLOG_snote   ("BOUNCE");
-      rc = rce;
-      /*---(done)------------------------*/
-   }
-   /*---(normal result)------------------*/
-   s_curr = x_curr;
-   /*---(save back)----------------------*/
-   if (r_curr != NULL)  *r_curr = x_curr;
-   /*---(complete)-----------------------*/
-   DEBUG_NORM   yLOG_sexit   (__FUNCTION__);
-   return rc;
-}
-
-char
-yregex_error__by_index  (void **r_curr, int a_index)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   tERROR     *x_curr      = NULL;
-   int         c           =    0;
-   /*---(header)-------------------------*/
-   DEBUG_DATA   yLOG_senter  (__FUNCTION__);
-   DEBUG_DATA   yLOG_sint    (a_index);
-   /*---(default)------------------------*/
-   if (r_curr != NULL)  *r_curr = NULL;
-   /*---(short-cut)----------------------*/
-   --rce;  if (a_index == -1) {
-      DEBUG_DATA   yLOG_snote   ("requested current");
-      x_curr = s_curr;
-      if (r_curr != NULL)  *r_curr = x_curr;
-      DEBUG_DATA   yLOG_spoint  (x_curr);
-      --rce;  if (x_curr == NULL) {
-         DEBUG_DATA   yLOG_sexitr  (__FUNCTION__, rce);
-         return rce;
-      }
-      DEBUG_DATA   yLOG_sexit   (__FUNCTION__);
-      return 0;
-   }
-   /*---(prepare)------------------------*/
-   x_curr = s_head;
-   /*---(defense)------------------------*/
-   DEBUG_DATA   yLOG_spoint  (x_curr);
-   --rce;  if (x_curr == NULL) {
-      DEBUG_DATA   yLOG_sexitr  (__FUNCTION__, rce);
-      return rce;
-   }
-   DEBUG_DATA   yLOG_sint    (a_index);
-   --rce;  if (a_index < -1) {
-      DEBUG_DATA   yLOG_sexitr  (__FUNCTION__, rce);
-      return rce;
-   }
-   /*---(walk data)----------------------*/
-   while (x_curr != NULL) {
-      if (c == a_index)  break;
-      ++c;
-      x_curr = x_curr->m_next;
-   }
-   /*---(check result)-------------------*/
-   DEBUG_DATA   yLOG_sint    (x_curr);
-   --rce;  if (x_curr == NULL) {
-      DEBUG_DATA   yLOG_sexitr  (__FUNCTION__, rce);
-      return rce;
-   }
-   /*---(save current)-------------------*/
-   s_curr = x_curr;
-   if (r_curr != NULL)  *r_curr = x_curr;
-   /*---(complete)-----------------------*/
-   DEBUG_DATA   yLOG_sexit   (__FUNCTION__);
-   return 0;
-}
+char yregex_error__by_cursor (char a_move, tERROR **r_back) { return yregex_share__by_cursor (TYPE_ERRS, &s_head, &s_tail, &s_curr, r_back, a_move); }
+char yregex_error__by_index  (int a_index, tERROR **r_back) { return yregex_share__by_index  (TYPE_ERRS, &s_head, &s_curr, r_back, a_index); }
 
 
 
@@ -442,7 +175,7 @@ yregex_error_fancify    (void)
    char        x_level     =  '-';
    char        t           [LEN_RECD]  = "";
    char        c           [LEN_LABEL] = "";
-   rc = yregex_error__by_cursor (&x_err, YDLST_DHEAD);
+   rc = yregex_error__by_cursor (YDLST_DHEAD, &x_err);
    while (x_err != NULL && rc >= 0) {
       /*---(update level/color)----------*/
       switch (x_err->level) {
@@ -467,7 +200,7 @@ yregex_error_fancify    (void)
       strlcat (s_fancy, t, LEN_RECD);
       /*---(prepare for next)------------*/
       x_last = x_err->beg + x_err->len;
-      rc = yregex_error__by_cursor (&x_err, YDLST_DNEXT);
+      rc = yregex_error__by_cursor (YDLST_DNEXT, &x_err);
       /*---(done)------------------------*/
    }
    /*---(no errors)----------------------*/
@@ -488,7 +221,7 @@ yregex_error_fancify    (void)
    return rc;
 }
 
-char yREGEX_fancy   (char *a_fancy) { strlcpy (a_fancy, s_fancy, LEN_RECD); return 0; }
+char yREGEX_fancy   (char *r_fancy) { strlcpy (r_fancy, s_fancy, LEN_RECD); return 0; }
 
 
 
@@ -522,7 +255,7 @@ yregex_error__unit      (char *a_question, int n)
       snprintf (unit_answer, LEN_RECD, "ERROR list       : num=%4d, head=%-10p, tail=%p", s_count, s_head, s_tail);
    }
    else if (strcmp (a_question, "entry"    )      == 0) {
-      yregex_error__by_index (&x_err, n);
+      yregex_error__by_index (n, &x_err);
       if (x_err != NULL) {
          sprintf (t, "%2då%.10sæ", strlen (x_err->cat ), x_err->cat );
          sprintf (u, "%2då%.40sæ", strlen (x_err->msg) , x_err->msg);

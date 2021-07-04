@@ -62,7 +62,7 @@ yREGEX_clear            (void)
    /*---(initialize grouping)------------*/
    strlcpy (myREGEX.g_mrk, "               ", LEN_LABEL);
    /*---(initialize sets)----------------*/
-   yregex_sets_prep ();
+   yregex_sets_reset ();
    yregex_rule_init ();
    myREGEX.ready = '-';
    /*---(initialize sets)----------------*/
@@ -107,7 +107,8 @@ yregex__unit_quiet      (void)
    yURG_urgs   (1, x_args);
    EXEC_init        ();
    yregex_error_init  ();
-   yregex_sets_init ();
+   yregex_sets_init   ();
+   yregex_pats_init   ();
    return 0;
 }
 
@@ -120,7 +121,8 @@ yregex__unit_loud       (void)
    yURG_urgs   (3, x_args);
    EXEC_init        ();
    yregex_error_init  ();
-   yregex_sets_init ();
+   yregex_sets_init   ();
+   yregex_pats_init   ();
    return 0;
 }
 
@@ -129,6 +131,7 @@ yregex__unit_end        (void)
 {
    yregex_error_wrap  ();
    yregex_sets_wrap ();
+   yregex_pats_wrap ();
    EXEC_wrap        ();
    yLOGS_end        ();
    return 0;
