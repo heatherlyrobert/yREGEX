@@ -91,11 +91,11 @@ main          (int a_argc, char *a_argv[])
       ++a;
       switch (s_run) {
       case 'f' :
-         rc = yREGEX_fast (x_recd);
+         rc = yREGEX_filter (x_recd);
          if (rc  > 0)  ++c;
          break;
       case 'y' :
-         rc = yREGEX_exec (x_recd);
+         rc = yREGEX_full (x_recd);
          if (rc  > 0)  ++c;
          break;
       case 'c' :

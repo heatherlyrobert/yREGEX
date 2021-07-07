@@ -755,59 +755,41 @@ yregex_sets_break       (int a_lvl, int a_rpos, int a_tpos)
    case '<' :
       if (a_tpos <= 0) {
          DEBUG_YREGEX  yLOG_note    ("BOW at BOL");
-         EXEC__passed (HAND_ANC);
+         yregex_exec__passed (HAND_ANC);
          rc = 1;
          break;
       }
       if (x_othrc == '.' || x_txtrc == ' ') {
          DEBUG_YREGEX  yLOG_note    ("not BOW");
-         EXEC__failed (HAND_ANC);
+         yregex_exec__failed (HAND_ANC);
          DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
          return 0;
       }
       DEBUG_YREGEX  yLOG_note    ("BOW");
-      EXEC__passed (HAND_ANC);
+      yregex_exec__passed (HAND_ANC);
       rc = 1;
       break;
    case '>' :
       if (x_txt == 0) {
          DEBUG_YREGEX  yLOG_note    ("EOW at EOL");
-         EXEC__passed (HAND_ANC);
+         yregex_exec__passed (HAND_ANC);
          rc = 1;
          break;
       }
       if (x_othrc == ' ' || x_txtrc == '.') {
          DEBUG_YREGEX  yLOG_note    ("not EOW");
-         EXEC__failed (HAND_ANC);
+         yregex_exec__failed (HAND_ANC);
          DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
          return 0;
       }
       DEBUG_YREGEX  yLOG_note    ("EOW");
-      EXEC__passed (HAND_ANC);
+      yregex_exec__passed (HAND_ANC);
       rc = 1;
       break;
-      /*> case '>' :                                                                     <* 
-       *>    if (x_txt == 0) {                                                           <* 
-       *>       DEBUG_YREGEX  yLOG_note    ("EOW at EOL");                               <* 
-       *>       rc = 1;                                                                  <* 
-       *>       break;                                                                   <* 
-       *>    }                                                                           <* 
-       *>    x_oth       = myREGEX.text [a_tpos + 1];                                        <* 
-       *>    DEBUG_YREGEX  yLOG_char    ("x_oth"     , x_oth);                           <* 
-       *>    x_othrc     = s_sets [x_indx].map [x_oth];                                  <* 
-       *>    DEBUG_YREGEX  yLOG_char    ("x_othrc"   , x_othrc);                         <* 
-       *>    if (x_othrc == '.' || x_txtrc == ' ') {                                     <* 
-       *>       DEBUG_YREGEX  yLOG_note    ("not EOW");                                  <* 
-       *>       DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);                               <* 
-       *>       return 0;                                                                <* 
-       *>    }                                                                           <* 
-       *>    DEBUG_YREGEX  yLOG_note    ("EOW");                                         <* 
-       *>    rc = 1;                                                                     <* 
-       *>    break;                                                                      <*/
    }
    DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
    /*---(prepare next)-------------------*/
-   EXEC__launcher (a_lvl + 1, a_rpos, a_tpos - 1, rc);
+   yregex_exec_launcher (a_lvl + 1, a_rpos, a_tpos - 1, rc);
    /*---(return)-------------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
    return rc;

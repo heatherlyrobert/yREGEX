@@ -118,7 +118,7 @@ char yregex_pats_init    (void) { return yregex_share_init  (TYPE_PATS, &s_head,
 char yregex_pats__purge  (void) { return yregex_share_purge (TYPE_PATS, &s_head, &s_tail, &s_curr, &s_count); }
 char yregex_pats_wrap    (void) { return yregex_share_wrap  (TYPE_PATS, &s_head, &s_tail, &s_curr, &s_count); }
 
-char         /*-> tbd --------------------------------[ leaf   [fz.531.021.10]*/ /*-[02.0000.01#.!]-*/ /*-[--.---.---.--]-*/
+char
 yregex_pats_reset       (void)
 {
    yregex_pats__purge ();

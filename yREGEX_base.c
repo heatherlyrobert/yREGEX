@@ -86,7 +86,7 @@ yREGEX__testloc      (cchar *a_regex, cchar *a_source)
    rc = yREGEX_comp (a_regex);
    if (rc <  0)   return "yREGEX_tester    : compilation failed";
    /*---(execute)------------------------*/
-   rc = yREGEX_exec (a_source);
+   rc = yREGEX_full (a_source);
    if (rc <  0)   return "yREGEX_tester    : execution failed";
    /*---(question)-----------------------*/
    return yregex_find__unit ("match", 0);
@@ -105,7 +105,7 @@ yregex__unit_quiet      (void)
    char       *x_args [1]  = { "yREGEX" };
    yURG_logger (1, x_args);
    yURG_urgs   (1, x_args);
-   EXEC_init        ();
+   yregex_exec_init   ();
    yregex_error_init  ();
    yregex_sets_init   ();
    yregex_pats_init   ();
@@ -119,7 +119,7 @@ yregex__unit_loud       (void)
    yURG_logger (3, x_args);
    yLOG_info   ("yREGEX"  , yREGEX_version   ());
    yURG_urgs   (3, x_args);
-   EXEC_init        ();
+   yregex_exec_init   ();
    yregex_error_init  ();
    yregex_sets_init   ();
    yregex_pats_init   ();
@@ -130,10 +130,10 @@ char         /*-> stop testing -----------------------[ light  [uz.211.001.00]*/
 yregex__unit_end        (void)
 {
    yregex_error_wrap  ();
-   yregex_sets_wrap ();
-   yregex_pats_wrap ();
-   EXEC_wrap        ();
-   yLOGS_end        ();
+   yregex_sets_wrap   ();
+   yregex_pats_wrap   ();
+   yregex_exec_wrap   ();
+   yLOGS_end          ();
    return 0;
 }
 

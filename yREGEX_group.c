@@ -20,6 +20,7 @@
  *
  */
 
+static  int s_stk       [MAX_STACK];
 
 
 /*====================------------------------------------====================*/
@@ -47,12 +48,8 @@ yregex_group__purge     (void)
    myREGEX.g_mul    =  100;
    myREGEX.g_foc    =  '-';
    strlcpy (myREGEX.g_mrk, "               ", LEN_LABEL);
-   for (i = 0; i < LEN_LABEL; ++i) {
-      myREGEX.g_beg [i] = -1;
-      myREGEX.g_end [i] = -1;
-   }
    for (i = 0; i < MAX_STACK; ++i) {
-      myREGEX.g_stk [i] = -1;
+      s_stk [i] = -1;
    }
    /*---(complete)-----------------------*/
    return 0;
@@ -161,7 +158,7 @@ yregex_group__open      (int *a_rpos)
    }
    /*---(update)-------------------------*/
    yregex_comp_add  (x_char, x_grp + 1);
-   myREGEX.g_stk [myREGEX.g_lvl] = x_grp;
+   s_stk [myREGEX.g_lvl] = x_grp;
    ++(myREGEX.g_cnt);
    /*---(increase level)-----------------*/
    ++(myREGEX.g_lvl);
@@ -207,7 +204,7 @@ yregex_group__branch    (int *a_rpos)
    }
    /*---(OR branch)----------------------*/
    DEBUG_YREGEX  yLOG_note    ("divide branches/matches");
-   x_grp = myREGEX.g_stk [myREGEX.g_lvl - 1];
+   x_grp = s_stk [myREGEX.g_lvl - 1];
    yregex_comp_add  (x_char, x_grp + 1);
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
@@ -252,7 +249,7 @@ yregex_group__close     (int *a_rpos)
    --(myREGEX.g_lvl);
    DEBUG_YREGEX  yLOG_value   ("g_lvl"     , myREGEX.g_lvl);
    /*---(find group)---------------------*/
-   x_grp = myREGEX.g_stk [myREGEX.g_lvl];
+   x_grp = s_stk [myREGEX.g_lvl];
    DEBUG_YREGEX  yLOG_value   ("x_grp"     , x_grp);
    /*---(regex container)----------------*/
    --rce;  if (myREGEX.rlen - 1 == *a_rpos) {
@@ -422,7 +419,7 @@ yregex_group_endpoints  (int a_cur, int *a_beg, int *a_end)
    if (a_beg != NULL) {
       DEBUG_YREGEX  yLOG_snote   ("begin");
       *a_beg = -1;
-      for (i = a_cur - 1; i >= 0; --i) {
+      for (i = a_cur; i >= 0; --i) {
          if (myREGEX.indx [i] != x_lvl)  continue;
          if (myREGEX.comp [i] != '('  )  continue;
          *a_beg = i;
@@ -433,7 +430,7 @@ yregex_group_endpoints  (int a_cur, int *a_beg, int *a_end)
    if (a_end != NULL) {
       DEBUG_YREGEX  yLOG_snote   ("end");
       *a_end = -1;
-      for (i = a_cur + 1; i < myREGEX.clen; ++i) {
+      for (i = a_cur; i < myREGEX.clen; ++i) {
          if (myREGEX.indx [i] != x_lvl)  continue;
          if (myREGEX.comp [i] != ')'  )  continue;
          *a_end = i;
@@ -460,8 +457,8 @@ yregex_group__unit      (char *a_question, int a_num)
    int         i           =    0;
    if        (strncmp (a_question, "stats"     , 20)  == 0) {
       for (i = 0; i < 20; ++i) {
-         if (myREGEX.g_stk [i] >= 0)  sprintf (s, " %2d", myREGEX.g_stk [i]);
-         else                         sprintf (s, "  -");
+         if (s_stk [i] >= 0)  sprintf (s, " %2d", s_stk [i]);
+         else                 sprintf (s, "  -");
          strcat  (t, s);
       }
       snprintf (unit_answer, LEN_TEXT, "GROUP stats      : %2d %3d %2d %3d %3d %c %s",

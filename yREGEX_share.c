@@ -7,12 +7,15 @@
 #define  IF_SETS   if      (a_type == TYPE_SETS)
 #define  EL_PATS   else if (a_type == TYPE_PATS)
 #define  EL_ERRS   else if (a_type == TYPE_ERRS)
-#define  EL_FIND   else if (a_type == TYPE_FIND)
 #define  EL_RULE   else if (a_type == TYPE_RULE)
+#define  EL_EXEC   else if (a_type == TYPE_EXEC)
+#define  EL_FIND   else if (a_type == TYPE_FIND)
 #define  ELSE      else 
 
-#define  UNHOOK_NEXT(a)   if (a->m_next != NULL) a->m_next->m_prev  = a->m_prev; else  *a_tail = a->m_prev;
-#define  UNHOOK_PREV(a)   if (a->m_prev != NULL) a->m_prev->m_next  = a->m_next; else  *a_head = a->m_next;
+#define  UNHOOK_NEXT(a)   { if (a->m_next != NULL) a->m_next->m_prev  = a->m_prev; else  *a_tail = a->m_prev; }
+#define  UNHOOK_PREV(a)   { if (a->m_prev != NULL) a->m_prev->m_next  = a->m_next; else  *a_head = a->m_next; }
+#define  GROUND(a)        a->m_prev = a->m_next = NULL;
+
 
 
 /*====================------------------------------------====================*/
@@ -27,24 +30,25 @@ yregex_share_new        (char a_type, void **r_new, void **a_head, void **a_tail
    char        rce         =  -10;
    char        rc          =    0;
    tERROR     *x_errs      = NULL;
-   tFIND      *x_find      = NULL;
    tPATS      *x_pats      = NULL;
    tRULE      *x_rule      = NULL;
    tSETS      *x_sets      = NULL;
+   tSTATE     *x_exec      = NULL;
+   tFIND      *x_find      = NULL;
    void       *x_new       = NULL;
    int         x_tries     =    0;
    /*---(header)-------------------------*/
-   DEBUG_DATA   yLOG_senter  (__FUNCTION__);
+   DEBUG_YREGEX   yLOG_senter  (__FUNCTION__);
    /*---(check return)-------------------*/
-   DEBUG_DATA   yLOG_spoint  (r_new);
+   DEBUG_YREGEX   yLOG_spoint  (r_new);
    --rce;  if (r_new == NULL) {
-      DEBUG_DATA   yLOG_sexitr  (__FUNCTION__, rce);
+      DEBUG_YREGEX   yLOG_sexitr  (__FUNCTION__, rce);
       return rce;
    }
-   DEBUG_DATA   yLOG_spoint  (*r_new);
+   DEBUG_YREGEX   yLOG_spoint  (*r_new);
    --rce;  if (*r_new != NULL) {
-      DEBUG_DATA   yLOG_snote   ("already set");
-      DEBUG_DATA   yLOG_sexitr  (__FUNCTION__, rce);
+      DEBUG_YREGEX   yLOG_snote   ("already set");
+      DEBUG_YREGEX   yLOG_sexitr  (__FUNCTION__, rce);
       return rce;
    }
    /*---(default)------------------------*/
@@ -55,27 +59,29 @@ yregex_share_new        (char a_type, void **r_new, void **a_head, void **a_tail
       IF_SETS  x_new = malloc (sizeof (tSETS));
       EL_PATS  x_new = malloc (sizeof (tPATS));
       EL_ERRS  x_new = malloc (sizeof (tERROR));
-      EL_FIND  x_new = malloc (sizeof (tFIND));
       EL_RULE  x_new = malloc (sizeof (tRULE));
+      EL_EXEC  x_new = malloc (sizeof (tSTATE));
+      EL_FIND  x_new = malloc (sizeof (tFIND));
       if (x_tries > 3)   break;
    }
-   DEBUG_DATA   yLOG_sint    (x_tries);
-   DEBUG_DATA   yLOG_spoint  (x_new);
+   DEBUG_YREGEX   yLOG_sint    (x_tries);
+   DEBUG_YREGEX   yLOG_spoint  (x_new);
    --rce;  if (x_new == NULL) {
-      DEBUG_DATA   yLOG_sexitr  (__FUNCTION__, rce);
+      DEBUG_YREGEX   yLOG_sexitr  (__FUNCTION__, rce);
       return rce;
    }
    /*---(wipe)---------------------------*/
    IF_SETS  yregex_sets__wipe  (x_new);
    EL_PATS  yregex_pats__wipe  (x_new);
    EL_ERRS  yregex_error__wipe (x_new);
+   EL_EXEC  yregex_exec__wipe  (x_new);
    EL_FIND  yregex_find__wipe  (x_new);
    /*---(hook)---------------------------*/
-   if    (*a_tail == NULL) {
-      DEBUG_DATA   yLOG_snote   ("first entry");
-      *a_head = x_new;
+   if    (a_tail == NULL || *a_tail == NULL) {
+      DEBUG_YREGEX   yLOG_snote   ("first entry");
+      if (a_head  != NULL)  *a_head = x_new;
    } else {
-      DEBUG_DATA   yLOG_snote   ("append to tail");
+      DEBUG_YREGEX   yLOG_snote   ("append to tail");
       IF_SETS  {
          x_sets = (tSETS  *) x_new;    x_sets->m_prev  = *a_tail;
          x_sets = (tSETS  *) *a_tail;  x_sets->m_next = x_new;
@@ -92,13 +98,21 @@ yregex_share_new        (char a_type, void **r_new, void **a_head, void **a_tail
          x_find = (tFIND  *) x_new;    x_find->m_prev  = *a_tail;
          x_find = (tFIND  *) *a_tail;  x_find->m_next = x_new;
       }
+      EL_EXEC  {
+         x_exec = (tSTATE *) x_new;    x_exec->m_prev  = *a_tail;
+         x_exec = (tSTATE *) *a_tail;  x_exec->m_next = x_new;
+      }
    }
-   *a_tail = x_new;
-   ++(*a_count);
+   if (a_tail  != NULL)  *a_tail = x_new;
+   /*---(increment)----------------------*/
+   if (a_count != NULL) {
+      ++(*a_count);
+      DEBUG_YREGEX   yLOG_sint    (*a_count);
+   }
    /*---(save return)--------------------*/
    *r_new = x_new;
    /*---(complete)-----------------------*/
-   DEBUG_DATA   yLOG_sexit   (__FUNCTION__);
+   DEBUG_YREGEX   yLOG_sexit   (__FUNCTION__);
    return rc;
 }
 
@@ -108,73 +122,74 @@ yregex_share_free       (char a_type, void **r_old, void **a_head, void **a_tail
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
    tERROR     *x_errs      = NULL;
-   tFIND      *x_find      = NULL;
    tPATS      *x_pats      = NULL;
    tRULE      *x_rule      = NULL;
    tSETS      *x_sets      = NULL;
+   tSTATE     *x_exec      = NULL;
+   tFIND      *x_find      = NULL;
    void       *x_old       = NULL;
    int         i           =    0;
    /*---(header)-------------------------*/
-   DEBUG_DATA   yLOG_senter  (__FUNCTION__);
+   DEBUG_YREGEX   yLOG_senter  (__FUNCTION__);
+   DEBUG_YREGEX   yLOG_schar   (a_type);
    /*---(check return)-------------------*/
-   DEBUG_DATA   yLOG_spoint  (r_old);
+   DEBUG_YREGEX   yLOG_spoint  (r_old);
    --rce;  if (r_old == NULL) {
-      DEBUG_DATA   yLOG_sexitr  (__FUNCTION__, rce);
+      DEBUG_YREGEX   yLOG_sexitr  (__FUNCTION__, rce);
       return rce;
    }
-   DEBUG_DATA   yLOG_spoint  (*r_old);
+   DEBUG_YREGEX   yLOG_spoint  (*r_old);
    --rce;  if (*r_old == NULL) {
-      DEBUG_DATA   yLOG_snote   ("never set");
-      DEBUG_DATA   yLOG_sexitr  (__FUNCTION__, rce);
+      DEBUG_YREGEX   yLOG_snote   ("never set");
+      DEBUG_YREGEX   yLOG_sexitr  (__FUNCTION__, rce);
       return rce;
    }
    /*---(simplify)-----------------------*/
    x_old = (tSETS *) *r_old;
    /*---(detach and decrement)-----------*/
-   IF_SETS { x_sets = (tSETS  *) *r_old; UNHOOK_NEXT(x_sets); UNHOOK_PREV(x_sets); }
-   EL_PATS { x_pats = (tPATS  *) *r_old; UNHOOK_NEXT(x_pats); UNHOOK_PREV(x_pats); }
-   EL_ERRS { x_errs = (tERROR *) *r_old; UNHOOK_NEXT(x_errs); UNHOOK_PREV(x_errs); }
-   EL_FIND { x_find = (tFIND  *) *r_old; UNHOOK_NEXT(x_find); UNHOOK_PREV(x_find); }
-   EL_RULE { x_rule = (tRULE  *) *r_old; UNHOOK_NEXT(x_rule); UNHOOK_PREV(x_rule); }
+   IF_SETS { x_sets = (tSETS  *) *r_old; UNHOOK_NEXT(x_sets); UNHOOK_PREV(x_sets); GROUND(x_sets); }
+   EL_PATS { x_pats = (tPATS  *) *r_old; UNHOOK_NEXT(x_pats); UNHOOK_PREV(x_pats); GROUND(x_pats); }
+   EL_ERRS { x_errs = (tERROR *) *r_old; UNHOOK_NEXT(x_errs); UNHOOK_PREV(x_errs); GROUND(x_errs); }
+   EL_FIND { x_find = (tFIND  *) *r_old; UNHOOK_NEXT(x_find); UNHOOK_PREV(x_find); GROUND(x_find); }
+   EL_RULE { x_rule = (tRULE  *) *r_old; UNHOOK_NEXT(x_rule); UNHOOK_PREV(x_rule); GROUND(x_rule); }
+   EL_EXEC { x_exec = (tSTATE *) *r_old; UNHOOK_NEXT(x_exec); UNHOOK_PREV(x_exec); GROUND(x_exec); }
    /*---(free details)-------------------*/
    IF_SETS {
-      if (x_sets->source != BASE_ENTRY && x_sets->name != NULL)   free (x_sets->name);
-      x_sets->name = NULL;
-      if (x_sets->source != BASE_ENTRY && x_sets->map  != NULL)   free (x_sets->map );
-      x_sets->map  = NULL;
+      if (x_sets->source != BASE_ENTRY) {
+         if (x_sets->name != NULL) { free (x_sets->name); x_sets->name = NULL; }
+         if (x_sets->map  != NULL) { free (x_sets->map ); x_sets->map  = NULL; }
+      }
    } EL_PATS {
-      if (x_pats->source != BASE_ENTRY && x_pats->name != NULL)   free (x_pats->name);
-      x_pats->name = NULL;
-      if (x_pats->source != BASE_ENTRY && x_pats->pat  != NULL)   free (x_pats->pat );
-      x_pats->pat  = NULL;
+      if (x_pats->source != BASE_ENTRY) {
+         if (x_pats->name != NULL) { free (x_pats->name); x_pats->name = NULL; }
+         if (x_pats->pat  != NULL) { free (x_pats->pat ); x_pats->pat  = NULL; }
+      }
    } EL_ERRS {
       if (x_errs->cat  != NULL)  free (x_errs->cat);
       if (x_errs->msg  != NULL)  free (x_errs->msg);
    } EL_FIND {
       for (i = 0; i < MAX_SUB; ++i) {
-         if (x_find->subs [i] != NULL) {
-            if (x_find->subs [i]->text != NULL)   free (x_find->subs [i]->text);
-            x_find->subs [i]->text = NULL;
-            if (x_find->subs [i]->quan != NULL)   free (x_find->subs [i]->quan);
-            x_find->subs [i]->quan = NULL;
-         }
-         x_find->subs [i] = NULL;
+         if (x_find->subs [i].text != NULL) { free (x_find->subs [i].text); x_find->subs [i].text = NULL; }
+         if (x_find->subs [i].quan != NULL) { free (x_find->subs [i].quan); x_find->subs [i].quan = NULL; }
       }
-      if (x_find->text != NULL)   free (x_find->text);
-      x_find->text = NULL;
-      if (x_find->quan != NULL)   free (x_find->quan);
-      x_find->quan = NULL;
+      if (x_find->text != NULL)  { free (x_find->text); x_find->text = NULL; }
+      if (x_find->quan != NULL)  { free (x_find->quan); x_find->quan = NULL; }
    } EL_RULE {
       if (x_rule->str  != NULL)  free (x_rule->str);
    }
    /*---(free and ground)----------------*/
    free (*r_old);
    *r_old = NULL;
+   /*---(update)-------------------------*/
+   DEBUG_YREGEX   yLOG_spoint  (*a_head);
+   DEBUG_YREGEX   yLOG_spoint  (*a_tail);
    /*---(decrement)----------------------*/
-   --(*a_count);
-   DEBUG_DATA   yLOG_sint    (*a_count);
+   if (a_count != NULL) {
+      --(*a_count);
+      DEBUG_YREGEX   yLOG_sint    (*a_count);
+   }
    /*---(complete)-----------------------*/
-   DEBUG_DATA   yLOG_sexit   (__FUNCTION__);
+   DEBUG_YREGEX   yLOG_sexit   (__FUNCTION__);
    return 0;
 }
 
@@ -191,12 +206,12 @@ yregex_share_init       (char a_type, void **a_head, void **a_tail, void **a_cur
    /*---(locals)-----------+-----+-----+-*/
    int         n           =    0;
    /*---(header)-------------------------*/
-   DEBUG_DATA   yLOG_enter   (__FUNCTION__);
+   DEBUG_YREGEX   yLOG_enter   (__FUNCTION__);
    /*---(ground everything)--------------*/
    *a_head  =  *a_tail = *a_curr = NULL;
    *a_count = 0;
    /*---(complete)-----------------------*/
-   DEBUG_DATA   yLOG_exit    (__FUNCTION__);
+   DEBUG_YREGEX   yLOG_exit    (__FUNCTION__);
    return 0;
 }
 
@@ -208,31 +223,41 @@ yregex_share_purge      (char a_type, void **a_head, void **a_tail, void **a_cur
    void       *x_curr      = NULL;
    int         n           =    0;
    /*---(header)-------------------------*/
-   DEBUG_DATA   yLOG_enter   (__FUNCTION__);
+   DEBUG_YREGEX   yLOG_enter   (__FUNCTION__);
+   DEBUG_YREGEX   yLOG_complex ("args"      , "%c, %-10.10p (%-10.10p), %-10.10p (%-10.10p), %-10.10p (%-10.10p), %-10.10p (%d)", a_type, a_head, *a_head, a_tail, *a_tail, a_curr, *a_curr, a_count, *a_count);
    /*---(walk level)---------------------*/
    x_curr = *a_head;
    while (x_curr != NULL) {
+      DEBUG_YREGEX   yLOG_point   ("x_curr"    , x_curr);
       IF_SETS  yregex_sets__free  (&x_curr);
       EL_PATS  yregex_pats__free  (&x_curr);
       EL_ERRS  yregex_error__free (&x_curr);
       EL_FIND  yregex_find__free  (&x_curr);
+      EL_EXEC  yregex_exec__free  (&x_curr);
+      ELSE {
+         DEBUG_NORM    yLOG_note    ("unknown type in next");
+         DEBUG_NORM    yLOG_exitr   (__FUNCTION__, rce);
+         return rce;
+      }
       x_curr = *a_head;
    }
    /*---(ground everything)--------------*/
-   *a_head  =  *a_tail = *a_curr = NULL;
-   *a_count = 0;
+   if (a_head  != NULL)  *a_head  = NULL;
+   if (a_tail  != NULL)  *a_tail  = NULL;
+   if (a_curr  != NULL)  *a_curr  = NULL;
+   if (a_count != NULL)  *a_count = 0;
    /*---(complete)-----------------------*/
-   DEBUG_DATA   yLOG_exit    (__FUNCTION__);
+   DEBUG_YREGEX   yLOG_exit    (__FUNCTION__);
    return 0;
 }
 
 char
 yregex_share_wrap       (char a_type, void **a_head, void **a_tail, void **a_curr, int *a_count)
 {
-   DEBUG_DATA   yLOG_enter   (__FUNCTION__);
+   DEBUG_YREGEX   yLOG_enter   (__FUNCTION__);
    yregex_share_purge (a_type, a_head, a_tail, a_curr, a_count);
    yregex_share_init  (a_type, a_head, a_tail, a_curr, a_count);
-   DEBUG_DATA   yLOG_exit    (__FUNCTION__);
+   DEBUG_YREGEX   yLOG_exit    (__FUNCTION__);
    return 0;
 }
 
@@ -254,6 +279,7 @@ yregex_share__by_cursor (char a_type, void **a_head, void **a_tail, void **r_cur
    tPATS      *x_pats      = NULL;
    tRULE      *x_rule      = NULL;
    tSETS      *x_sets      = NULL;
+   tSTATE     *x_exec      = NULL;
    void       *x_curr      = NULL;
    /*---(header)-------------------------*/
    DEBUG_NORM   yLOG_senter  (__FUNCTION__);
@@ -291,6 +317,12 @@ yregex_share__by_cursor (char a_type, void **a_head, void **a_tail, void **r_cur
       EL_PATS  { x_pats = (tPATS  *) x_curr;  x_curr = x_pats->m_prev; }
       EL_ERRS  { x_errs = (tERROR *) x_curr;  x_curr = x_errs->m_prev; }
       EL_FIND  { x_find = (tFIND  *) x_curr;  x_curr = x_find->m_prev; }
+      EL_EXEC  { x_exec = (tSTATE *) x_curr;  x_curr = x_exec->m_prev; }
+      ELSE {
+         DEBUG_NORM    yLOG_snote   ("unknown type in prev");
+         DEBUG_NORM    yLOG_sexitr  (__FUNCTION__, rce);
+         return rce;
+      }
       break;
    case YDLST_CURR : case YDLST_DCURR :
       break;
@@ -299,6 +331,12 @@ yregex_share__by_cursor (char a_type, void **a_head, void **a_tail, void **r_cur
       EL_PATS  { x_pats = (tPATS  *) x_curr;  x_curr = x_pats->m_next; }
       EL_ERRS  { x_errs = (tERROR *) x_curr;  x_curr = x_errs->m_next; }
       EL_FIND  { x_find = (tFIND  *) x_curr;  x_curr = x_find->m_next; }
+      EL_EXEC  { x_exec = (tSTATE *) x_curr;  x_curr = x_exec->m_next; }
+      ELSE {
+         DEBUG_NORM    yLOG_snote   ("unknown type in next");
+         DEBUG_NORM    yLOG_sexitr  (__FUNCTION__, rce);
+         return rce;
+      }
       break;
    case YDLST_TAIL : case YDLST_DTAIL :
       x_curr = *a_tail;
@@ -342,59 +380,66 @@ yregex_share__by_index  (char a_type, void **a_head, void **r_curr, void **r_bac
    tPATS      *x_pats      = NULL;
    tRULE      *x_rule      = NULL;
    tSETS      *x_sets      = NULL;
+   tSTATE     *x_exec      = NULL;
    void       *x_curr      = NULL;
    int         c           =    0;
    /*---(header)-------------------------*/
-   DEBUG_DATA   yLOG_senter  (__FUNCTION__);
-   DEBUG_DATA   yLOG_sint    (a_index);
+   DEBUG_YREGEX   yLOG_senter  (__FUNCTION__);
+   DEBUG_YREGEX   yLOG_sint    (a_index);
    /*---(default)------------------------*/
    if (r_back != NULL)  *r_back = NULL;
    /*---(short-cut)----------------------*/
    --rce;  if (a_index == -1) {
-      DEBUG_DATA   yLOG_snote   ("requested current");
+      DEBUG_YREGEX   yLOG_snote   ("requested current");
       x_curr = *r_curr;
       if (r_back != NULL)  *r_back = x_curr;
-      DEBUG_DATA   yLOG_spoint  (x_curr);
+      DEBUG_YREGEX   yLOG_spoint  (x_curr);
       --rce;  if (x_curr == NULL) {
-         DEBUG_DATA   yLOG_sexitr  (__FUNCTION__, rce);
+         DEBUG_YREGEX   yLOG_sexitr  (__FUNCTION__, rce);
          return rce;
       }
-      DEBUG_DATA   yLOG_sexit   (__FUNCTION__);
+      DEBUG_YREGEX   yLOG_sexit   (__FUNCTION__);
       return 0;
    }
    /*---(prepare)------------------------*/
    x_curr = *a_head;
    /*---(defense)------------------------*/
-   DEBUG_DATA   yLOG_spoint  (x_curr);
+   DEBUG_YREGEX   yLOG_spoint  (x_curr);
    --rce;  if (x_curr == NULL) {
-      DEBUG_DATA   yLOG_sexitr  (__FUNCTION__, rce);
+      DEBUG_YREGEX   yLOG_sexitr  (__FUNCTION__, rce);
       return rce;
    }
-   DEBUG_DATA   yLOG_sint    (a_index);
+   DEBUG_YREGEX   yLOG_sint    (a_index);
    --rce;  if (a_index < -1) {
-      DEBUG_DATA   yLOG_sexitr  (__FUNCTION__, rce);
+      DEBUG_YREGEX   yLOG_sexitr  (__FUNCTION__, rce);
       return rce;
    }
    /*---(walk data)----------------------*/
-   while (x_curr != NULL) {
+   --rce;  while (x_curr != NULL) {
       if (c == a_index)  break;
       ++c;
       IF_SETS  { x_sets = (tSETS  *) x_curr;  x_curr = x_sets->m_next; }
       EL_PATS  { x_pats = (tPATS  *) x_curr;  x_curr = x_pats->m_next; }
       EL_ERRS  { x_errs = (tERROR *) x_curr;  x_curr = x_errs->m_next; }
       EL_FIND  { x_find = (tFIND  *) x_curr;  x_curr = x_find->m_next; }
+      EL_EXEC  { x_exec = (tSTATE *) x_curr;  x_curr = x_exec->m_next; }
+      ELSE {
+         DEBUG_NORM    yLOG_snote   ("unknown type in next");
+         DEBUG_NORM    yLOG_sexitr  (__FUNCTION__, rce);
+         return rce;
+      }
    }
    /*---(check result)-------------------*/
-   DEBUG_DATA   yLOG_sint    (x_curr);
+   DEBUG_YREGEX   yLOG_sint    (x_curr);
    --rce;  if (x_curr == NULL) {
-      DEBUG_DATA   yLOG_sexitr  (__FUNCTION__, rce);
+      DEBUG_YREGEX   yLOG_sexitr  (__FUNCTION__, rce);
       return rce;
    }
    /*---(save back)----------------------*/
    *r_curr = x_curr;
    if (r_back != NULL)  *r_back = x_curr;
    /*---(complete)-----------------------*/
-   DEBUG_DATA   yLOG_sexit   (__FUNCTION__);
+   DEBUG_YREGEX   yLOG_sexit   (__FUNCTION__);
    return 0;
 }
 
