@@ -3,84 +3,302 @@
 #include    "yREGEX_priv.h"
 
 
-/*
- * metis  ww4··  speed up EXEC_sub with iteration, not recursion
- *
- *
- */
-
-#define     MAX_LVL      1000
-#define     MAX_STATE   10000
-
-/*---(struct.re)--------+-----------+-*//*-+----------------------------------*/
-/*> typedef     struct      cSTATE      tSTATE;                                        <* 
- *> static struct      cSTATE {                                                        <* 
- *>    /+---(basics)-----------------+/                                                <* 
- *>    short       begin;                       /+ starting point                 +/   <* 
- *>    short       level;                       /+ processing depth               +/   <* 
- *>    short       rpos;                        /+ regex position                 +/   <* 
- *>    short       tpos;                        /+ text position                  +/   <* 
- *>    short       tmax;                        /+ max text position              +/   <* 
- *>    /+---(results)----------------+/                                                <* 
- *>    char        ready;                       /+ ready for action/complete      +/   <* 
- *>    char        rc;                          /+ link to shared return codes    +/   <* 
- *>    /+---(connections)------------+/                                                <* 
- *>    int         prev;                        /+ previous state (created this)  +/   <* 
- *>    /+---(done)-------------------+/                                                <* 
- *> };                                                                                 <* 
- *> /+---(static.vars)------+-----------+-+//+-+----------------------------------+/   <* 
- *> static      tSTATE      s_states    [MAX_STATE];   /+ all states              +/   <* 
- *> static      int         s_nstate    = 0;           /+ total number of states  +/   <* 
- *> static      int         s_curr      = 0;           /+ point to current state  +/   <*/
 
 
 
+static tSTATE     *s_head     = NULL;        /* full head                    */
+static tSTATE     *s_tail     = NULL;        /* tail of list                 */
+static tSTATE     *s_curr     = NULL;        /* curent cursor at level       */
+static tSTATE     *s_focus    = NULL;        /* current focus of matching    */
+static int         s_count    =    0;        /* full count at level          */
+static int         s_ready    =    0;
+static int         s_begin    =    0;        /* current text beginning point */
 
-/*> static tSTATE     *s_head     = NULL;                                             <* 
- *> static tSTATE     *s_tail     = NULL;                                             <* 
- *> static tSTATE     *s_curr     = NULL;                                             <* 
- *> static int         s_count    = 0;                                                <*/
+
+
+static      char        s_print     [LEN_RECD] = "";
 
 
 
+/*====================------------------------------------====================*/
+/*===----                       allocation/memory                      ----===*/
+/*====================------------------------------------====================*/
+static void  o___SUPPORT_________o () { return; }
 
-static      int         s_begin     = 0;                /* current search begin    */
+char*
+yregex_exec__memory     (tSTATE *a_cur)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   int         n           =    0;
+   /*---(defense)------------------------*/
+   if (a_cur == NULL) {
+      strlcpy (s_print, "n/a", LEN_RECD);
+      return s_print;
+   }
+   /*---(defense)------------------------*/
+   strlcpy (s_print, "å_____.___.__.__æ", LEN_RECD);
+   ++n;  if (a_cur->lvl         >= 0)           s_print [n] = 'X';
+   ++n;  if (a_cur->seq         >= 0)           s_print [n] = 'X';
+   ++n;  if (a_cur->beg         >= 0)           s_print [n] = 'X';
+   ++n;  if (a_cur->rpos        >= 0)           s_print [n] = 'X';
+   ++n;  if (a_cur->tpos        >= 0)           s_print [n] = 'X';
+   ++n;
+   ++n;  if (a_cur->ready       != '-')         s_print [n] = 'X';
+   ++n;  if (a_cur->who         != '-')         s_print [n] = 'X';
+   ++n;  if (a_cur->rc          != -66)         s_print [n] = 'X';
+   ++n;
+   ++n;  if (a_cur->parent      != NULL)        s_print [n] = 'X';
+   ++n;  if (a_cur->nchild      >= 1)           s_print [n] = 'X';
+   ++n;
+   ++n;  if (a_cur->m_prev      != NULL)        s_print [n] = 'X';
+   ++n;  if (a_cur->m_next      != NULL)        s_print [n] = 'X';
+   return s_print;
+}
 
-/*> char         /+-> tbd --------------------------------[ shoot  [fe.833.144.30]+/ /+-[01.0000.01#.H]-+/ /+-[--.---.---.--]-+/   <* 
- *> yregex_exec__prep    (cchar *a_source)                                                                                         <* 
- *> {                                                                                                                              <* 
- *>    /+---(locals)-----------+-----+-----+-+/                                                                                    <* 
- *>    char        rce         =  -10;                                                                                             <* 
- *>    char        rc          =    0;                                                                                             <* 
- *>    int         i           =    0;                                                                                             <* 
- *>    int         j           =    0;                                                                                             <* 
- *>    /+---(header)-------------------------+/                                                                                    <* 
- *>    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);                                                                                  <* 
- *>    DEBUG_YREGEX  yLOG_point   ("a_source"  , a_source);                                                                        <* 
- *>    /+---(check regex)--------------------+/                                                                                    <* 
- *>    --rce;  if (a_source  == NULL) {                                                                                            <* 
- *>       DEBUG_YREGEX  yLOG_note    ("can not be null");                                                                          <* 
- *>       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);                                                                          <* 
- *>       return rce;                                                                                                              <* 
- *>    }                                                                                                                           <* 
- *>    rc = strlcpy (myREGEX.text, a_source , LEN_TEXT);                                                                           <* 
- *>    DEBUG_YREGEX  yLOG_value   ("rc"        , rc);                                                                              <* 
- *>    --rce;  if (rc     <  0   ) {                                                                                               <* 
- *>       DEBUG_YREGEX  yLOG_note    ("truncated copy");                                                                           <* 
- *>       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);                                                                          <* 
- *>       return rce;                                                                                                              <* 
- *>    }                                                                                                                           <* 
- *>    myREGEX.tlen = strllen (myREGEX.text , LEN_TEXT);                                                                           <* 
- *>    DEBUG_YREGEX  yLOG_value   ("myREGEX.tlen"  , myREGEX.tlen);                                                                <* 
- *>    /+---(state settings)-----------------+/                                                                                    <* 
- *>    s_nstate = 0;                                                                                                               <* 
- *>    s_curr   = 0;                                                                                                               <* 
- *>    /+---(finds)--------------------------+/                                                                                    <* 
- *>    yregex_find_init ();                                                                                                        <* 
- *>    /+---(complete)-----------------------+/                                                                                    <* 
- *>    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);                                                                                  <* 
- *>    return 0;                                                                                                                   <* 
- *> }                                                                                                                              <*/
+char
+yregex_exec__wipe       (tSTATE *a_cur)
+{
+   /*---(wipe)---------------------------*/
+   a_cur->lvl      = -1;
+   a_cur->seq      = -1;
+   a_cur->beg      = -1;
+   a_cur->rpos     = -1;
+   a_cur->tpos     = -1;
+   a_cur->ready    = '-';
+   a_cur->who      = '-';
+   a_cur->rc       = -66;
+   a_cur->parent   = NULL;
+   a_cur->nchild   = 0;
+   a_cur->m_prev   = NULL;
+   a_cur->m_next   = NULL;
+   /*---(complete)-----------------------*/
+   return 0;
+}
+
+
+
+/*====================------------------------------------====================*/
+/*===----                       allocation/memory                      ----===*/
+/*====================------------------------------------====================*/
+static void  o___MEMORY__________o () { return; }
+
+char yregex_exec__new   (tSTATE **r_new) { return yregex_share_new  (TYPE_EXEC, r_new, &s_head, &s_tail, &s_count); }
+char yregex_exec__free  (tSTATE **r_old) { return yregex_share_free (TYPE_EXEC, r_old, &s_head, &s_tail, &s_count); }
+
+
+
+/*====================------------------------------------====================*/
+/*===----                          program wide                        ----===*/
+/*====================------------------------------------====================*/
+static void  o___PROGRAM_________o () { return; }
+
+char yregex_exec_init   (void) { return yregex_share_init  (TYPE_EXEC, &s_head, &s_tail, &s_curr, &s_count); }
+char yregex_exec__purge (void) { return yregex_share_purge (TYPE_EXEC, &s_head, &s_tail, &s_curr, &s_count); }
+char yregex_exec_wrap   (void) { return yregex_share_wrap  (TYPE_EXEC, &s_head, &s_tail, &s_curr, &s_count); }
+
+
+
+/*====================------------------------------------====================*/
+/*===----                       run-time support                       ----===*/
+/*====================------------------------------------====================*/
+static void  o___HELPERS_________o () { return; }
+
+char         /*-> tbd --------------------------------[ shoot  [fe.833.144.30]*/ /*-[01.0000.01#.H]-*/ /*-[--.---.---.--]-*/
+yregex_exec_prep        (char *a_source)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   char        rc          =    0;
+   int         i           =    0;
+   int         j           =    0;
+   /*---(header)-------------------------*/
+   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
+   DEBUG_YREGEX  yLOG_point   ("a_source"  , a_source);
+   /*---(default)------------------------*/
+   strlcpy (myREGEX.text, "" , LEN_TEXT);
+   myREGEX.tlen  = 0;
+   /*---(check regex)--------------------*/
+   --rce;  if (a_source  == NULL) {
+      DEBUG_YREGEX  yLOG_note    ("can not be null");
+      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   rc = strlcpy (myREGEX.text, a_source , LEN_TEXT);
+   DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
+   --rce;  if (rc     <  0   ) {
+      DEBUG_YREGEX  yLOG_note    ("truncated copy");
+      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   myREGEX.tlen = strllen (myREGEX.text , LEN_TEXT);
+   DEBUG_YREGEX  yLOG_value   ("myREGEX.tlen"  , myREGEX.tlen);
+   /*---(state settings)-----------------*/
+   yregex_exec__purge ();
+   s_focus = NULL;
+   s_ready = 0;
+   /*---(finds)--------------------------*/
+   yregex_find__purge ();
+   /*---(complete)-----------------------*/
+   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+   return 0;
+}
+
+char
+yregex_exec__setfocus   (short a_seq)
+{
+   tSTATE     *x_focus     = NULL;
+   s_focus = x_focus;
+   yregex_exec__by_index (a_seq, &x_focus);
+   if (x_focus != NULL)   s_focus = x_focus;
+   else                   return -1;
+   return 0;
+}
+
+char
+yregex_exec__setbegin   (short a_beg)
+{
+   s_begin = a_beg;
+   return 0;
+}
+
+
+
+/*====================------------------------------------====================*/
+/*===----                        pushing states                        ----===*/
+/*====================------------------------------------====================*/
+static void      o___PUSH____________________o (void) {;}
+
+char
+yregex_exec__push       (short a_lvl, short a_rpos, short a_tpos)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   tSTATE     *x_new       = NULL;
+   /*---(header)-------------------------*/
+   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
+   /*---(defense)------------------------*/
+   DEBUG_YREGEX  yLOG_value   ("a_lvl"     , a_lvl);
+   DEBUG_YREGEX  yLOG_value   ("a_rpos"    , a_rpos);
+   DEBUG_YREGEX  yLOG_value   ("a_tpos"    , a_tpos);
+   /*---(add error)----------------------*/
+   yregex_exec__new (&x_new);
+   DEBUG_YREGEX  yLOG_point   ("x_new"     , x_new);
+   if (x_new == NULL) {
+      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(push)---------------------------*/
+   x_new->lvl   = a_lvl;
+   x_new->seq   = s_count - 1;
+   x_new->beg   = s_begin;
+   x_new->rpos  = a_rpos;
+   x_new->tpos  = a_tpos;
+   x_new->ready = 'y';
+   ++s_ready;
+   /*---(connections)--------------------*/
+   if (a_lvl > 0) {
+      DEBUG_YREGEX  yLOG_point   ("s_focus"   , s_focus);
+      x_new->parent  = s_focus;
+      ++(x_new->parent->nchild);
+   }
+   /*---(complete)-----------------------*/
+   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+   return 0;
+}
+
+char
+yregex_exec__pushback   (short a_lvl, short a_rpos, short a_tpos)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   char        rc          =    0;
+   tSTATE     *x_curr      = NULL;
+   /*---(header)-------------------------*/
+   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
+   /*---(push)---------------------------*/
+   rc = yregex_exec__push (a_lvl, a_rpos, a_tpos);
+   DEBUG_YREGEX  yLOG_value   ("push"      , rc);
+   --rce;  if (rc < 0) {
+      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(set current)--------------------*/
+   x_curr = s_tail;
+   DEBUG_YREGEX  yLOG_point   ("x_curr"    , x_curr);
+   --rce;  if (x_curr == NULL) {
+      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(check parent)-------------------*/
+   DEBUG_YREGEX  yLOG_value   ("lvl"       , x_curr->lvl);
+   DEBUG_YREGEX  yLOG_point   ("parent"    , x_curr->parent);
+   --rce;  if (x_curr->lvl <= 0 || x_curr->parent == NULL) {
+      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(update parent)------------------*/
+   --(x_curr->parent->nchild);
+   x_curr->parent = x_curr->parent->parent;
+   if (x_curr->parent != NULL)  ++(x_curr->parent->nchild);
+   /*---(complete)-----------------------*/
+   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+   return 0;
+}
+
+
+
+/*====================------------------------------------====================*/
+/*===----                        state markers                         ----===*/
+/*====================------------------------------------====================*/
+static void      o___MARKERS_________________o (void) {;}
+
+char
+yregex_exec__passed     (char a_who)
+{
+   char        rce         =  -10;
+   if (s_focus == NULL)  return rce;
+   s_focus->who   = a_who;
+   s_focus->rc    = 1;
+   s_focus->ready = '-';
+   --s_ready;
+   return 1;
+}
+
+char
+yregex_exec__failed     (char a_who)
+{
+   char        rce         =  -10;
+   if (s_focus == NULL)  return rce;
+   s_focus->who   = a_who;
+   s_focus->rc    = 0;
+   s_focus->ready = '-';
+   --s_ready;
+   return 0;
+}
+
+char
+yregex_exec__found      (void)
+{
+   char        rce         =  -10;
+   if (s_focus == NULL)  return rce;
+   s_focus->who   = HAND_PAS;
+   s_focus->rc    = 100;
+   s_focus->ready = '-';
+   --s_ready;
+   return 1;
+}
+
+char
+yregex_exec__bombed     (void)
+{
+   char        rce         =  -10;
+   if (s_focus == NULL)  return rce;
+   s_focus->who   = HAND_BAD;
+   s_focus->rc    = -100;
+   s_focus->ready = '-';
+   --s_ready;
+   return 0;
+}
 
 
 
@@ -89,659 +307,293 @@ static      int         s_begin     = 0;                /* current search begin 
 /*====================------------------------------------====================*/
 static void      o___HANDLE__________________o (void) {;}
 
-/*> char                                                                                                                                                      <* 
- *> yregex_exec__group      (int a_level, int a_rpos, int a_tpos)                                                                                             <* 
- *> {                                                                                                                                                         <* 
- *>    /+---(locals)-----------+-----+-----+-+/                                                                                                               <* 
- *>    int         x_ndiv      =    0;                                                                                                                        <* 
- *>    uchar       x_type      =    0;                                                                                                                        <* 
- *>    int         x_offset    =    0;                                                                                                                        <* 
- *>    int         i           =    0;                                                                                                                        <* 
- *>    int         x_end       =    0;                                                                                                                        <* 
- *>    uchar       x_mod       =    0;                                                                                                                        <* 
- *>    /+---(header)-------------------------+/                                                                                                               <* 
- *>    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);                                                                                                             <* 
- *>    DEBUG_YREGEX  yLOG_complex ("header"    , "level %-3d, rpos %-3d, tpos %-3d", a_level, a_rpos, a_tpos);                                                <* 
- *>    /+---(prepare)------------------------+/                                                                                                               <* 
- *>    yregex_group_endpoints (a_rpos, NULL, &x_end);                                                                                                         <* 
- *>    DEBUG_YREGEX  yLOG_value   ("x_end"     , x_end);                                                                                                      <* 
- *>    x_mod       = myREGEX.mods [x_end];                                                                                                                    <* 
- *>    DEBUG_YREGEX  yLOG_char    ("x_mod"     , x_mod);                                                                                                      <* 
- *>    x_ndiv      = myREGEX.mods [a_rpos] - '0';                                                                                                             <* 
- *>    DEBUG_YREGEX  yLOG_value   ("x_ndiv"    , x_ndiv);                                                                                                     <* 
- *>    /+---(launch each branch)-------------+/                                                                                                               <* 
- *>    for (i = 0; i <= x_ndiv; ++i) {                                                                                                                        <* 
- *>       x_type  = myREGEX.comp [a_rpos + x_offset];                                                                                                         <* 
- *>       DEBUG_YREGEX  yLOG_complex ("branch"    , "lvl %d, rpos %2d, type %c, off %2d, r+o %2d", i + 1, a_rpos, x_type, x_offset, a_rpos + x_offset + 1);   <* 
- *>       if (strchr ("(|", x_type) != NULL) yregex_exec_push (a_level, a_rpos + x_offset + 1, a_tpos, -1);                                                   <* 
- *>       x_offset += myREGEX.jump [a_rpos + x_offset];                                                                                                       <* 
- *>    }                                                                                                                                                      <* 
- *>    /+---(launch without)-----------------+/                                                                                                               <* 
- *>    if (strchr (G_ZERO, x_mod) != NULL) {                                                                                                                  <* 
- *>       DEBUG_YREGEX  yLOG_note    ("always back launch for *@?! types");                                                                                   <* 
- *>       yregex_exec_push (a_level, x_end + 1, a_tpos, -1);                                                                                                  <* 
- *>    }                                                                                                                                                      <* 
- *>    /+---(complete)-----------------------+/                                                                                                               <* 
- *>    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);                                                                                                             <* 
- *>    return 1;                                                                                                                                              <* 
- *> }                                                                                                                                                         <*/
+char
+yregex_exec_launcher    (short a_lvl, short a_rpos, short a_tpos, char a_rc)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   uchar       x_reg       =  ' ';
+   uchar       x_mod       =  ' ';
+   /*---(header)-------------------------*/
+   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
+   DEBUG_YREGEX  yLOG_complex ("header"    , "level %-3d, rpos %-3d, tpos %-3d, rc %-3d", a_lvl, a_rpos, a_tpos, a_rc);
+   /*---(prepare)------------------------*/
+   x_reg       = myREGEX.comp [a_rpos];
+   x_mod       = myREGEX.mods [a_rpos];
+   DEBUG_YREGEX  yLOG_char    ("x_mod"     , x_mod);
+   /*---(back launch some)---------------*/
+   if (x_reg != ';' && strchr (G_ZERO, x_mod) != NULL) {
+      DEBUG_YREGEX  yLOG_note    ("always back launch for *@?! types");
+      yregex_exec__pushback (a_lvl, a_rpos + 1, a_tpos);
+   }
+   /*---(always launch if successful)----*/
+   if (a_rc > 0) {
+      if (x_reg != ';' && strchr (G_MANY, x_mod) != NULL) {
+         DEBUG_YREGEX  yLOG_note    ("relaunch for successful *@ types");
+         yregex_exec__push (a_lvl, a_rpos    , a_tpos + 1);
+      } else {
+         DEBUG_YREGEX  yLOG_note    ("launch next for all successful steps");
+         yregex_exec__push (a_lvl, a_rpos + 1, a_tpos + 1);
+      }
+   }
+   /*---(complete)-----------------------*/
+   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+   return a_rc;
+}
 
-/*> char                                                                                                         <* 
- *> yregex_exec__anchor         (int a_level, int a_rpos, int a_tpos)                                            <* 
- *> {                                                                                                            <* 
- *>    /+---(locals)-----------+-----+-----+-+/                                                                  <* 
- *>    char        rc          =    0;                                                                           <* 
- *>    char        x_ch        =  ' ';                                                                           <* 
- *>    /+---(header)-------------------------+/                                                                  <* 
- *>    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);                                                                <* 
- *>    DEBUG_YREGEX  yLOG_complex ("header"    , "level %-3d, rpos %-3d, tpos %-3d", a_level, a_rpos, a_tpos);   <* 
- *>    /+---(prepare)------------------------+/                                                                  <* 
- *>    x_ch        = myREGEX.comp [a_rpos];                                                                      <* 
- *>    DEBUG_YREGEX  yLOG_char    ("x_chr"     , x_ch);                                                          <* 
- *>    /+---(handle)-------------------------+/                                                                  <* 
- *>    switch (x_ch) {                                                                                           <* 
- *>    case '^' :   /+ beginning of line +/                                                                      <* 
- *>       if (a_tpos != 0) {                                                                                     <* 
- *>          DEBUG_YREGEX  yLOG_note    ("FAILED, not at BOL");                                                  <* 
- *>          DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);                                                          <* 
- *>          return 0;                                                                                           <* 
- *>       }                                                                                                      <* 
- *>       DEBUG_YREGEX  yLOG_note    ("BOL");                                                                    <* 
- *>       rc = 1;                                                                                                <* 
- *>       break;                                                                                                 <* 
- *>    case '$' :   /+ end of line       +/                                                                      <* 
- *>       if (a_tpos < myREGEX.tlen){                                                                            <* 
- *>          DEBUG_YREGEX  yLOG_note    ("FAILED, not at EOL");                                                  <* 
- *>          DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);                                                          <* 
- *>          return 0;                                                                                           <* 
- *>       }                                                                                                      <* 
- *>       DEBUG_YREGEX  yLOG_note    ("EOL");                                                                    <* 
- *>       rc = 1;                                                                                                <* 
- *>       break;                                                                                                 <* 
- *>    }                                                                                                         <* 
- *>    DEBUG_YREGEX  yLOG_value   ("rc"        , rc);                                                            <* 
- *>    /+---(prepare next)-------------------+/                                                                  <* 
- *>    yregex_exec_launcher (a_level, a_rpos, a_tpos - 1, rc);                                                   <* 
- *>    /+---(complete)-----------------------+/                                                                  <* 
- *>    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);                                                                <* 
- *>    return rc;                                                                                                <* 
- *> }                                                                                                            <*/
+char
+yregex_exec__literal    (short a_lvl, short a_rpos, short a_tpos)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   char        rc          =    0;
+   uchar       x_reg       =    0;
+   uchar       x_txt       =    0;
+   uchar       x_mod       =    0;
+   /*---(header)-------------------------*/
+   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
+   DEBUG_YREGEX  yLOG_complex ("header"    , "lvl %-3d, rpos %-3d, tpos %-3d", a_lvl, a_rpos, a_tpos);
+   /*---(prepare)------------------------*/
+   x_reg       = myREGEX.comp [a_rpos];
+   DEBUG_YREGEX  yLOG_char    ("x_reg"     , x_reg);
+   x_txt       = myREGEX.text [a_tpos];
+   DEBUG_YREGEX  yLOG_char    ("x_txt"     , x_txt);
+   /*---(test)---------------------------*/
+   if (x_reg == x_txt) {
+      DEBUG_YREGEX  yLOG_note    ("matches, passed");
+      rc = yregex_exec__passed (HAND_LIT);
+   } else {
+      DEBUG_YREGEX  yLOG_note    ("FAILED");
+      rc = yregex_exec__failed (HAND_LIT);
+   }
+   DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
+   /*---(prepare next)-------------------*/
+   yregex_exec_launcher (a_lvl + 1, a_rpos, a_tpos, rc);
+   /*---(return)-------------------------*/
+   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+   return rc;
+}
 
-/*> char                                                                                                         <* 
- *> yregex_exec__literal    (int a_level, int a_rpos, int a_tpos)                                                <* 
- *> {                                                                                                            <* 
- *>    /+---(locals)-----------+-----+-----+-+/                                                                  <* 
- *>    char        rce         =  -10;                                                                           <* 
- *>    char        rc          =    0;                                                                           <* 
- *>    uchar       x_reg       =    0;                                                                           <* 
- *>    uchar       x_txt       =    0;                                                                           <* 
- *>    uchar       x_mod       =    0;                                                                           <* 
- *>    /+---(header)-------------------------+/                                                                  <* 
- *>    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);                                                                <* 
- *>    DEBUG_YREGEX  yLOG_complex ("header"    , "level %-3d, rpos %-3d, tpos %-3d", a_level, a_rpos, a_tpos);   <* 
- *>    /+---(prepare)------------------------+/                                                                  <* 
- *>    x_reg       = myREGEX.comp [a_rpos];                                                                      <* 
- *>    DEBUG_YREGEX  yLOG_char    ("x_reg"     , x_reg);                                                         <* 
- *>    x_txt       = myREGEX.text [a_tpos];                                                                      <* 
- *>    DEBUG_YREGEX  yLOG_char    ("x_txt"     , x_txt);                                                         <* 
- *>    /+---(test)---------------------------+/                                                                  <* 
- *>    if (x_reg == x_txt) {                                                                                     <* 
- *>       DEBUG_YREGEX  yLOG_note    ("matches, passed");                                                        <* 
- *>       rc = 1;                                                                                                <* 
- *>    } else {                                                                                                  <* 
- *>       DEBUG_YREGEX  yLOG_note    ("FAILED");                                                                 <* 
- *>    }                                                                                                         <* 
- *>    DEBUG_YREGEX  yLOG_value   ("rc"        , rc);                                                            <* 
- *>    /+---(prepare next)-------------------+/                                                                  <* 
- *>    yregex_exec_launcher (a_level, a_rpos, a_tpos, rc);                                                       <* 
- *>    /+---(return)-------------------------+/                                                                  <* 
- *>    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);                                                                <* 
- *>    return rc;                                                                                                <* 
- *> }                                                                                                            <*/
+char
+yregex_exec__anchor         (short a_lvl, short a_rpos, short a_tpos)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rc          =    0;
+   char        x_ch        =  ' ';
+   /*---(header)-------------------------*/
+   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
+   DEBUG_YREGEX  yLOG_complex ("header"    , "level %-3d, rpos %-3d, tpos %-3d", a_lvl, a_rpos, a_tpos);
+   /*---(prepare)------------------------*/
+   x_ch        = myREGEX.comp [a_rpos];
+   DEBUG_YREGEX  yLOG_char    ("x_chr"     , x_ch);
+   /*---(handle)-------------------------*/
+   switch (x_ch) {
+   case '^' :   /* beginning of line */
+      if (a_tpos != 0) {
+         DEBUG_YREGEX  yLOG_note    ("FAILED, not at BOL");
+         rc = yregex_exec__failed (HAND_ANC);
+         DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+         return 0;
+      }
+      DEBUG_YREGEX  yLOG_note    ("at BOL, success, set tpos back one");
+      rc = yregex_exec__passed (HAND_ANC);
+      break;
+   case '$' :   /* end of line       */
+      if (a_tpos < myREGEX.tlen){
+         DEBUG_YREGEX  yLOG_note    ("FAILED, not at EOL");
+         rc = yregex_exec__failed (HAND_ANC);
+         DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+         return 0;
+      }
+      DEBUG_YREGEX  yLOG_note    ("at EOL, success");
+      rc = yregex_exec__passed (HAND_ANC);
+      break;
+   default  : /* anything else */
+      DEBUG_YREGEX  yLOG_note    ("non-anchor character, FAILED");
+      rc = yregex_exec__failed (HAND_ANC);
+      DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+      return 0;
+      break;
+   }
+   DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
+   /*---(prepare next)-------------------*/
+   yregex_exec_launcher (a_lvl + 1, a_rpos, a_tpos - 1, rc);
+   /*---(complete)-----------------------*/
+   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+   return rc;
+}
+
+char
+yregex_exec__group      (short a_lvl, short a_rpos, short a_tpos)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rc          =    0;
+   int         x_ndiv      =    0;
+   uchar       x_type      =    0;
+   int         x_offset    =    0;
+   int         i           =    0;
+   int         x_end       =    0;
+   uchar       x_mod       =    0;
+   /*---(header)-------------------------*/
+   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
+   DEBUG_YREGEX  yLOG_complex ("header"    , "level %-3d, rpos %-3d, tpos %-3d", a_lvl, a_rpos, a_tpos);
+   /*---(prepare)------------------------*/
+   yregex_group_endpoints (a_rpos, NULL, &x_end);
+   DEBUG_YREGEX  yLOG_value   ("x_end"     , x_end);
+   x_mod       = myREGEX.mods [x_end];
+   DEBUG_YREGEX  yLOG_char    ("x_mod"     , x_mod);
+   x_ndiv      = myREGEX.mods [a_rpos] - '0';
+   DEBUG_YREGEX  yLOG_value   ("x_ndiv"    , x_ndiv);
+   /*---(launch each branch)-------------*/
+   for (i = 0; i <= x_ndiv; ++i) {
+      x_type  = myREGEX.comp [a_rpos + x_offset];
+      DEBUG_YREGEX  yLOG_complex ("branch"    , "lvl %d, rpos %2d, type %c, off %2d, r+o %2d", i + 1, a_rpos, x_type, x_offset, a_rpos + x_offset + 1);
+      if (strchr ("(|", x_type) != NULL) {
+         rc = yregex_exec__passed (HAND_GRP);
+         yregex_exec__push (a_lvl + 1, a_rpos + x_offset + 1, a_tpos);
+      }
+      x_offset += myREGEX.jump [a_rpos + x_offset];
+   }
+   /*---(launch without)-----------------*/
+   if (strchr (G_ZERO, x_mod) != NULL) {
+      DEBUG_YREGEX  yLOG_note    ("always back launch for *@?! types");
+      rc = yregex_exec__passed (HAND_GRP);
+      yregex_exec__push (a_lvl + 1, x_end + 1, a_tpos);
+   }
+   /*---(complete)-----------------------*/
+   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+   return 1;
+}
+
+char
+yregex_exec__branch     (short a_lvl, short a_rpos, short a_tpos)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rc          =    0;
+   uchar       x_mod       =    0;
+   int         x_beg       =    0;
+   int         x_end       =    0;
+   /*---(header)-------------------------*/
+   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
+   DEBUG_YREGEX  yLOG_complex ("header"    , "level %-3d, rpos %-3d, tpos %-3d", a_lvl, a_rpos, a_tpos);
+   /*---(prepare)------------------------*/
+   x_mod       = myREGEX.mods [a_rpos];
+   DEBUG_YREGEX  yLOG_char    ("x_mod"     , x_mod);
+   /*---(locations)----------------------*/
+   yregex_group_endpoints (a_rpos, &x_beg, &x_end);
+   DEBUG_YREGEX  yLOG_value   ("x_beg"     , x_beg);
+   DEBUG_YREGEX  yLOG_value   ("x_end"     , x_end);
+   /*---(always launch if successful)----*/
+   if (strchr (G_MANY, x_mod) != NULL) {
+      DEBUG_YREGEX  yLOG_note    ("relaunch for successful *@ types");
+      rc = yregex_exec__passed (HAND_GRP);
+      yregex_exec__push (a_lvl + 1, x_beg    , a_tpos);
+   } else {
+      DEBUG_YREGEX  yLOG_note    ("launch next for all successful steps");
+      rc = yregex_exec__passed (HAND_GRP);
+      yregex_exec__push (a_lvl + 1, x_end + 1, a_tpos);
+   }
+   /*---(complete)-----------------------*/
+   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+   return 1;
+}
+
+char
+yregex_exec__single     (void)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   char        rc          =    0;
+   int         l           =    0;
+   int         r           =    0;
+   int         t           =    0;
+   uchar       c           =  ' ';
+   int         i           =    0;
+   /*---(header)-------------------------*/
+   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
+   /*---(defense)------------------------*/
+   DEBUG_YREGEX  yLOG_point   ("s_focus"   , s_focus);
+   --rce;  if (s_focus == NULL) {
+      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(prepare)------------------------*/
+   l  = s_focus->lvl;
+   r  = s_focus->rpos;
+   t  = s_focus->tpos;
+   c  = myREGEX.comp [r];
+   i  = myREGEX.indx [r];
+   DEBUG_YREGEX  yLOG_complex ("header"    , "level %-3d, rpos %-3d, tpos %-3d, tmax %-3d", l, r, t, myREGEX.tlen);
+   /*---(check for null)-----------------*/
+   if (c == 0 || r == myREGEX.rlen) {
+      DEBUG_YREGEX  yLOG_note    ("success, found end of regex and/or null");
+      yregex_exec__found ();
+      yregex_find_add (s_focus);
+      DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+      return 100;
+   }
+   /*---(check for overlong ANDs)--------*/
+   if (t > myREGEX.tlen) {
+      DEBUG_YREGEX  yLOG_note    ("hit a_tmax and must die");
+      yregex_exec__bombed ();
+      rc = -100;
+      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rc);
+      return rc;
+   }
+   /*---(get literals quick)-------------*/
+   else if (i == 0) {
+      DEBUG_YREGEX  yLOG_note    ("found literal");
+      rc = yregex_exec__literal (l, r, t);
+   }
+   /*---(more complex actions)-----------*/
+   else {
+      switch (c) {
+      case '(' :
+         DEBUG_YREGEX  yLOG_note    ("open group");
+         rc = yregex_exec__group   (l, r, t);
+         break;
+      case ')' : case '|' :
+         DEBUG_YREGEX  yLOG_note    ("close branch/group");
+         rc = yregex_exec__branch  (l, r, t);
+         break;
+      case ';' :
+         DEBUG_YREGEX  yLOG_note    ("execute rule");
+         /*> rc = yregex_rule_exec     (l + 1, r, t, a_index);                        <*/
+         break;
+      case '^' : case '$' :
+         DEBUG_YREGEX  yLOG_note    ("true anchor");
+         rc = yregex_exec__anchor  (l, r, t);
+         break;
+      case '<' : case '>' :
+         DEBUG_YREGEX  yLOG_note    ("set anchor");
+         rc = yregex_sets_break (l, r, t);
+         break;
+      case '[' :
+         DEBUG_YREGEX  yLOG_note    ("found set");
+         /*> rc = yregex_sets_exec     (l + 1, r, t);                                 <*/
+         break;
+      default  :
+         DEBUG_YREGEX  yLOG_note    ("other");
+         rc = yregex_exec__literal (l, r, t);
+         break;
+      }
+   }
+   /*---(finish)-------------------------*/
+   /*> if (rc <= 0)  yregex_exec__failed ();                                                 <* 
+    *> else          yregex_exec__passed ();                                                 <*/
+   /*---(complete)-----------------------*/
+   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+   return rc;
+}
 
 
 
 /*====================------------------------------------====================*/
-/*===----                         data structure                       ----===*/
+/*===----                        searching entries                     ----===*/
 /*====================------------------------------------====================*/
-static void      o___STRUCTURE_______________o (void) {;}
+static void  o___SEARCH__________o () { return; }
 
-/*> char                                                                                <* 
- *> yregex_exec_push        (short a_level, short a_rpos, short a_tpos, short a_tmax)   <* 
- *> {                                                                                   <* 
- *>    /+---(header)-------------------------+/                                         <* 
- *>    DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);                                       <* 
- *>    DEBUG_YREGEX  yLOG_sint    (a_level);                                            <* 
- *>    DEBUG_YREGEX  yLOG_sint    (a_rpos);                                             <* 
- *>    DEBUG_YREGEX  yLOG_sint    (a_tpos);                                             <* 
- *>    DEBUG_YREGEX  yLOG_sint    (a_tmax);                                             <* 
- *>    /+---(push)---------------------------+/                                         <* 
- *>    DEBUG_YREGEX  yLOG_sint    (s_nstate);                                           <* 
- *>    s_states [s_nstate].begin = s_begin;                                             <* 
- *>    s_states [s_nstate].level = a_level;                                             <* 
- *>    s_states [s_nstate].rpos  = a_rpos;                                              <* 
- *>    s_states [s_nstate].tpos  = a_tpos;                                              <* 
- *>    s_states [s_nstate].ready = 'y';                                                 <* 
- *>    s_states [s_nstate].rc    = 0;                                                   <* 
- *>    /+---(handle max)---------------------+/                                         <* 
- *>    if (a_tmax < 0)        s_states [s_nstate].tmax  = s_states [s_curr].tmax;       <* 
- *>    else if (a_tmax == 0)  s_states [s_nstate].tmax  = LEN_TEXT;                     <* 
- *>    else                   s_states [s_nstate].tmax  = a_tmax;                       <* 
- *>    /+---(connections)--------------------+/                                         <* 
- *>    DEBUG_YREGEX  yLOG_sint    (s_curr);                                             <* 
- *>    s_states [s_nstate].prev  = s_curr;                                              <* 
- *>    /+---(prepare for next)---------------+/                                         <* 
- *>    ++s_nstate;                                                                      <* 
- *>    DEBUG_YREGEX  yLOG_sint    (s_nstate);                                           <* 
- *>    /+---(complete)-----------------------+/                                         <* 
- *>    DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);                                       <* 
- *>    return 0;                                                                        <* 
- *> }                                                                                   <*/
-
-/*> char                                                                                    <* 
- *> yregex_exec_backpush        (short a_level, short a_rpos, short a_tpos, short a_tmax)   <* 
- *> {                                                                                       <* 
- *>    int         x_prev      = 0;                                                         <* 
- *>    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);                                           <* 
- *>    yregex_exec_push (a_level, a_rpos, a_tpos, a_tmax);                                  <* 
- *>    x_prev = s_states [s_states [s_nstate - 1].prev].prev;                               <* 
- *>    DEBUG_YREGEX  yLOG_char    ("x_prev"    , x_prev);                                   <* 
- *>    s_states [s_nstate - 1].prev  = x_prev;                                              <* 
- *>    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);                                           <* 
- *>    return 0;                                                                            <* 
- *> }                                                                                       <*/
-
-/*> char                                                                                                                                   <* 
- *> yREGEX_dump          (void)                                                                                                            <* 
- *> {                                                                                                                                      <* 
- *>    int         i           = 0;                                                                                                        <* 
- *>    int         c           = 0;                                                                                                        <* 
- *>    char        x_reg       [5];                                                                                                        <* 
- *>    char        x_mod       [5];                                                                                                        <* 
- *>    char        x_txt       [5];                                                                                                        <* 
- *>    char        t           [LEN_TEXT];                                                                                                 <* 
- *>    for (i = 0; i < s_nstate; ++i) {                                                                                                    <* 
- *>       if (s_states [i].prev == i)  c = 0;                                                                                              <* 
- *>       if ((c %  5) == 0)   printf ("\n");                                                                                              <* 
- *>       if ((c % 45) == 0)   printf ("prev  refn  beg  lvl  --  rps  reg  ind  mod  jmp  --  tps  txt  --  rdy  retn  --  found\n\n");   <* 
- *>       if (myREGEX.comp [s_states [i].rpos] >= 32)  sprintf (x_reg, "  %c", myREGEX.comp [s_states [i].rpos]);                          <* 
- *>       else                                     strlcpy (x_reg, "nul", 5);                                                              <* 
- *>       if (myREGEX.mods [s_states [i].rpos] >= 32)  sprintf (x_mod, "  %c", myREGEX.mods [s_states [i].rpos]);                          <* 
- *>       else                                     strlcpy (x_mod, "nul", 5);                                                              <* 
- *>       if (myREGEX.text [s_states [i].tpos] >= 32)  sprintf (x_txt, "  %c", myREGEX.text [s_states [i].tpos]);                          <* 
- *>       else                                     strlcpy (x_txt, "nul", 5);                                                              <* 
- *>       yregex_find_text (i, t);                                                                                                         <* 
- *>       printf ("%4d  %4d  %3d  %3d  --  %3d  %s  %3d  %s  %3d  --  %3d  %s  --    %c   %3d  --  %s\n",                                  <* 
- *>             s_states [i].prev, i, s_states [i].begin ,s_states [i].level,                                                              <* 
- *>             s_states [i].rpos, x_reg,                                                                                                  <* 
- *>             myREGEX.indx [s_states [i].rpos], x_mod, myREGEX.jump [s_states [i].rpos],                                                 <* 
- *>             s_states [i].tpos, x_txt,                                                                                                  <* 
- *>             s_states [i].ready, s_states [i].rc,                                                                                       <* 
- *>             t);                                                                                                                        <* 
- *>       ++c;                                                                                                                             <* 
- *>    }                                                                                                                                   <* 
- *>    return 0;                                                                                                                           <* 
- *> }                                                                                                                                      <*/
-
-/*> char                                                                                                                                   <* 
- *> yregex_exec_list     (void)                                                                                                            <* 
- *> {                                                                                                                                      <* 
- *>    int         i           = 0;                                                                                                        <* 
- *>    int         c           = 0;                                                                                                        <* 
- *>    char        x_reg       [5];                                                                                                        <* 
- *>    char        x_mod       [5];                                                                                                        <* 
- *>    char        x_txt       [5];                                                                                                        <* 
- *>    char        t           [LEN_TEXT];                                                                                                 <* 
- *>    for (i = 0; i < s_nstate; ++i) {                                                                                                    <* 
- *>       if (s_states [i].ready != 'W') continue;                                                                                         <* 
- *>       if ((c %  5) == 0)   printf ("\n");                                                                                              <* 
- *>       if ((c % 45) == 0)   printf ("prev  refn  beg  lvl  --  rps  reg  ind  mod  jmp  --  tps  txt  --  rdy  retn  --  found\n\n");   <* 
- *>       if (myREGEX.comp [s_states [i].rpos] >= 32)  sprintf (x_reg, "  %c", myREGEX.comp [s_states [i].rpos]);                          <* 
- *>       else                                     strlcpy (x_reg, "nul", 5);                                                              <* 
- *>       if (myREGEX.mods [s_states [i].rpos] >= 32)  sprintf (x_mod, "  %c", myREGEX.mods [s_states [i].rpos]);                          <* 
- *>       else                                     strlcpy (x_mod, "nul", 5);                                                              <* 
- *>       if (myREGEX.text [s_states [i].tpos] >= 32)  sprintf (x_txt, "  %c", myREGEX.text [s_states [i].tpos]);                          <* 
- *>       else                                     strlcpy (x_txt, "nul", 5);                                                              <* 
- *>       yregex_find_text (i, t);                                                                                                         <* 
- *>       printf ("%4d  %4d  %3d  %3d  --  %3d  %s  %3d  %s  %3d  --  %3d  %s  --    %c   %3d  --  %s\n",                                  <* 
- *>             s_states [i].prev, i, s_states [i].begin ,s_states [i].level,                                                              <* 
- *>             s_states [i].rpos, x_reg,                                                                                                  <* 
- *>             myREGEX.indx [s_states [i].rpos], x_mod, myREGEX.jump [s_states [i].rpos],                                                 <* 
- *>             s_states [i].tpos, x_txt,                                                                                                  <* 
- *>             s_states [i].ready, s_states [i].rc,                                                                                       <* 
- *>             t);                                                                                                                        <* 
- *>       ++c;                                                                                                                             <* 
- *>    }                                                                                                                                   <* 
- *>    return 0;                                                                                                                           <* 
- *> }                                                                                                                                      <*/
-
-/*> int                                                                               <* 
- *> yregex_exec_index            (int a_index)                                        <* 
- *> {                                                                                 <* 
- *>    return myREGEX.indx [s_states [a_index].rpos];                                 <* 
- *> }                                                                                 <*/
-
-
-/*====================------------------------------------====================*/
-/*===----                       run-time handling                      ----===*/
-/*====================------------------------------------====================*/
-static void      o___RUNNER__________________o (void) {;}
-
-char  g_found   [LEN_TEXT];
-char  g_quans   [LEN_TEXT];
-
-short g_subb    = -1;
-char  g_subf    [LEN_TEXT];
-char  g_subq    [LEN_TEXT];
-
-#define       S_SUB_BEFORE       0
-#define       S_SUB_INSIDE       1
-#define       S_SUB_AFTER        2
-#define       S_SUB_DONE         3
-
-/*> char                                                                                                        <* 
- *> yregex_exec_found_NEW   (int a_index)                                                                       <* 
- *> {                                                                                                           <* 
- *>    /+---(locals)-----------+-----+-----+-+/                                                                 <* 
- *>    int         i           =    0;                                                                          <* 
- *>    int         p           =   -1;                                                                          <* 
- *>    int         x_rpos      =    0;                                                                          <* 
- *>    uchar       x_reg       =  ' ';                                                                          <* 
- *>    int         x_tpos      =    0;                                                                          <* 
- *>    uchar       x_ch        =  ' ';                                                                          <* 
- *>    uchar       x_mod       =  ' ';                                                                          <* 
- *>    int         x_indx      =    0;                                                                          <* 
- *>    int         x_len       =    0;                                                                          <* 
- *>    char        x_text      [LEN_RECD];                                                                      <* 
- *>    char        x_quan      [LEN_RECD];                                                                      <* 
- *>    char        t           [LEN_RECD];                                                                      <* 
- *>    char        q           [LEN_RECD];                                                                      <* 
- *>    /+---(mark tail)----------------------+/                                                                 <* 
- *>    s_states [a_index].ready = 'W';                                                                          <* 
- *>    s_states [a_index].rc    =  1;                                                                           <* 
- *>    /+---(identify groups)----------------+/                                                                 <* 
- *>    i = a_index;                                                                                             <* 
- *>    while ((i = s_states [i].prev) != p) {                                                                   <* 
- *>       /+---(mark solution)---------------+/                                                                 <* 
- *>       p = i;                                                                                                <* 
- *>       s_states [i].ready = '+';                                                                             <* 
- *>       /+---(get  solution)---------------+/                                                                 <* 
- *>       x_rpos = s_states [i].rpos;                                                                           <* 
- *>       x_reg  = myREGEX.comp [x_rpos];                                                                       <* 
- *>       /+---(text)---------------------------+/                                                              <* 
- *>       x_tpos = s_states [i].tpos;                                                                           <* 
- *>       x_ch   = myREGEX.text [x_tpos];                                                                       <* 
- *>       x_indx = myREGEX.indx [x_rpos] - 1;                                                                   <* 
- *>       if (x_indx == 998)  x_indx = 10;                                                                      <* 
- *>       x_mod  = myREGEX.mods [x_rpos];                                                                       <* 
- *>       /+---(handle grouping)----------------+/                                                              <* 
- *>       switch (x_reg) {                                                                                      <* 
- *>       case ')' : case '|' :                                                                                 <* 
- *>          myREGEX.g_end [x_indx] = x_tpos - 1;                                                               <* 
- *>          break;                                                                                             <* 
- *>       case '(' :                                                                                            <* 
- *>          myREGEX.g_beg [x_indx] = x_tpos;                                                                   <* 
- *>          break;                                                                                             <* 
- *>       default  :                                                                                            <* 
- *>          x_text [x_tpos] = x_ch;                                                                            <* 
- *>          x_quan [x_tpos] = x_mod;                                                                           <* 
- *>          break;                                                                                             <* 
- *>       }                                                                                                     <* 
- *>    }                                                                                                        <* 
- *>    /+---(fill groups)--------------------+/                                                                 <* 
- *>    for (i = 0; i <= 10; ++i) {                                                                              <* 
- *>       /+> printf ("%2d %c\n", i, myREGEX.g_mrk [i]);                                     <+/                <* 
- *>       if (myREGEX.g_mrk [i] == ' ') {                                                                       <* 
- *>          yregex_find_addsub (a_index, i, -1    , ""    , ""    );                                           <* 
- *>          continue;                                                                                          <* 
- *>       }                                                                                                     <* 
- *>       x_len = myREGEX.g_end [i] - myREGEX.g_beg [i] + 1;                                                    <* 
- *>       strlcpy (t, x_text + myREGEX.g_beg [i], x_len + 1);                                                   <* 
- *>       strlcpy (q, x_quan + myREGEX.g_beg [i], x_len + 1);                                                   <* 
- *>       /+> printf ("   %3d %3d %3d [%s] [%s]\n", myREGEX.g_beg [i], myREGEX.g_end [i], x_len, t, q);   <+/   <* 
- *>       if (i == 0)  yregex_find_add (a_index, s_states [a_index].begin, t, q);                               <* 
- *>       yregex_find_addsub (a_index, i, myREGEX.g_beg [i], t, q);                                             <* 
- *>    }                                                                                                        <* 
- *>    /+---(complete)-----------------------+/                                                                 <* 
- *>    return 0;                                                                                                <* 
- *> }                                                                                                           <*/
-
-/*> char                                                                                                            <* 
- *> yregex_exec_sub         (int a_index, int a_paren)                                                              <* 
- *> {                                                                                                               <* 
- *>    /+---(locals)-----------+-----+-----+-+/                                                                     <* 
- *>    char        rc          =    S_SUB_BEFORE;                                                                   <* 
- *>    char        t           [5] = "";                                                                            <* 
- *>    int         x_rpos      =    0;                                                                              <* 
- *>    int         x_tpos      =    0;                                                                              <* 
- *>    uchar       x_ch        =  ' ';                                                                              <* 
- *>    uchar       x_reg       =  ' ';                                                                              <* 
- *>    uchar       x_mod       =  ' ';                                                                              <* 
- *>    int         x_indx      =    0;                                                                              <* 
- *>    /+---(dig to origin)------------------+/                                                                     <* 
- *>    if (a_index != s_states [a_index].prev) {                                                                    <* 
- *>       /+> printf ("      call deeper\n");                                             <+/                       <* 
- *>       rc = yregex_exec_sub (s_states [a_index].prev, a_paren);                                                  <* 
- *>    } else {                                                                                                     <* 
- *>       /+> printf ("      wiping\n");                                                  <+/                       <* 
- *>       /+> strlcpy (g_subf, "", LEN_TEXT);                                             <*                        <* 
- *>        *> strlcpy (g_subq, "", LEN_TEXT);                                             <+/                       <* 
- *>       g_subb     = -1;                                                                                          <* 
- *>       g_subf [0] = '\0';                                                                                        <* 
- *>       g_subq [0] = '\0';                                                                                        <* 
- *>       rc = S_SUB_BEFORE;                                                                                        <* 
- *>    }                                                                                                            <* 
- *>    /+---(filter)-------------------------+/                                                                     <* 
- *>    if (s_states [a_index].ready == 'W')  return rc;                                                             <* 
- *>    if (rc >= S_SUB_AFTER)                return rc;                                                             <* 
- *>    /+---(text)---------------------------+/                                                                     <* 
- *>    x_tpos = s_states [a_index].tpos;                                                                            <* 
- *>    x_ch   = myREGEX.text [x_tpos];                                                                              <* 
- *>    /+---(quantifiers)--------------------+/                                                                     <* 
- *>    x_rpos = s_states [a_index].rpos;                                                                            <* 
- *>    x_reg  = myREGEX.comp [x_rpos];                                                                              <* 
- *>    x_indx = myREGEX.indx [x_rpos];                                                                              <* 
- *>    x_mod  = myREGEX.mods [x_rpos];                                                                              <* 
- *>    /+> printf ("   rpos %-2d, reg %c, indx %-2d, mod %c, rc %-2d\n", x_rpos, x_reg, x_indx, x_mod, rc);   <+/   <* 
- *>    /+---(check for close)----------------+/                                                                     <* 
- *>    if (strchr ("|)", x_reg) != NULL  && x_indx == a_paren) {                                                    <* 
- *>       /+> printf ("      close paren\n");                                             <+/                       <* 
- *>       return S_SUB_AFTER;                                                                                       <* 
- *>    }                                                                                                            <* 
- *>    /+---(check for open)-----------------+/                                                                     <* 
- *>    if (strchr ("(" , x_reg) != NULL  && x_indx == a_paren) {                                                    <* 
- *>       /+> printf ("      open paren\n");                                              <+/                       <* 
- *>       if (g_subb == -1)  g_subb = x_tpos;                                                                       <* 
- *>       return S_SUB_INSIDE;                                                                                      <* 
- *>    }                                                                                                            <* 
- *>    if (rc <= S_SUB_BEFORE) {                                                                                    <* 
- *>       /+> printf ("      skipping\n");                                                <+/                       <* 
- *>       return rc;                                                                                                <* 
- *>    }                                                                                                            <* 
- *>    /+---(handle sets)--------------------+/                                                                     <* 
- *>    if (x_reg == '[') {                                                                                          <* 
- *>       sprintf (t, "%c", x_ch);                                                                                  <* 
- *>       strlcat (g_subf, t, LEN_TEXT);                                                                            <* 
- *>       sprintf (t, "%c", x_mod);                                                                                 <* 
- *>       strlcat (g_subq, t, LEN_TEXT);                                                                            <* 
- *>       return rc;                                                                                                <* 
- *>    }                                                                                                            <* 
- *>    /+---(filter other specials)----------+/                                                                     <* 
- *>    if (x_indx > 0)      return rc;      /+ avoid grouping +/                                                    <* 
- *>    /+---(append result)------------------+/                                                                     <* 
- *>    sprintf (t, "%c", x_ch);                                                                                     <* 
- *>    strlcat (g_subf, t, LEN_TEXT);                                                                               <* 
- *>    sprintf (t, "%c", x_mod);                                                                                    <* 
- *>    strlcat (g_subq, t, LEN_TEXT);                                                                               <* 
- *>    /+---(complete)-----------------------+/                                                                     <* 
- *>    return rc;                                                                                                   <* 
- *> }                                                                                                               <*/
-
-/*> int                                                                                                                   <* 
- *> yregex_exec_tpos        (int a_index, int a_paren, int *a_tbeg, int *a_tend)                                          <* 
- *> {                                                                                                                     <* 
- *>    /+---(locals)-----------+-----+-----+-+/                                                                           <* 
- *>    int         rc          =   -1;                                                                                    <* 
- *>    int         x_tpos      =    0;                                                                                    <* 
- *>    uchar       x_ch        =  ' ';                                                                                    <* 
- *>    int         x_rpos      =    0;                                                                                    <* 
- *>    uchar       x_reg       =  ' ';                                                                                    <* 
- *>    int         x_indx      =    0;                                                                                    <* 
- *>    uchar       x_mod       =  ' ';                                                                                    <* 
- *>    /+---(text)---------------------------+/                                                                           <* 
- *>    /+> printf ("   index %-3d, paren %-2d, tbeg %-2d, tend %-2d\n", a_index, a_paren, *a_tbeg, *a_tend);   <+/        <* 
- *>    x_tpos = s_states [a_index].tpos;                                                                                  <* 
- *>    /+---(quantifiers)--------------------+/                                                                           <* 
- *>    x_rpos = s_states [a_index].rpos;                                                                                  <* 
- *>    x_reg  = myREGEX.comp [x_rpos];                                                                                    <* 
- *>    x_indx = myREGEX.indx [x_rpos];                                                                                    <* 
- *>    x_mod  = myREGEX.mods [x_rpos];                                                                                    <* 
- *>    /+> printf ("   tpos %-2d, rpos %-2d, reg %c, indx %-2d, mod %c\n", x_tpos, x_rpos, x_reg, x_indx, x_mod);   <+/   <* 
- *>    /+---(check for last marker)----------+/                                                                           <* 
- *>    if (strchr ("|)", x_reg) != NULL && x_indx == a_paren) {                                                           <* 
- *>       /+> printf ("      found CLOSE at %d\n", x_tpos);                               <+/                             <* 
- *>       *a_tend = x_tpos;                                                                                               <* 
- *>       rc = 1;                                                                                                         <* 
- *>    }                                                                                                                  <* 
- *>    /+---(check for paren)----------------+/                                                                           <* 
- *>    if (strchr ("(", x_reg) != NULL && x_indx == a_paren) {                                                            <* 
- *>       /+> printf ("      found OPEN/OR at %d\n", x_tpos);                             <+/                             <* 
- *>       *a_tbeg = x_tpos;                                                                                               <* 
- *>       rc = 2;                                                                                                         <* 
- *>    }                                                                                                                  <* 
- *>    /+---(dig to origin)------------------+/                                                                           <* 
- *>    else if (a_index != s_states [a_index].prev) {                                                                     <* 
- *>       /+> printf ("      call deeper\n");                                             <+/                             <* 
- *>       rc = yregex_exec_tpos (s_states [a_index].prev, a_paren, a_tbeg, a_tend);                                       <* 
- *>    }                                                                                                                  <* 
- *>    /+> printf ("      done with %d\n", rc);                                           <+/                             <* 
- *>    /+---(complete)-----------------------+/                                                                           <* 
- *>    return rc;                                                                                                         <* 
- *> }                                                                                                                     <*/
-
-/*> char                                                                                        <* 
- *> yregex_exec__found      (int a_index)                                                       <* 
- *> {                                                                                           <* 
- *>    /+---(locals)-----------+-----+-----+-+/                                                 <* 
- *>    char        rc          =    0;                                                          <* 
- *>    char        t           [5] = "";                                                        <* 
- *>    int         x_rpos      =    0;                                                          <* 
- *>    int         x_tpos      =    0;                                                          <* 
- *>    uchar       x_ch        =  ' ';                                                          <* 
- *>    uchar       x_reg       =  ' ';                                                          <* 
- *>    uchar       x_mod       =  ' ';                                                          <* 
- *>    int         x_indx      =    0;                                                          <* 
- *>    /+---(dig to origin)------------------+/                                                 <* 
- *>    if (a_index != s_states [a_index].prev) {                                                <* 
- *>       rc = yregex_exec__found (s_states [a_index].prev);                                    <* 
- *>    } else {                                                                                 <* 
- *>       /+> strlcpy (g_found, "", LEN_TEXT);                                            <*    <* 
- *>        *> strlcpy (g_quans, "", LEN_TEXT);                                            <+/   <* 
- *>       g_found [0] = '\0';                                                                   <* 
- *>       g_quans [0] = '\0';                                                                   <* 
- *>    }                                                                                        <* 
- *>    /+---(filter)-------------------------+/                                                 <* 
- *>    if (rc > 0)                           return rc;                                         <* 
- *>    if (s_states [a_index].ready == 'W')  return 1;                                          <* 
- *>    /+---(mark)---------------------------+/                                                 <* 
- *>    s_states [a_index].ready = '+';                                                          <* 
- *>    /+---(text)---------------------------+/                                                 <* 
- *>    x_tpos = s_states [a_index].tpos;                                                        <* 
- *>    x_ch   = myREGEX.text [x_tpos];                                                          <* 
- *>    /+---(quantifiers)--------------------+/                                                 <* 
- *>    x_rpos = s_states [a_index].rpos;                                                        <* 
- *>    x_reg  = myREGEX.comp [x_rpos];                                                          <* 
- *>    x_indx = myREGEX.indx [x_rpos];                                                          <* 
- *>    x_mod  = myREGEX.mods [x_rpos];                                                          <* 
- *>    /+---(find start of rules)------------+/                                                 <* 
- *>    if (x_reg == ';' && x_indx > 0) {                                                        <* 
- *>       return 1;                                                                             <* 
- *>    }                                                                                        <* 
- *>    /+---(handle sets)--------------------+/                                                 <* 
- *>    if (x_reg == '[') {                                                                      <* 
- *>       sprintf (t, "%c", x_ch);                                                              <* 
- *>       strlcat (g_found, t, LEN_TEXT);                                                       <* 
- *>       sprintf (t, "%c", x_mod);                                                             <* 
- *>       strlcat (g_quans, t, LEN_TEXT);                                                       <* 
- *>       return 0;                                                                             <* 
- *>    }                                                                                        <* 
- *>    /+---(filter other specials)----------+/                                                 <* 
- *>    if (x_indx > 0)  return 0;          /+ avoid grouping +/                                 <* 
- *>    /+---(append result)------------------+/                                                 <* 
- *>    sprintf (t, "%c", x_ch);                                                                 <* 
- *>    strlcat (g_found, t, LEN_TEXT);                                                          <* 
- *>    sprintf (t, "%c", x_mod);                                                                <* 
- *>    strlcat (g_quans, t, LEN_TEXT);                                                          <* 
- *>    /+---(complete)-----------------------+/                                                 <* 
- *>    return 0;                                                                                <* 
- *> }                                                                                           <*/
-
-/*> char                                                                                                                        <* 
- *> yregex_exec_launcher    (short a_level, short a_rpos, short a_tpos, char a_rc)                                              <* 
- *> {                                                                                                                           <* 
- *>    /+---(locals)-----------+-----+-----+-+/                                                                                 <* 
- *>    uchar       x_reg       =  ' ';                                                                                          <* 
- *>    uchar       x_mod       =  ' ';                                                                                          <* 
- *>    /+---(header)-------------------------+/                                                                                 <* 
- *>    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);                                                                               <* 
- *>    DEBUG_YREGEX  yLOG_complex ("header"    , "level %-3d, rpos %-3d, tpos %-3d, rc %-3d", a_level, a_rpos, a_tpos, a_rc);   <* 
- *>    /+---(prepare)------------------------+/                                                                                 <* 
- *>    x_reg       = myREGEX.comp [a_rpos];                                                                                     <* 
- *>    x_mod       = myREGEX.mods [a_rpos];                                                                                     <* 
- *>    DEBUG_YREGEX  yLOG_char    ("x_mod"     , x_mod);                                                                        <* 
- *>    /+---(back launch some)---------------+/                                                                                 <* 
- *>    if (x_reg != ';' && strchr (G_ZERO, x_mod) != NULL) {                                                                    <* 
- *>       DEBUG_YREGEX  yLOG_note    ("always back launch for *@?! types");                                                     <* 
- *>       yregex_exec_backpush (a_level, a_rpos + 1, a_tpos, -1);                                                               <* 
- *>    }                                                                                                                        <* 
- *>    /+---(always launch if successful)----+/                                                                                 <* 
- *>    if (a_rc > 0) {                                                                                                          <* 
- *>       if (x_reg != ';' && strchr (G_MANY, x_mod) != NULL) {                                                                 <* 
- *>          DEBUG_YREGEX  yLOG_note    ("relaunch for successful *@ types");                                                   <* 
- *>          yregex_exec_push (a_level, a_rpos    , a_tpos + 1, -1);                                                            <* 
- *>       } else {                                                                                                              <* 
- *>          DEBUG_YREGEX  yLOG_note    ("launch next for all successful steps");                                               <* 
- *>          yregex_exec_push (a_level, a_rpos + 1, a_tpos + 1, -1);                                                            <* 
- *>       }                                                                                                                     <* 
- *>    }                                                                                                                        <* 
- *>    /+---(complete)-----------------------+/                                                                                 <* 
- *>    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);                                                                               <* 
- *>    return a_rc;                                                                                                             <* 
- *> }                                                                                                                           <*/
-
-/*> char                                                                                                         <* 
- *> yregex_exec__branch     (int a_level, int a_rpos, int a_tpos)                                                <* 
- *> {                                                                                                            <* 
- *>    /+---(locals)-----------+-----+-----+-+/                                                                  <* 
- *>    uchar       x_mod       =    0;                                                                           <* 
- *>    int         x_beg       =    0;                                                                           <* 
- *>    int         x_end       =    0;                                                                           <* 
- *>    /+---(header)-------------------------+/                                                                  <* 
- *>    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);                                                                <* 
- *>    DEBUG_YREGEX  yLOG_complex ("header"    , "level %-3d, rpos %-3d, tpos %-3d", a_level, a_rpos, a_tpos);   <* 
- *>    /+---(prepare)------------------------+/                                                                  <* 
- *>    x_mod       = myREGEX.mods [a_rpos];                                                                      <* 
- *>    DEBUG_YREGEX  yLOG_char    ("x_mod"     , x_mod);                                                         <* 
- *>    /+---(locations)----------------------+/                                                                  <* 
- *>    yregex_group_endpoints (a_rpos, &x_beg, &x_end);                                                          <* 
- *>    DEBUG_YREGEX  yLOG_value   ("x_beg"     , x_beg);                                                         <* 
- *>    DEBUG_YREGEX  yLOG_value   ("x_end"     , x_end);                                                         <* 
- *>    /+---(always launch if successful)----+/                                                                  <* 
- *>    if (strchr (G_MANY, x_mod) != NULL) {                                                                     <* 
- *>       DEBUG_YREGEX  yLOG_note    ("relaunch for successful *@ types");                                       <* 
- *>       yregex_exec_push (a_level, x_beg    , a_tpos, 0);                                                      <* 
- *>    } else {                                                                                                  <* 
- *>       DEBUG_YREGEX  yLOG_note    ("launch next for all successful steps");                                   <* 
- *>       yregex_exec_push (a_level, x_end + 1, a_tpos, 0);                                                      <* 
- *>    }                                                                                                         <* 
- *>    /+---(complete)-----------------------+/                                                                  <* 
- *>    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);                                                                <* 
- *>    return 1;                                                                                                 <* 
- *> }                                                                                                            <*/
-
-/*> char                                                                                                                            <* 
- *> yregex_exec__single     (int a_index)                                                                                           <* 
- *> {                                                                                                                               <* 
- *>    /+---(locals)-----------+-----+-----+-+/                                                                                     <* 
- *>    char        rc          =    0;                                                                                              <* 
- *>    int         i           =    0;                                                                                              <* 
- *>    int         x_level     =    0;                                                                                              <* 
- *>    int         x_rpos      =    0;                                                                                              <* 
- *>    int         x_tpos      =    0;                                                                                              <* 
- *>    uchar       x_ch        =  ' ';                                                                                              <* 
- *>    int         x_indx      =    0;                                                                                              <* 
- *>    uchar       x_mod       =  ' ';                                                                                              <* 
- *>    int         x_tmax      =    0;                                                                                              <* 
- *>    /+---(header)-------------------------+/                                                                                     <* 
- *>    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);                                                                                   <* 
- *>    DEBUG_YREGEX  yLOG_value   ("a_index"   , a_index);                                                                          <* 
- *>    /+---(prepare)------------------------+/                                                                                     <* 
- *>    x_level = s_states [a_index].level;                                                                                          <* 
- *>    x_rpos  = s_states [a_index].rpos;                                                                                           <* 
- *>    x_tpos  = s_states [a_index].tpos;                                                                                           <* 
- *>    x_ch    = myREGEX.comp [s_states [a_index].rpos];                                                                            <* 
- *>    x_indx  = myREGEX.indx [s_states [a_index].rpos];                                                                            <* 
- *>    x_mod   = myREGEX.mods [s_states [a_index].rpos];                                                                            <* 
- *>    x_tmax  = s_states [a_index].tmax;                                                                                           <* 
- *>    DEBUG_YREGEX  yLOG_complex ("header"    , "level %-3d, rpos %-3d, tpos %-3d, tmax %-3d", x_level, x_rpos, x_tpos, x_tmax);   <* 
- *>    /+---(check for null)-----------------+/                                                                                     <* 
- *>    if (x_ch == 0) {                                                                                                             <* 
- *>       DEBUG_YREGEX  yLOG_note    ("found null");                                                                                <* 
- *>       yregex_exec_found_NEW (a_index);                                                                                          <* 
- *>       /+> s_states [a_index].ready = 'W';                                                             <*                        <* 
- *>        *> s_states [a_index].rc    =  1;                                                              <*                        <* 
- *>        *> rc = yregex_exec__found (a_index);                                                          <*                        <* 
- *>        *> yregex_find_add (a_index, s_states [a_index].begin, g_found, g_quans);                      <*                        <* 
- *>        *> for (i = 1; i <= 10; ++i) {                                                                 <*                        <* 
- *>        *>    if (myREGEX.g_mrk [i - 1] == ' ') {                                                         <*                     <* 
- *>        *>       yregex_find_addsub (a_index, i - 1, -1    , ""    , ""    );                          <*                        <* 
- *>        *>    }                                                                                        <*                        <* 
- *>        *>    else {                                                                                   <*                        <* 
- *>        *>       rc = yregex_exec_sub (a_index, i);                                                    <*                        <* 
- *>        *>       if (rc < S_SUB_AFTER)  yregex_find_addsub (a_index, i - 1, -1    , ""    , ""    );   <*                        <* 
- *>        *>       else                   yregex_find_addsub (a_index, i - 1, g_subb, g_subf, g_subq);   <*                        <* 
- *>        *>    }                                                                                        <*                        <* 
- *>        *> }                                                                                           <*                        <* 
- *>        *> if (myREGEX.g_mrk [10] == ' ') {                                                               <*                     <* 
- *>        *>    yregex_find_addsub (a_index, i - 1, -1    , ""    , ""    );                             <*                        <* 
- *>        *> } else {                                                                                    <*                        <* 
- *>        *>    rc = yregex_exec_sub (a_index, GROUP_FOCUS);                                             <*                        <* 
- *>        *>    if (rc <= 0)  yregex_find_addsub (a_index, 10, -1    , ""    , ""    );                  <*                        <* 
- *>        *>    if (rc >  0)  yregex_find_addsub (a_index, 10, g_subb, g_subf, g_subq);                  <*                        <* 
- *>        *> }                                                                                           <+/                       <* 
- *>       DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);                                                                                <* 
- *>       return 100;                                                                                                               <* 
- *>    }                                                                                                                            <* 
- *>    /+---(check for overlong ANDs)--------+/                                                                                     <* 
- *>    if (x_tpos == x_tmax) {                                                                                                      <* 
- *>       DEBUG_YREGEX  yLOG_note    ("hit a_tmax and must die");                                                                   <* 
- *>       rc = -1;                                                                                                                  <* 
- *>    }                                                                                                                            <* 
- *>    /+---(get literals quick)-------------+/                                                                                     <* 
- *>    else if (x_indx == 0) {                                                                                                      <* 
- *>       DEBUG_YREGEX  yLOG_note    ("found literal");                                                                             <* 
- *>       rc = yregex_exec__literal    (x_level + 1, x_rpos, x_tpos);                                                               <* 
- *>    }                                                                                                                            <* 
- *>    /+---(more complex actions)-----------+/                                                                                     <* 
- *>    else {                                                                                                                       <* 
- *>       switch (x_ch) {                                                                                                           <* 
- *>       case '(' :                                                                                                                <* 
- *>          DEBUG_YREGEX  yLOG_note    ("open group");                                                                             <* 
- *>          rc = yregex_exec__group   (x_level + 1, x_rpos, x_tpos);                                                               <* 
- *>          break;                                                                                                                 <* 
- *>       case ')' : case '|' :                                                                                                     <* 
- *>          DEBUG_YREGEX  yLOG_note    ("close branch/group");                                                                     <* 
- *>          rc = yregex_exec__branch  (x_level + 1, x_rpos, x_tpos);                                                               <* 
- *>          break;                                                                                                                 <* 
- *>       case ';' :                                                                                                                <* 
- *>          DEBUG_YREGEX  yLOG_note    ("execute rule");                                                                           <* 
- *>          rc = yregex_rule_exec     (x_level + 1, x_rpos, x_tpos, a_index);                                                      <* 
- *>          break;                                                                                                                 <* 
- *>       case '^' : case '$' :                                                                                                     <* 
- *>          DEBUG_YREGEX  yLOG_note    ("true anchor");                                                                            <* 
- *>          rc = yregex_exec__anchor  (x_level + 1, x_rpos, x_tpos);                                                               <* 
- *>          break;                                                                                                                 <* 
- *>       case '<' : case '>' :                                                                                                     <* 
- *>          DEBUG_YREGEX  yLOG_note    ("set anchor");                                                                             <* 
- *>          rc = yregex_sets_break    (x_level + 1, x_rpos, x_tpos);                                                               <* 
- *>          break;                                                                                                                 <* 
- *>       case '[' :                                                                                                                <* 
- *>          DEBUG_YREGEX  yLOG_note    ("found set");                                                                              <* 
- *>          rc = yregex_sets_exec     (x_level + 1, x_rpos, x_tpos);                                                               <* 
- *>          break;                                                                                                                 <* 
- *>       default  :                                                                                                                <* 
- *>          DEBUG_YREGEX  yLOG_note    ("other");                                                                                  <* 
- *>          rc = yregex_exec__literal (x_level + 1, x_rpos, x_tpos);                                                               <* 
- *>          break;                                                                                                                 <* 
- *>       }                                                                                                                         <* 
- *>    }                                                                                                                            <* 
- *>    /+---(finish)-------------------------+/                                                                                     <* 
- *>    s_states [a_index].ready = '-';                                                                                              <* 
- *>    s_states [a_index].rc    = rc;                                                                                               <* 
- *>    /+---(complete)-----------------------+/                                                                                     <* 
- *>    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);                                                                                   <* 
- *>    return rc;                                                                                                                   <* 
- *> }                                                                                                                               <*/
+char yregex_exec__by_cursor  (char a_move, tSTATE **r_back) { return yregex_share__by_cursor (TYPE_EXEC, &s_head, &s_tail, &s_curr, r_back, a_move); }
+char yregex_exec__by_index   (int a_index, tSTATE **r_back) { return yregex_share__by_index  (TYPE_EXEC, &s_head, &s_curr, r_back, a_index); }
 
 
 
@@ -750,47 +602,130 @@ char  g_subq    [LEN_TEXT];
 /*====================------------------------------------====================*/
 static void      o___DRIVER__________________o (void) {;}
 
-/*> char                                                                              <* 
- *> yregex_exec_driver   (char a_type, cchar *a_source)                               <* 
- *> {                                                                                 <* 
- *>    /+---(locals)-----------+-----+-----+-+/                                       <* 
- *>    int         rc          =    0;                                                <* 
- *>    int         i           =    0;                                                <* 
- *>    /+---(header)-------------------------+/                                       <* 
- *>    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);                                     <* 
- *>    DEBUG_YREGEX  yLOG_char    ("a_type"    , a_type);                             <* 
- *>    DEBUG_YREGEX  yLOG_point   ("a_source"  , a_source);                           <* 
- *>    /+---(prepare)------------------------+/                                       <* 
- *>    rc = yregex_exec__prep  (a_source);                                            <* 
- *>    DEBUG_YREGEX  yLOG_value   ("rc"        , rc);                                 <* 
- *>    if (rc < 0) {                                                                  <* 
- *>       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rc);                              <* 
- *>       return rc;                                                                  <* 
- *>    }                                                                              <* 
- *>    /+---(parse)--------------------------+/                                       <* 
- *>    DEBUG_YREGEX  yLOG_info    ("a_source"  , a_source);                           <* 
- *>    DEBUG_YREGEX  yLOG_value   ("myREGEX.tlen"  , myREGEX.tlen);                   <* 
- *>    for (s_begin = 0; s_begin < myREGEX.tlen; ++s_begin) {                         <* 
- *>       DEBUG_YREGEX  yLOG_value   ("BEGIN AT"  , s_begin);                         <* 
- *>       s_curr = s_nstate;                                                          <* 
- *>       yregex_exec_push (0, 0, s_begin, 0);                                        <* 
- *>       for (i = 0; i < s_nstate; ++i) {                                            <* 
- *>          if (s_states [i].ready != 'y') continue;                                 <* 
- *>          s_curr = i;                                                              <* 
- *>          rc = yregex_exec__single (i);                                            <* 
- *>          if (a_type == '1' && yregex_find_count () > 0)  return 1;                <* 
- *>       }                                                                           <* 
- *>    }                                                                              <* 
- *>    rc = yregex_find_count ();                                                     <* 
- *>    if (rc > 100) rc == 100;                                                       <* 
- *>    /+---(complete)-----------------------+/                                       <* 
- *>    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);                                     <* 
- *>    return rc;                                                                     <* 
- *> }                                                                                 <*/
+char 
+yregex_exec__driver  (char a_type, cchar *a_source)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   int         rc          =    0;
+   int         i           =    0;
+   int         c           =    0;
+   /*---(header)-------------------------*/
+   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
+   DEBUG_YREGEX  yLOG_char    ("a_type"    , a_type);
+   DEBUG_YREGEX  yLOG_point   ("a_source"  , a_source);
+   /*---(prepare)------------------------*/
+   rc = yregex_exec_prep  (a_source);
+   DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
+   if (rc < 0) {
+      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rc);
+      return rc;
+   }
+   /*---(parse)--------------------------*/
+   DEBUG_YREGEX  yLOG_info    ("a_source"  , a_source);
+   DEBUG_YREGEX  yLOG_value   ("myREGEX.tlen"  , myREGEX.tlen);
+   /*---(walk beginning points)----------*/
+   for (s_begin = 0; s_begin < myREGEX.tlen; ++s_begin) {
+      /*---(prepare)---------------------*/
+      DEBUG_YREGEX  yLOG_value   ("BEGIN AT"  , s_begin);
+      yregex_exec__push (0, 0, s_begin);
+      /*---(walk levels)-----------------*/
+      DEBUG_YREGEX  yLOG_complex ("LEVEL"     , "%4d, %4d, %p", i, s_count, s_head);
+      /*---(walk states)--------------*/
+      s_focus = s_head;
+      while (s_focus != NULL) {
+         DEBUG_YREGEX  yLOG_complex ("checking"  , "%-10p, %c", s_focus, s_focus->ready);
+         if (s_focus->ready == 'y') {
+            rc = yregex_exec__single ();
+            if (rc == 100)  ++c;
+            DEBUG_YREGEX  yLOG_value   ("single"    , rc);
+            if (a_type == '1' && yregex_find_count () > 0) {
+               DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+               return 1;
+            }
+         }
+         s_focus = s_focus->m_next;
+      }
+   }
+   /*> rc = yregex_find_count ();                                                     <*/
+   if (c > 100)  c = 100;
+   /*---(complete)-----------------------*/
+   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+   return c;
+}
 
-/*> char yREGEX_exec          (cchar *a_source) { return yregex_exec_driver ('a', a_source); }   <*/
-/*> char yREGEX_fast          (cchar *a_source) { return yregex_exec_driver ('1', a_source); }   <*/
+char yREGEX_full          (cchar *a_source) { return yregex_exec__driver ('a', a_source); }
+char yREGEX_filter        (cchar *a_source) { return yregex_exec__driver ('1', a_source); }
 
 
 
-/*===============================[[ end code ]]===============================*/
+/*====================------------------------------------====================*/
+/*===----                         unit testing                         ----===*/
+/*====================------------------------------------====================*/
+static void  o___UNITTEST________o () { return; }
+
+char*        /*-> unit testing accessor --------------[ ------ [gs.HA0.1B3.K5]*/ /*-[02.0000.00#.#]-*/ /*-[--.---.---.--]-*/
+yregex_exec__unit       (char *a_question, int n)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   int         x_fore      = 0;
+   int         x_back      = 0;
+   tSTATE     *x_curr      = NULL;
+   char        rc          =    0;
+   int         c           =    0;
+   char        t           [LEN_RECD]  = "[]";
+   char        s           [LEN_RECD]  = "";
+   char        u           [LEN_RECD]  = "";
+   char        w           [LEN_RECD]  = "";
+   int         i           =    0;
+   /*---(preprare)-----------------------*/
+   strcpy (unit_answer, "ERR              : question not understood");
+   /*---(dependency list)----------------*/
+   if      (strcmp (a_question, "count"    )      == 0) {
+      if (n < 0 || n >= MAX_LEVEL) {
+         snprintf (unit_answer, LEN_RECD, "EXEC count  (%2d) : level out of range ( < 0 or >= %d)", n, MAX_LEVEL);
+      } else {
+         x_curr = s_head; while (x_curr != NULL) { ++x_fore; x_curr = x_curr->m_next; }
+         x_curr = s_tail; while (x_curr != NULL) { ++x_back; x_curr = x_curr->m_prev; }
+         snprintf (unit_answer, LEN_RECD, "EXEC count  (%2d) : num=%4d, fore=%4d, back=%4d", n, s_count, x_fore, x_back);
+      }
+   }
+   else if (strcmp (a_question, "list"        )   == 0) {
+      if (n < 0 || n >= MAX_LEVEL) {
+         snprintf (unit_answer, LEN_RECD, "EXEC list   (%2d) : level out of range ( < 0 or >= %d)", n, MAX_LEVEL);
+      } else {
+         snprintf (unit_answer, LEN_RECD, "EXEC list   (%2d) : num=%4d, head=%-10p, tail=%p", n, s_count, s_head, s_tail);
+      }
+   }
+   /*> else if (strcmp (a_question, "levels"      )   == 0) {                         <* 
+    *>    for (i = 0; i < 20; ++i) {                                                  <* 
+    *>       if      (s_count [i] <= 0)    sprintf (t, "   -");                       <* 
+    *>       else if (s_count [i] >  999)  sprintf (t, " %3d", 999);                  <* 
+    *>       else                          sprintf (t, " %3d", s_count [i]);          <* 
+    *>       strcat (s, t);                                                           <* 
+    *>    }                                                                           <* 
+    *>    snprintf (unit_answer, LEN_RECD, "EXEC levels      :%s", s);                <* 
+    *> }                                                                              <*/
+   else if (strcmp (a_question, "text"        )   == 0) {
+      snprintf (unit_answer, LEN_RECD, "EXEC text        : %2då%sæ", myREGEX.tlen, myREGEX.text);
+   }
+   else if (strcmp (a_question, "state"    )      == 0) {
+      yregex_exec__by_index (n, &x_curr);
+      strcpy (s, "(nil)         -n    -m");
+      if (x_curr != NULL) {
+         if (x_curr->parent != NULL)  sprintf (s, "%-10p   %2dn   %2dm", x_curr->parent, x_curr->parent->seq, x_curr->parent->lvl);
+         if (x_curr->rc == -66)   strcpy  (t, "   -");
+         else                     sprintf (t, "%4d", x_curr->rc);
+         snprintf (unit_answer, LEN_RECD, "EXEC state  (%2d) : %2d  %3db  %3dr  %3dt   %c %c  %4src  %2dc  %s",
+               x_curr->seq, x_curr->lvl, x_curr->beg, x_curr->rpos, x_curr->tpos, x_curr->ready, x_curr->who, t, x_curr->nchild, s);
+      } else {
+         snprintf (unit_answer, LEN_RECD, "EXEC state  (%2d) :  -    -b    -r    -t   - -     -rc   -c  %s", n, s);
+      }
+      return unit_answer;
+   }
+   /*---(complete)-----------------------*/
+   return unit_answer;
+}
+
+
+
+

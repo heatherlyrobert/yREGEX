@@ -109,6 +109,7 @@ yregex__unit_quiet      (void)
    yregex_error_init  ();
    yregex_sets_init   ();
    yregex_pats_init   ();
+   yregex_find_init   ();
    return 0;
 }
 
@@ -123,6 +124,7 @@ yregex__unit_loud       (void)
    yregex_error_init  ();
    yregex_sets_init   ();
    yregex_pats_init   ();
+   yregex_find_init   ();
    return 0;
 }
 
@@ -133,6 +135,7 @@ yregex__unit_end        (void)
    yregex_sets_wrap   ();
    yregex_pats_wrap   ();
    yregex_exec_wrap   ();
+   yregex_find_wrap   ();
    yLOGS_end          ();
    return 0;
 }

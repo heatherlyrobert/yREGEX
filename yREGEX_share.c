@@ -83,23 +83,23 @@ yregex_share_new        (char a_type, void **r_new, void **a_head, void **a_tail
    } else {
       DEBUG_YREGEX   yLOG_snote   ("append to tail");
       IF_SETS  {
-         x_sets = (tSETS  *) x_new;    x_sets->m_prev  = *a_tail;
+         x_sets = (tSETS  *) x_new;    x_sets->m_prev = *a_tail;
          x_sets = (tSETS  *) *a_tail;  x_sets->m_next = x_new;
       }
       EL_PATS  {
-         x_pats = (tPATS  *) x_new;    x_pats->m_prev  = *a_tail;
+         x_pats = (tPATS  *) x_new;    x_pats->m_prev = *a_tail;
          x_pats = (tPATS  *) *a_tail;  x_pats->m_next = x_new;
       }
       EL_ERRS  {
-         x_errs = (tERROR *) x_new;    x_errs->m_prev  = *a_tail;
+         x_errs = (tERROR *) x_new;    x_errs->m_prev = *a_tail;
          x_errs = (tERROR *) *a_tail;  x_errs->m_next = x_new;
       }
       EL_FIND  {
-         x_find = (tFIND  *) x_new;    x_find->m_prev  = *a_tail;
+         x_find = (tFIND  *) x_new;    x_find->m_prev = *a_tail;
          x_find = (tFIND  *) *a_tail;  x_find->m_next = x_new;
       }
       EL_EXEC  {
-         x_exec = (tSTATE *) x_new;    x_exec->m_prev  = *a_tail;
+         x_exec = (tSTATE *) x_new;    x_exec->m_prev = *a_tail;
          x_exec = (tSTATE *) *a_tail;  x_exec->m_next = x_new;
       }
    }
@@ -168,10 +168,6 @@ yregex_share_free       (char a_type, void **r_old, void **a_head, void **a_tail
       if (x_errs->cat  != NULL)  free (x_errs->cat);
       if (x_errs->msg  != NULL)  free (x_errs->msg);
    } EL_FIND {
-      for (i = 0; i < MAX_SUB; ++i) {
-         if (x_find->subs [i].text != NULL) { free (x_find->subs [i].text); x_find->subs [i].text = NULL; }
-         if (x_find->subs [i].quan != NULL) { free (x_find->subs [i].quan); x_find->subs [i].quan = NULL; }
-      }
       if (x_find->text != NULL)  { free (x_find->text); x_find->text = NULL; }
       if (x_find->quan != NULL)  { free (x_find->quan); x_find->quan = NULL; }
    } EL_RULE {

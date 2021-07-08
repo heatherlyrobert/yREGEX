@@ -33,8 +33,8 @@
 
 #define     P_VERMAJOR  "0.--, preparing for serious use"
 #define     P_VERMINOR  "0.6-, keep advancing"
-#define     P_VERNUM    "0.6k"
-#define     P_VERTXT    "aggressive cleanup and resulting bug-hunt"
+#define     P_VERNUM    "0.6l"
+#define     P_VERTXT    "crazy drive to take array out of exec.  gotta work thru unit tests"
 
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -157,6 +157,7 @@ static      struct      cSTATE {
    char        rc;                          /* return code                    */
    /*---(connections)------------*/
    tSTATE     *parent;
+   short       nchild;
    tSTATE     *m_prev;
    tSTATE     *m_next;
    /*---(done)-------------------*/
@@ -175,22 +176,9 @@ struct      cERROR {
 };
 
 /*---(struct.re)--------+-----------+-*//*-+----------------------------------*/
-typedef     struct      cNSUB       tNSUB;
-static      struct      cNSUB {
-   /*---(data)-------------------*/
-   short       beg;
-   short       len;
-   char       *text;
-   char       *quan;
-   /*---(done)-------------------*/
-};
-
-/*---(struct.re)--------+-----------+-*//*-+----------------------------------*/
-#define     MAX_SUB       11
+#define     MAX_SUB       10
 typedef     struct      cFIND       tFIND;
 struct      cFIND {
-   /*---(tie to exec)------------*/
-   short       ref;                         /* ref from exec                  */
    /*---(basics)-----------------*/
    short       beg;                         /* starting point                 */
    short       end;                         /* ending point                   */
@@ -198,7 +186,8 @@ struct      cFIND {
    char       *text;                        /* found text                     */
    char       *quan;                        /* quantifiers                    */
    /*---(subs)-------------------*/
-   tNSUB       subs     [MAX_SUB];
+   short       s_off    [MAX_SUB];
+   short       s_len    [MAX_SUB];
    /*---(master)-----------------*/
    tFIND      *m_prev;
    tFIND      *m_next;
@@ -377,7 +366,7 @@ char*       yregex_error__unit      (char *a_question, int n);
 char*       yregex_exec__memory     (tSTATE *a_cur);
 char        yregex_exec__wipe       (tSTATE *a_cur);
 /*---(memory)---------------*/
-char        yregex_exec__new        (tSTATE **r_new, short a_lvl);
+char        yregex_exec__new        (tSTATE **r_new);
 char        yregex_exec__free       (tSTATE **r_old);
 /*---(program)--------------*/
 char        yregex_exec_init        (void);
@@ -387,8 +376,8 @@ char        yregex_exec_wrap        (void);
 char        yregex_exec__push       (short a_lvl, short a_rpos, short a_tpos);
 char        yregex_exec__pushback   (short a_lvl, short a_rpos, short a_tpos);
 /*---(search)---------------*/
-char        yregex_exec__by_cursor  (short a_lvl, char a_move, tSTATE **r_back);
-char        yregex_exec__by_index   (short a_lvl, int a_index, tSTATE **r_back);
+char        yregex_exec__by_cursor  (char a_move, tSTATE **r_back);
+char        yregex_exec__by_index   (int a_index, tSTATE **r_back);
 /*---(running)--------------*/
 char        yregex_exec_prep        (char *a_source);
 char        yregex_exec__passed     (char a_who);
@@ -407,9 +396,9 @@ char        yregex_exec__driver     (char a_type, cchar *a_source);
 char        yREGEX_full             (cchar *a_source);
 char        yREGEX_filter           (cchar *a_source);
 /*---(unittest)-------------*/
-char        yregex_exec__setfocus   (short a_lvl, short a_index);
+char        yregex_exec__setfocus   (short a_seq);
 char        yregex_exec__setbegin   (short a_beg);
-char*       yregex_exec__unit       (char *a_question, int n, int m);
+char*       yregex_exec__unit       (char *a_question, int n);
 /*---(done)-----------------*/
 
 
@@ -507,19 +496,16 @@ char*       yregex_pats__unit       (char *a_question, int a_num);
 /*---(support)--------------*/
 char*       yregex_find__memory     (tFIND *a_cur);
 char        yregex_find__wipe       (tFIND *a_cur);
-char        yregex_nsub__wipe       (tNSUB *a_cur);
 /*---(memory)---------------*/
 char        yregex_find__new        (tFIND **a_new);
 char        yregex_find__free       (tFIND **a_old);
-char        yregex_nsub__new        (tNSUB **a_new);
-char        yregex_nsub__free       (tNSUB **a_old);
 /*---(program)--------------*/
 char        yregex_find_init        (void);
 char        yregex_find__purge      (void);
 char        yregex_find_wrap        (void);
 /*---(create)---------------*/
-char        yregex_find__full       (int a_beg, char *a_text, char *a_quan);
-char        yregex_find__sub        (int a_num, int a_beg, char *a_text, char *a_quan);
+char        yregex_find__full       (short a_beg, char *a_text, char *a_quan);
+char        yregex_find__sub        (char a_num, short a_beg, short a_len);
 /*---(structure)------------*/
 char        yregex_find__reset      (void);
 char        yregex_find__trail      (tSTATE *a_focus);

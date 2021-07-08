@@ -16,14 +16,6 @@
 
 
 
-
-
-
-/*---(static.vars)------+-----------+-*//*-+----------------------------------*/
-/*> static      tFIND       s_finds     [MAX_FIND];    /+ all finds               +/   <*/
-/*> static      int         s_nfind     = 0;           /+ total number of states  +/   <*/
-
-
 /*---(static.vars)------+-----------+-*//*-+----------------------------------*/
 static      tFIND      *s_head      = NULL;
 static      tFIND      *s_tail      = NULL;
@@ -53,9 +45,7 @@ yregex_find__memory     (tFIND *a_cur)
       return s_print;
    }
    /*---(defense)------------------------*/
-   strlcpy (s_print, "å_._____.___________.__æ", LEN_RECD);
-   ++n;  if (a_cur->ref         >= 0)           s_print [n] = 'X';
-   ++n;
+   strlcpy (s_print, "å_____.__________.__æ", LEN_RECD);
    ++n;  if (a_cur->beg         >= 0)           s_print [n] = 'X';
    ++n;  if (a_cur->end         >= 0)           s_print [n] = 'X';
    ++n;  if (a_cur->len         >= 0)           s_print [n] = 'X';
@@ -63,7 +53,7 @@ yregex_find__memory     (tFIND *a_cur)
    ++n;  if (a_cur->quan        != NULL)        s_print [n] = 'X';
    ++n;
    for (i = 0; i < MAX_SUB; ++i) {
-      ++n;  if (a_cur->subs [i].beg  >= 0)        s_print [n] = 'X';
+      ++n;  if (a_cur->s_off [i]     >= 0)        s_print [n] = 'X';
    }
    ++n;
    ++n;  if (a_cur->m_prev      != NULL)        s_print [n] = 'X';
@@ -77,17 +67,14 @@ yregex_find__wipe       (tFIND *a_cur)
    /*---(locals)-----------+-----+-----+-*/
    int         i           =    0;
    /*---(wipe)---------------------------*/
-   a_cur->ref      = -1;
    a_cur->beg      = -1;
    a_cur->end      = -1;
    a_cur->len      = -1;
    a_cur->text     = NULL;
    a_cur->quan     = NULL;
    for (i = 0; i < MAX_SUB; ++i) {
-      a_cur->subs [i].beg  = -1;
-      a_cur->subs [i].len  = -1;
-      a_cur->subs [i].text = NULL;
-      a_cur->subs [i].quan = NULL;
+      a_cur->s_off [i]     = -1;
+      a_cur->s_len [i]     = -1;
    }
    a_cur->m_prev   = NULL;
    a_cur->m_next   = NULL;
@@ -124,7 +111,7 @@ char yregex_find_wrap    (void) { return yregex_share_wrap  (TYPE_FIND, &s_head,
 static void      o___CREATE__________________o (void) {;}
 
 char
-yregex_find__full       (int a_beg, char *a_text, char *a_quan)
+yregex_find__full       (short a_beg, char *a_text, char *a_quan)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -134,6 +121,7 @@ yregex_find__full       (int a_beg, char *a_text, char *a_quan)
    --rce;  if (a_beg < 0 || a_beg >= myREGEX.tlen)  return rce;
    --rce;  if (a_text == NULL)  return rce;
    --rce;  if (a_quan == NULL)  return rce;
+   --rce;  if (strlen (a_text) != strlen (a_quan))  return rce;
    /*---(create a find)------------------*/
    rc = yregex_find__new (&x_new);
    --rce;  if (x_new == NULL) {
@@ -142,7 +130,7 @@ yregex_find__full       (int a_beg, char *a_text, char *a_quan)
    /*---(check dups)---------------------*/
    x_new->beg   = a_beg;
    x_new->len   = strlen (a_text);
-   x_new->end   = a_beg + x_new->beg;
+   x_new->end   = a_beg + x_new->len - 1;
    x_new->text  = strdup (a_text);
    x_new->quan  = strdup (a_quan);
    /*---(complete)-----------------------*/
@@ -150,22 +138,20 @@ yregex_find__full       (int a_beg, char *a_text, char *a_quan)
 }
 
 char
-yregex_find__sub        (int a_num, int a_beg, char *a_text, char *a_quan)
+yregex_find__sub        (char a_num, short a_off, short a_len)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
    tFIND      *x_cur       = NULL;
-   /*---(defense)------------------------*/
-   --rce;  if (a_num < 0 || a_num > 9)              return rce;
-   --rce;  if (a_beg < 0 || a_beg >= myREGEX.tlen)  return rce;
-   --rce;  if (a_text == NULL)                      return rce;
-   --rce;  if (a_quan == NULL)                      return rce;
-   /*---(update)-------------------------*/
    x_cur = s_tail;
-   x_cur->subs [a_num].beg   = a_beg;
-   x_cur->subs [a_num].len   = strlen (a_text);
-   x_cur->subs [a_num].text  = strdup (a_text);
-   x_cur->subs [a_num].quan  = strdup (a_quan);
+   /*---(defense)------------------------*/
+   --rce;  if (x_cur == NULL)                       return rce;
+   --rce;  if (a_num < 0 || a_num > 9)              return rce;
+   --rce;  if (a_off < 0 || a_off >= x_cur->len)    return rce;
+   --rce;  if (a_len < 1 || a_off + a_len - 1 >= x_cur->len)    return rce;
+   /*---(update)-------------------------*/
+   x_cur->s_off [a_num]  = a_off;
+   x_cur->s_len [a_num]  = a_len;
    /*---(complete)-----------------------*/
    return 0;
 }
@@ -347,127 +333,6 @@ yREGEX_best          (cchar a_type, cchar a_dir, int  *a_beg, int *a_len, int *a
     *> return 0;                                                                      <*/
 }
 
-static char   s_method   = YREGEX_GREEDY;
-static char   s_scorer   = '*';
-static int    s_index    =  -1;
-static int    s_pos      =   0;
-
-int
-yregex_find__target     (char a_dir, int a_pos)
-{
-   /*> /+---(locals)-----------+-----+-----+-+/                                       <* 
-    *> char        rce         =  -10;                                                <* 
-    *> int         i           =    0;                                                <* 
-    *> int         x_orig      =    0;                                                <* 
-    *> int         x_targ      =    0;                                                <* 
-    *> int         x_pos       =    0;                                                <* 
-    *> /+---(header)-------------------------+/                                       <* 
-    *> DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);                                     <* 
-    *> DEBUG_YREGEX  yLOG_schar   (a_dir);                                            <* 
-    *> DEBUG_YREGEX  yLOG_sint    (a_pos);                                            <* 
-    *> /+---(find next right)----------------+/                                       <* 
-    *> if (strchr ("[>", a_dir) != NULL) {                                            <* 
-    *>    DEBUG_YREGEX  yLOG_snote   ("right");                                       <* 
-    *>    x_orig = x_targ = +100000;                                                  <* 
-    *>    if (a_pos == -1)  a_pos = -x_orig;                                          <* 
-    *>    for (i = 0; i < s_nfind; ++i) {                                             <* 
-    *>       x_pos = s_finds [i].beg;                                                 <* 
-    *>       if (x_pos < a_pos)            continue;                                  <* 
-    *>       if (x_pos > x_targ)           continue;                                  <* 
-    *>       DEBUG_YREGEX  yLOG_sint    (i);                                          <* 
-    *>       DEBUG_YREGEX  yLOG_sint    (x_targ);                                     <* 
-    *>       x_targ = x_pos;                                                          <* 
-    *>    }                                                                           <* 
-    *> }                                                                              <* 
-    *> /+---(find next left)-----------------+/                                       <* 
-    *> else if (strchr ("<]", a_dir) != NULL) {                                       <* 
-    *>    DEBUG_YREGEX  yLOG_snote   ("left");                                        <* 
-    *>    x_orig = x_targ = -100000;                                                  <* 
-    *>    if (a_pos == -1)  a_pos = -x_orig;                                          <* 
-    *>    for (i = 0; i < s_nfind; ++i) {                                             <* 
-    *>       x_pos = s_finds [i].beg;                                                 <* 
-    *>       if (x_pos > a_pos)            continue;                                  <* 
-    *>       if (x_pos < x_targ)           continue;                                  <* 
-    *>       x_targ = x_pos;                                                          <* 
-    *>       DEBUG_YREGEX  yLOG_sint    (i);                                          <* 
-    *>       DEBUG_YREGEX  yLOG_sint    (x_targ);                                     <* 
-    *>    }                                                                           <* 
-    *> }                                                                              <* 
-    *> /+---(output)-------------------------+/                                       <* 
-    *> else {                                                                         <* 
-    *>    DEBUG_YREGEX  yLOG_snote   ("direction unknown");                           <* 
-    *>    DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);                             <* 
-    *> }                                                                              <* 
-    *> /+---(output)-------------------------+/                                       <* 
-    *> --rce;  if (x_targ == x_orig) {                                                <* 
-    *>    DEBUG_YREGEX  yLOG_snote   ("FAILED");                                      <* 
-    *>    DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);                             <* 
-    *>    return rce;                                                                 <* 
-    *> }                                                                              <* 
-    *> /+---(complete)-----------------------+/                                       <* 
-    *> DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);                                     <* 
-    *> return x_targ;                                                                 <*/
-}
-
-int
-yregex_find__score      (char a_method, int a_pos)
-{
-   /*> /+---(locals)-----------+-----+-----+-+/                                               <* 
-    *> char        rce         =  -10;                                                        <* 
-    *> int         i           =    0;                                                        <* 
-    *> int         x_pos       =    0;                                                        <* 
-    *> int         x_score     =    0;                                                        <* 
-    *> int         x_top       =    0;                                                        <* 
-    *> int         x_best      =   -1;                                                        <* 
-    *> /+---(header)-------------------------+/                                               <* 
-    *> DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);                                             <* 
-    *> DEBUG_YREGEX  yLOG_schar   (a_method);                                                 <* 
-    *> DEBUG_YREGEX  yLOG_sint    (a_pos);                                                    <* 
-    *> /+---(prepare)------------------------+/                                               <* 
-    *> switch (a_method) {                                                                    <* 
-    *> case YREGEX_LAZY :  x_top = +100000;  break;                                           <* 
-    *> default          :  x_top = -100000;  break;                                           <* 
-    *> }                                                                                      <* 
-    *> /+---(find next left)-----------------+/                                               <* 
-    *> for (i = 0; i < s_nfind; ++i) {                                                        <* 
-    *>    /+---(filter position)-------------+/                                               <* 
-    *>    x_pos = s_finds [i].beg;                                                            <* 
-    *>    if (x_pos != a_pos)           continue;                                             <* 
-    *>    /+---(score)-----------------------+/                                               <* 
-    *>    if (s_method == YREGEX_BEST)    x_score  = s_finds [i].balance;                     <* 
-    *>    else                            x_score  = s_finds [i].greedy + s_finds [i].lazy;   <* 
-    *>    /+---(filter score)----------------+/                                               <* 
-    *>    switch (s_method) {                                                                 <* 
-    *>    case YREGEX_GREEDY : case YREGEX_BEST :                                             <* 
-    *>       if (x_score <= x_top)  continue;                                                 <* 
-    *>       break;                                                                           <* 
-    *>    case YREGEX_LAZY   :                                                                <* 
-    *>       if (x_score >= x_top)  continue;                                                 <* 
-    *>       break;                                                                           <* 
-    *>    }                                                                                   <* 
-    *>    /+---(update)----------------------+/                                               <* 
-    *>    x_top  = x_score;                                                                   <* 
-    *>    x_best = i;                                                                         <* 
-    *>    DEBUG_YREGEX  yLOG_sint    (x_top);                                                 <* 
-    *>    /+---(done)------------------------+/                                               <* 
-    *> }                                                                                      <* 
-    *> /+---(save values)--------------------+/                                               <* 
-    *> s_index = x_best;                                                                      <* 
-    *> s_pos   = x_pos;                                                                       <* 
-    *> /+---(complete)-----------------------+/                                               <* 
-    *> DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);                                             <* 
-    *> return x_best;                                                                         <*/
-}
-
-char
-yREGEX_method           (char a_type)
-{
-   if      (s_method == YREGEX_LAZY)  s_method = a_type;
-   else if (s_method == YREGEX_BEST)  s_method = a_type;
-   else                               s_method = YREGEX_GREEDY;
-   return 0;
-}
-
 
 
 /*====================------------------------------------====================*/
@@ -485,11 +350,11 @@ char yregex_find__by_index   (int a_index, tFIND  **r_back) { return yregex_shar
 /*====================------------------------------------====================*/
 static void      o___MARKING_________________o (void) {;}
 
-static int  s_beg   = 0;
-static char s_text  [LEN_TEXT] = "";
-static char s_quan  [LEN_TEXT] = "";
-static int  s_gbeg  [LEN_LABEL];
-static int  s_gend  [LEN_LABEL];
+static short s_beg   = 0;
+static char  s_text  [LEN_TEXT] = "";
+static char  s_quan  [LEN_TEXT] = "";
+static short s_gbeg  [LEN_LABEL];
+static short s_gend  [LEN_LABEL];
 
 char
 yregex_find__reset      (void)
@@ -573,9 +438,7 @@ yregex_find__parse      (void)
    for (i = 0; i < 10; ++i) {
       if (s_gbeg [i] <  0)  continue;
       x_len = s_gend [i] - s_gbeg [i] + 1;
-      sprintf (t, "%*.*s", x_len, x_len, s_text);
-      sprintf (q, "%*.*s", x_len, x_len, s_quan);
-      yregex_find__sub (i, s_gbeg [i], t, q);
+      yregex_find__sub (i, s_gbeg [i], x_len);
       ++c;
    }
    return c;
@@ -591,142 +454,6 @@ yregex_find_add         (tSTATE *a_focus)
    return rc;
 }
 
-char
-yregex_find__mark       (tSTATE *a_focus)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   tSTATE     *x_curr      = NULL;
-   int         x_rpos      =    0;
-   int         x_tpos      =    0;
-   uchar       x_char      =  ' ';
-   uchar       x_comp      =  ' ';
-   int         x_indx      =  ' ';
-   uchar       x_mods      =  ' ';
-   /*---(header)-------------------------*/
-   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
-   /*---(defense)------------------------*/
-   DEBUG_YREGEX  yLOG_point   ("a_focus"   , a_focus);
-   --rce;  if (a_focus == NULL) {
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   x_curr         = a_focus;
-   /*---(walk solution)------------------*/
-   while (x_curr != NULL) {
-      /*---(grab parent)-----------------*/
-      x_curr = x_curr->parent;
-      /*---(mark)------------------------*/
-      x_curr->ready = '+';
-      /*---(positions)-------------------*/
-      x_rpos = x_curr->rpos;
-      x_tpos = x_curr->tpos;
-      /*---(contents)-----------------------*/
-      x_char = myREGEX.text [x_tpos];
-      x_comp = myREGEX.comp [x_rpos];
-      x_indx = myREGEX.indx [x_rpos] - 1;
-      x_mods = myREGEX.mods [x_rpos];
-      /*---(fixing)-------------------------*/
-      if (x_indx == 998)  x_indx = 10;
-      /*---(grouping)-----------------------*/
-      /*> switch (x_reg) {                                                            <* 
-       *> case ')' : case '|' :                                                       <* 
-       *>    myREGEX.g_end [x_indx] = x_tpos - 1;                                     <* 
-       *>    break;                                                                   <* 
-       *> case '(' :                                                                  <* 
-       *>    myREGEX.g_beg [x_indx] = x_tpos;                                         <* 
-       *>    break;                                                                   <* 
-       *> default  :                                                                  <* 
-       *>    x_text [x_tpos] = x_ch;                                                  <* 
-       *>    x_quan [x_tpos] = x_mod;                                                 <* 
-       *>    break;                                                                   <* 
-       *> }                                                                           <*/
-   }
-   /*---(header)-------------------------*/
-   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
-   return 0;
-}
-
-char
-yregex_find_mark        (tSTATE *a_focus)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   int         i           =    0;
-   int         p           =   -1;
-   int         x_rpos      =    0;
-   uchar       x_reg       =  ' ';
-   int         x_tpos      =    0;
-   uchar       x_ch        =  ' ';
-   uchar       x_mod       =  ' ';
-   int         x_indx      =    0;
-   int         x_len       =    0;
-   char        x_text      [LEN_RECD];
-   char        x_quan      [LEN_RECD];
-   char        t           [LEN_RECD];
-   char        q           [LEN_RECD];
-   tSTATE     *x_curr      = NULL;
-   /*---(header)-------------------------*/
-   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
-   /*---(defense)------------------------*/
-   DEBUG_YREGEX  yLOG_point   ("a_focus"   , a_focus);
-   --rce;  if (a_focus == NULL) {
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   /*---(mark tail)----------------------*/
-   a_focus->who   = HAND_PAS;
-   a_focus->rc    = 100;
-   a_focus->ready = '-';
-   /*---(prepare)------------------------*/
-   x_curr         = a_focus;
-   /*---(identify groups)----------------*/
-   /*> i = a_index;                                                                                             <* 
-    *> while ((i = s_states [i].prev) != p) {                                                                   <* 
-    *>    /+---(mark solution)---------------+/                                                                 <* 
-    *>    p = i;                                                                                                <* 
-    *>    s_states [i].ready = '+';                                                                             <* 
-    *>    /+---(get  solution)---------------+/                                                                 <* 
-    *>    x_rpos = s_states [i].rpos;                                                                           <* 
-    *>    x_reg  = myREGEX.comp [x_rpos];                                                                       <* 
-    *>    /+---(text)---------------------------+/                                                              <* 
-    *>    x_tpos = s_states [i].tpos;                                                                           <* 
-    *>    x_ch   = myREGEX.text [x_tpos];                                                                       <* 
-    *>    x_indx = myREGEX.indx [x_rpos] - 1;                                                                   <* 
-    *>    if (x_indx == 998)  x_indx = 10;                                                                      <* 
-    *>    x_mod  = myREGEX.mods [x_rpos];                                                                       <* 
-    *>    /+---(handle grouping)----------------+/                                                              <* 
-    *>    switch (x_reg) {                                                                                      <* 
-    *>    case ')' : case '|' :                                                                                 <* 
-    *>       myREGEX.g_end [x_indx] = x_tpos - 1;                                                               <* 
-    *>       break;                                                                                             <* 
-    *>    case '(' :                                                                                            <* 
-    *>       myREGEX.g_beg [x_indx] = x_tpos;                                                                   <* 
-    *>       break;                                                                                             <* 
-    *>    default  :                                                                                            <* 
-    *>       x_text [x_tpos] = x_ch;                                                                            <* 
-    *>       x_quan [x_tpos] = x_mod;                                                                           <* 
-    *>       break;                                                                                             <* 
-    *>    }                                                                                                     <* 
-    *> }                                                                                                        <* 
-    *> /+---(fill groups)--------------------+/                                                                 <* 
-    *> for (i = 0; i <= 10; ++i) {                                                                              <* 
-    *>    /+> printf ("%2d %c\n", i, myREGEX.g_mrk [i]);                                     <+/                <* 
-    *>    if (myREGEX.g_mrk [i] == ' ') {                                                                       <* 
-    *>       yregex_find_addsub (a_index, i, -1    , ""    , ""    );                                           <* 
-    *>       continue;                                                                                          <* 
-    *>    }                                                                                                     <* 
-    *>    x_len = myREGEX.g_end [i] - myREGEX.g_beg [i] + 1;                                                    <* 
-    *>    strlcpy (t, x_text + myREGEX.g_beg [i], x_len + 1);                                                   <* 
-    *>    strlcpy (q, x_quan + myREGEX.g_beg [i], x_len + 1);                                                   <* 
-    *>    /+> printf ("   %3d %3d %3d [%s] [%s]\n", myREGEX.g_beg [i], myREGEX.g_end [i], x_len, t, q);   <+/   <* 
-    *>    if (i == 0)  yregex_find_add (a_index, s_states [a_index].begin, t, q);                               <* 
-    *>    yregex_find_addsub (a_index, i, myREGEX.g_beg [i], t, q);                                             <* 
-    *> }                                                                                                        <*/
-   /*---(complete)-----------------------*/
-   return 0;
-}
-
 
 
 /*====================------------------------------------====================*/
@@ -738,10 +465,14 @@ char*
 yregex_find__unit    (char *a_question, int a_num)
 {
    /*---(locals)-----------+------+----+-*/
-   int         x_fore      = 0;
-   int         x_back      = 0;
+   int         x_fore      =    0;
+   int         x_back      =    0;
    tFIND      *x_curr      = NULL;
    int         x_find      =     0;
+   char        t           [LEN_HUND]  = "";
+   char        q           [LEN_HUND]  = "";
+   char        n           [LEN_HUND]  = "";
+   int         i           =     0;
    /*---(initialize)---------------------*/
    strlcpy (unit_answer, "FIND__unit, unknown request", 100);
    /*---(mapping)------------------------*/
@@ -758,6 +489,41 @@ yregex_find__unit    (char *a_question, int a_num)
    }
    else if (strcmp (a_question, "quan"        )   == 0) {
       snprintf (unit_answer, LEN_RECD, "FIND quan        : %2då%sæ", strlen (s_quan), s_quan);
+   }
+   else if (strcmp (a_question, "entry"    )      == 0) {
+      yregex_find__by_index (a_num, &x_curr);
+      if (x_curr != NULL) {
+         sprintf (t, "%2då%-.20sæ", strlen (x_curr->text), x_curr->text);
+         sprintf (q, "%2då%-.20sæ", strlen (x_curr->quan), x_curr->quan);
+         for (i = 0; i < LEN_HUND; ++i) n [i] = '\0';
+         for (i = 0; i < 10; ++i) {
+            if (x_curr->s_off [i] == -1)  n [i] = '·';
+            else                          n [i] = 'X';
+         }
+         snprintf (unit_answer, LEN_RECD, "FIND entry  (%2d) : %2d %2d %2d %-24.24s %-24.24s å%sæ",
+               a_num, x_curr->beg, x_curr->end, x_curr->len, t, q, n);
+      } else {
+         snprintf (unit_answer, LEN_RECD, "FIND entry  (%2d) :  -  -  -  -åæ                      -åæ                     åæ", a_num);
+      }
+      return unit_answer;
+   }
+   else if (strcmp (a_question, "subs"     )      == 0) {
+      yregex_find__by_index (a_num, &x_curr);
+      if (x_curr != NULL) {
+         for (i = 0; i < 10; ++i) {
+            if (x_curr->s_off [i] >= 0) {
+               sprintf (t, "%d·%2d/%-2d ", i, x_curr->s_off [i], x_curr->s_len [i]);
+            } else {
+               sprintf (t, "·· ·/·  ");
+            }
+            strlcat (q, t, LEN_HUND);
+         }
+         q [strlen (q) - 1] = '\0';
+         snprintf (unit_answer, LEN_RECD, "FIND subs   (%2d) : å%sæ", a_num, q);
+      } else {
+         snprintf (unit_answer, LEN_RECD, "FIND subs   (%2d) : å·· ·/·  ·· ·/·  ·· ·/·  ·· ·/·  ·· ·/·  ·· ·/·  ·· ·/·  ·· ·/·  ·· ·/·  ·· ·/· æ", a_num);
+      }
+      return unit_answer;
    }
    /*> else if (strncmp (a_question, "match"     , 20)  == 0) {                                                                                                                    <* 
     *>    if (a_num >= s_nfind)  snprintf (unit_answer, LEN_TEXT, "FIND match  (%2d) : %3d %3d[%-.40s]", a_num, -1, -1, "");                                                       <* 
