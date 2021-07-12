@@ -201,6 +201,8 @@ yregex_exec__push       (short a_lvl, short a_rpos, short a_tpos)
       x_new->parent  = s_focus;
       ++(x_new->parent->nchild);
    }
+   /*---(update)-------------------------*/
+   if (s_focus == NULL)  s_focus = x_new;
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
    return 0;
@@ -251,6 +253,19 @@ yregex_exec__pushback   (short a_lvl, short a_rpos, short a_tpos)
 /*===----                        state markers                         ----===*/
 /*====================------------------------------------====================*/
 static void      o___MARKERS_________________o (void) {;}
+
+char
+yregex_exec__next_focus (void)
+{
+   char        rce         =  -10;
+   --rce;  if (s_tail  == NULL)  return rce;
+   --rce;  if (s_focus == NULL)  s_focus = s_tail;
+   while (s_focus != NULL && s_focus->ready != 'y') {
+      s_focus = s_focus->m_next;
+   }
+   if (s_focus == NULL)  s_focus = s_tail;
+   return 0;
+}
 
 char
 yregex_exec__passed     (char a_who)
@@ -631,7 +646,6 @@ yregex_exec__driver  (char a_type, cchar *a_source)
       /*---(walk levels)-----------------*/
       DEBUG_YREGEX  yLOG_complex ("LEVEL"     , "%4d, %4d, %p", i, s_count, s_head);
       /*---(walk states)--------------*/
-      s_focus = s_head;
       while (s_focus != NULL) {
          DEBUG_YREGEX  yLOG_complex ("checking"  , "%-10p, %c", s_focus, s_focus->ready);
          if (s_focus->ready == 'y') {
@@ -645,6 +659,7 @@ yregex_exec__driver  (char a_type, cchar *a_source)
          }
          s_focus = s_focus->m_next;
       }
+      s_focus = s_tail;
    }
    /*> rc = yregex_find_count ();                                                     <*/
    if (c > 100)  c = 100;
@@ -681,20 +696,12 @@ yregex_exec__unit       (char *a_question, int n)
    strcpy (unit_answer, "ERR              : question not understood");
    /*---(dependency list)----------------*/
    if      (strcmp (a_question, "count"    )      == 0) {
-      if (n < 0 || n >= MAX_LEVEL) {
-         snprintf (unit_answer, LEN_RECD, "EXEC count  (%2d) : level out of range ( < 0 or >= %d)", n, MAX_LEVEL);
-      } else {
-         x_curr = s_head; while (x_curr != NULL) { ++x_fore; x_curr = x_curr->m_next; }
-         x_curr = s_tail; while (x_curr != NULL) { ++x_back; x_curr = x_curr->m_prev; }
-         snprintf (unit_answer, LEN_RECD, "EXEC count  (%2d) : num=%4d, fore=%4d, back=%4d", n, s_count, x_fore, x_back);
-      }
+      x_curr = s_head; while (x_curr != NULL) { ++x_fore; x_curr = x_curr->m_next; }
+      x_curr = s_tail; while (x_curr != NULL) { ++x_back; x_curr = x_curr->m_prev; }
+      snprintf (unit_answer, LEN_RECD, "EXEC count       : num=%4d, fore=%4d, back=%4d, ready=%4d", s_count, x_fore, x_back, s_ready);
    }
    else if (strcmp (a_question, "list"        )   == 0) {
-      if (n < 0 || n >= MAX_LEVEL) {
-         snprintf (unit_answer, LEN_RECD, "EXEC list   (%2d) : level out of range ( < 0 or >= %d)", n, MAX_LEVEL);
-      } else {
-         snprintf (unit_answer, LEN_RECD, "EXEC list   (%2d) : num=%4d, head=%-10p, tail=%p", n, s_count, s_head, s_tail);
-      }
+      snprintf (unit_answer, LEN_RECD, "EXEC list        : num=%4d, head=%-10p, tail=%p", s_count, s_head, s_tail);
    }
    /*> else if (strcmp (a_question, "levels"      )   == 0) {                         <* 
     *>    for (i = 0; i < 20; ++i) {                                                  <* 
@@ -719,6 +726,20 @@ yregex_exec__unit       (char *a_question, int n)
                x_curr->seq, x_curr->lvl, x_curr->beg, x_curr->rpos, x_curr->tpos, x_curr->ready, x_curr->who, t, x_curr->nchild, s);
       } else {
          snprintf (unit_answer, LEN_RECD, "EXEC state  (%2d) :  -    -b    -r    -t   - -     -rc   -c  %s", n, s);
+      }
+      return unit_answer;
+   }
+   else if (strcmp (a_question, "focus"    )      == 0) {
+      x_curr = s_focus;
+      strcpy (s, "(nil)         -n    -m");
+      if (x_curr != NULL) {
+         if (x_curr->parent != NULL)  sprintf (s, "%-10p   %2dn   %2dm", x_curr->parent, x_curr->parent->seq, x_curr->parent->lvl);
+         if (x_curr->rc == -66)   strcpy  (t, "   -");
+         else                     sprintf (t, "%4d", x_curr->rc);
+         snprintf (unit_answer, LEN_RECD, "EXEC focus  (%2d) : %2d  %3db  %3dr  %3dt   %c %c  %4src  %2dc  %s",
+               x_curr->seq, x_curr->lvl, x_curr->beg, x_curr->rpos, x_curr->tpos, x_curr->ready, x_curr->who, t, x_curr->nchild, s);
+      } else {
+         snprintf (unit_answer, LEN_RECD, "EXEC focus  (%2d) :  -    -b    -r    -t   - -     -rc   -c  %s", -1, s);
       }
       return unit_answer;
    }

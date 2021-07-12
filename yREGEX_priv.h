@@ -33,8 +33,8 @@
 
 #define     P_VERMAJOR  "0.--, preparing for serious use"
 #define     P_VERMINOR  "0.6-, keep advancing"
-#define     P_VERNUM    "0.6l"
-#define     P_VERTXT    "crazy drive to take array out of exec.  gotta work thru unit tests"
+#define     P_VERNUM    "0.6m"
+#define     P_VERTXT    "all exec unit tests converted do new state model and working"
 
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -380,6 +380,7 @@ char        yregex_exec__by_cursor  (char a_move, tSTATE **r_back);
 char        yregex_exec__by_index   (int a_index, tSTATE **r_back);
 /*---(running)--------------*/
 char        yregex_exec_prep        (char *a_source);
+char        yregex_exec__next_focus (void);
 char        yregex_exec__passed     (char a_who);
 char        yregex_exec__failed     (char a_who);
 char        yregex_exec__found      (void);
