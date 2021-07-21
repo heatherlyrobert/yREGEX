@@ -21,7 +21,7 @@ static int         s_count    = 0;
 
 
 
-static      char        s_print     [LEN_RECD] = "";
+char        g_print     [LEN_RECD] = "";
 static      char        s_fancy     [LEN_RECD] = "";
 
 
@@ -30,30 +30,6 @@ static      char        s_fancy     [LEN_RECD] = "";
 /*===----                       allocation/memory                      ----===*/
 /*====================------------------------------------====================*/
 static void  o___SUPPORT_________o () { return; }
-
-char*
-yregex_error__memory    (tERROR *a_cur)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   int         n           =    0;
-   /*---(defense)------------------------*/
-   if (a_cur == NULL) {
-      strlcpy (s_print, "n/a", LEN_RECD);
-      return s_print;
-   }
-   /*---(defense)------------------------*/
-   strlcpy (s_print, "å_.____.__æ", LEN_RECD);
-   ++n;  if (a_cur->level       != '-')         s_print [n] = 'X';
-   ++n;
-   ++n;  if (a_cur->cat         != NULL)        s_print [n] = 'X';
-   ++n;  if (a_cur->beg         >  0)           s_print [n] = 'X';
-   ++n;  if (a_cur->len         >  0)           s_print [n] = 'X';
-   ++n;  if (a_cur->msg         != NULL)        s_print [n] = 'X';
-   ++n;
-   ++n;  if (a_cur->m_prev      != NULL)        s_print [n] = 'X';
-   ++n;  if (a_cur->m_next      != NULL)        s_print [n] = 'X';
-   return s_print;
-}
 
 char
 yregex_error__wipe      (tERROR *a_cur)
@@ -230,12 +206,34 @@ char yREGEX_fancy   (char *r_fancy) { strlcpy (r_fancy, s_fancy, LEN_RECD); retu
 /*====================------------------------------------====================*/
 static void  o___UNITTEST________o () { return; }
 
+char*
+yregex_error__memory    (tERROR *a_cur)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   int         n           =    0;
+   /*---(defense)------------------------*/
+   if (a_cur == NULL) {
+      strlcpy (g_print, "n/a", LEN_RECD);
+      return g_print;
+   }
+   /*---(defense)------------------------*/
+   strlcpy (g_print, "å_.____.__æ", LEN_RECD);
+   ++n;  if (a_cur->level       != '-')         g_print [n] = 'X';
+   ++n;
+   ++n;  if (a_cur->cat         != NULL)        g_print [n] = 'X';
+   ++n;  if (a_cur->beg         >  0)           g_print [n] = 'X';
+   ++n;  if (a_cur->len         >  0)           g_print [n] = 'X';
+   ++n;  if (a_cur->msg         != NULL)        g_print [n] = 'X';
+   ++n;
+   ++n;  if (a_cur->m_prev      != NULL)        g_print [n] = 'X';
+   ++n;  if (a_cur->m_next      != NULL)        g_print [n] = 'X';
+   return g_print;
+}
+
 char*        /*-> unit testing accessor --------------[ ------ [gs.HA0.1B3.K5]*/ /*-[02.0000.00#.#]-*/ /*-[--.---.---.--]-*/
 yregex_error__unit      (char *a_question, int n)
 {
    /*---(locals)-----------+-----+-----+-*/
-   int         x_fore      = 0;
-   int         x_back      = 0;
    tERROR     *x_err       = NULL;
    char        rc          =    0;
    int         c           =    0;
@@ -247,12 +245,10 @@ yregex_error__unit      (char *a_question, int n)
    strcpy (unit_answer, "ERROR            : question not understood");
    /*---(dependency list)----------------*/
    if      (strcmp (a_question, "count"    )      == 0) {
-      x_err = s_head; while (x_err != NULL) { ++x_fore; x_err = x_err->m_next; }
-      x_err = s_tail; while (x_err != NULL) { ++x_back; x_err = x_err->m_prev; }
-      snprintf (unit_answer, LEN_RECD, "ERROR count      : num=%4d, fore=%4d, back=%4d", s_count, x_fore, x_back);
+      yregex_share__unit (TYPE_ERRS, s_head, s_tail, s_count, "count", 0);
    }
    else if (strcmp (a_question, "list"        )   == 0) {
-      snprintf (unit_answer, LEN_RECD, "ERROR list       : num=%4d, head=%-10p, tail=%p", s_count, s_head, s_tail);
+      yregex_share__unit (TYPE_ERRS, s_head, s_tail, s_count, "list" , 0);
    }
    else if (strcmp (a_question, "entry"    )      == 0) {
       yregex_error__by_index (n, &x_err);

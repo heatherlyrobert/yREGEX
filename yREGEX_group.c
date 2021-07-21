@@ -47,7 +47,7 @@ yregex_group__purge     (void)
    myREGEX.g_hid    =   10;
    myREGEX.g_mul    =  100;
    myREGEX.g_foc    =  '-';
-   strlcpy (myREGEX.g_mrk, "               ", LEN_LABEL);
+   strlcpy (myREGEX.g_mrk, "···········", LEN_LABEL);
    for (i = 0; i < MAX_STACK; ++i) {
       s_stk [i] = -1;
    }

@@ -16,6 +16,7 @@
 #define  UNHOOK_PREV(a)   { if (a->m_prev != NULL) a->m_prev->m_next  = a->m_next; else  *a_head = a->m_next; }
 #define  GROUND(a)        a->m_prev = a->m_next = NULL;
 
+#define  HOOK_ALL(a,b)    { a = (b *) x_new;    a->m_prev = *a_tail; a = (b *) *a_tail;  a->m_next = x_new; }
 
 
 /*====================------------------------------------====================*/
@@ -39,6 +40,7 @@ yregex_share_new        (char a_type, void **r_new, void **a_head, void **a_tail
    int         x_tries     =    0;
    /*---(header)-------------------------*/
    DEBUG_YREGEX   yLOG_senter  (__FUNCTION__);
+   DEBUG_YREGEX   yLOG_schar   (a_type);
    /*---(check return)-------------------*/
    DEBUG_YREGEX   yLOG_spoint  (r_new);
    --rce;  if (r_new == NULL) {
@@ -74,6 +76,7 @@ yregex_share_new        (char a_type, void **r_new, void **a_head, void **a_tail
    IF_SETS  yregex_sets__wipe  (x_new);
    EL_PATS  yregex_pats__wipe  (x_new);
    EL_ERRS  yregex_error__wipe (x_new);
+   EL_RULE  yregex_rule__wipe  (x_new);
    EL_EXEC  yregex_exec__wipe  (x_new);
    EL_FIND  yregex_find__wipe  (x_new);
    /*---(hook)---------------------------*/
@@ -83,24 +86,22 @@ yregex_share_new        (char a_type, void **r_new, void **a_head, void **a_tail
    } else {
       DEBUG_YREGEX   yLOG_snote   ("append to tail");
       IF_SETS  {
-         x_sets = (tSETS  *) x_new;    x_sets->m_prev = *a_tail;
-         x_sets = (tSETS  *) *a_tail;  x_sets->m_next = x_new;
+         HOOK_ALL (x_sets, tSETS );
       }
       EL_PATS  {
-         x_pats = (tPATS  *) x_new;    x_pats->m_prev = *a_tail;
-         x_pats = (tPATS  *) *a_tail;  x_pats->m_next = x_new;
+         HOOK_ALL (x_pats, tPATS );
       }
       EL_ERRS  {
-         x_errs = (tERROR *) x_new;    x_errs->m_prev = *a_tail;
-         x_errs = (tERROR *) *a_tail;  x_errs->m_next = x_new;
+         HOOK_ALL (x_errs, tERROR);
+      }
+      EL_RULE  {
+         HOOK_ALL (x_rule, tRULE );
       }
       EL_FIND  {
-         x_find = (tFIND  *) x_new;    x_find->m_prev = *a_tail;
-         x_find = (tFIND  *) *a_tail;  x_find->m_next = x_new;
+         HOOK_ALL (x_find, tFIND );
       }
       EL_EXEC  {
-         x_exec = (tSTATE *) x_new;    x_exec->m_prev = *a_tail;
-         x_exec = (tSTATE *) *a_tail;  x_exec->m_next = x_new;
+         HOOK_ALL (x_exec, tSTATE);
       }
    }
    if (a_tail  != NULL)  *a_tail = x_new;
@@ -127,7 +128,6 @@ yregex_share_free       (char a_type, void **r_old, void **a_head, void **a_tail
    tSETS      *x_sets      = NULL;
    tSTATE     *x_exec      = NULL;
    tFIND      *x_find      = NULL;
-   void       *x_old       = NULL;
    int         i           =    0;
    /*---(header)-------------------------*/
    DEBUG_YREGEX   yLOG_senter  (__FUNCTION__);
@@ -144,8 +144,6 @@ yregex_share_free       (char a_type, void **r_old, void **a_head, void **a_tail
       DEBUG_YREGEX   yLOG_sexitr  (__FUNCTION__, rce);
       return rce;
    }
-   /*---(simplify)-----------------------*/
-   x_old = (tSETS *) *r_old;
    /*---(detach and decrement)-----------*/
    IF_SETS { x_sets = (tSETS  *) *r_old; UNHOOK_NEXT(x_sets); UNHOOK_PREV(x_sets); GROUND(x_sets); }
    EL_PATS { x_pats = (tPATS  *) *r_old; UNHOOK_NEXT(x_pats); UNHOOK_PREV(x_pats); GROUND(x_pats); }
@@ -171,7 +169,7 @@ yregex_share_free       (char a_type, void **r_old, void **a_head, void **a_tail
       if (x_find->text != NULL)  { free (x_find->text); x_find->text = NULL; }
       if (x_find->quan != NULL)  { free (x_find->quan); x_find->quan = NULL; }
    } EL_RULE {
-      if (x_rule->str  != NULL)  free (x_rule->str);
+      if (x_rule->str  != NULL)  { free (x_rule->str);  x_rule->str  = NULL; }
    }
    /*---(free and ground)----------------*/
    free (*r_old);
@@ -228,6 +226,7 @@ yregex_share_purge      (char a_type, void **a_head, void **a_tail, void **a_cur
       IF_SETS  yregex_sets__free  (&x_curr);
       EL_PATS  yregex_pats__free  (&x_curr);
       EL_ERRS  yregex_error__free (&x_curr);
+      EL_RULE  yregex_rule__free  (&x_curr);
       EL_FIND  yregex_find__free  (&x_curr);
       EL_EXEC  yregex_exec__free  (&x_curr);
       ELSE {
@@ -314,6 +313,7 @@ yregex_share__by_cursor (char a_type, void **a_head, void **a_tail, void **r_cur
       EL_ERRS  { x_errs = (tERROR *) x_curr;  x_curr = x_errs->m_prev; }
       EL_FIND  { x_find = (tFIND  *) x_curr;  x_curr = x_find->m_prev; }
       EL_EXEC  { x_exec = (tSTATE *) x_curr;  x_curr = x_exec->m_prev; }
+      EL_RULE  { x_rule = (tRULE  *) x_curr;  x_curr = x_rule->m_prev; }
       ELSE {
          DEBUG_NORM    yLOG_snote   ("unknown type in prev");
          DEBUG_NORM    yLOG_sexitr  (__FUNCTION__, rce);
@@ -328,6 +328,7 @@ yregex_share__by_cursor (char a_type, void **a_head, void **a_tail, void **r_cur
       EL_ERRS  { x_errs = (tERROR *) x_curr;  x_curr = x_errs->m_next; }
       EL_FIND  { x_find = (tFIND  *) x_curr;  x_curr = x_find->m_next; }
       EL_EXEC  { x_exec = (tSTATE *) x_curr;  x_curr = x_exec->m_next; }
+      EL_RULE  { x_rule = (tRULE  *) x_curr;  x_curr = x_rule->m_next; }
       ELSE {
          DEBUG_NORM    yLOG_snote   ("unknown type in next");
          DEBUG_NORM    yLOG_sexitr  (__FUNCTION__, rce);
@@ -419,6 +420,7 @@ yregex_share__by_index  (char a_type, void **a_head, void **r_curr, void **r_bac
       EL_ERRS  { x_errs = (tERROR *) x_curr;  x_curr = x_errs->m_next; }
       EL_FIND  { x_find = (tFIND  *) x_curr;  x_curr = x_find->m_next; }
       EL_EXEC  { x_exec = (tSTATE *) x_curr;  x_curr = x_exec->m_next; }
+      EL_RULE  { x_rule = (tRULE  *) x_curr;  x_curr = x_rule->m_next; }
       ELSE {
          DEBUG_NORM    yLOG_snote   ("unknown type in next");
          DEBUG_NORM    yLOG_sexitr  (__FUNCTION__, rce);
@@ -553,6 +555,48 @@ yregex_share__by_name   (char a_type, void **a_head, void **r_back, char *a_name
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
    return n;
+}
+
+
+
+/*====================------------------------------------====================*/
+/*===----                    unit testing accessor                     ----===*/
+/*====================------------------------------------====================*/
+static void      o___UNITTEST________________o (void) {;}
+
+#define  COUNT_FORE(a,b)  { a = (b *) a_head; while (a != NULL) { ++x_fore; a = a->m_next; } }
+#define  COUNT_BACK(a,b)  { a = (b *) a_tail; while (a != NULL) { ++x_back; a = a->m_prev; } }
+
+char*
+yregex_share__unit      (char a_type, void *a_head, void *a_tail, int a_count, char *a_question, int a_num)
+{
+   /*---(locals)-----------+------+----+-*/
+   int         x_fore      =    0;
+   int         x_back      =    0;
+   tERROR     *x_errs      = NULL;
+   tPATS      *x_pats      = NULL;
+   tRULE      *x_rule      = NULL;
+   tSETS      *x_sets      = NULL;
+   tSTATE     *x_exec      = NULL;
+   tFIND      *x_find      = NULL;
+   char        x_title     [LEN_LABEL] = "";
+   /*---(mapping)------------------------*/
+   IF_SETS { COUNT_FORE(x_sets,tSETS ); COUNT_BACK(x_sets,tSETS ); strcpy (x_title,"SETS" ); }
+   EL_RULE { COUNT_FORE(x_rule,tRULE ); COUNT_BACK(x_rule,tRULE ); strcpy (x_title,"RULE" ); }
+   EL_PATS { COUNT_FORE(x_pats,tPATS ); COUNT_BACK(x_pats,tPATS ); strcpy (x_title,"PATS" ); }
+   EL_ERRS { COUNT_FORE(x_errs,tERROR); COUNT_BACK(x_errs,tERROR); strcpy (x_title,"ERROR"); }
+   EL_EXEC { COUNT_FORE(x_exec,tSTATE); COUNT_BACK(x_exec,tSTATE); strcpy (x_title,"EXEC" ); }
+   EL_FIND { COUNT_FORE(x_find,tFIND ); COUNT_BACK(x_find,tFIND ); strcpy (x_title,"FIND" ); }
+   if      (strcmp (a_question, "count"    )      == 0) {
+      strcat (x_title, " count");
+      snprintf (unit_answer, LEN_RECD, "%-12.12s     : num=%4d, fore=%4d, back=%4d", x_title, a_count, x_fore, x_back);
+   }
+   else if (strcmp (a_question, "list"        )   == 0) {
+      strcat (x_title, " list");
+      snprintf (unit_answer, LEN_RECD, "%-12.12s     : num=%4d, head=%-10p, tail=%p", x_title, a_count, a_head, a_tail);
+   }
+   /*---(complete)-----------------------*/
+   return unit_answer;
 }
 
 

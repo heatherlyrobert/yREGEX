@@ -110,12 +110,13 @@ yregex_comp__prep    (cchar *a_regex)
     *> myREGEX.g_hid  = 10;                                                           <* 
     *> myREGEX.g_foc   = '-';                                                         <* 
     *> strlcpy (myREGEX.g_mrk, "               ", LEN_LABEL);                         <*/
-   /*---(initialize sets)----------------*/
+   /*---(reset elements)-----------------*/
    yregex_error_reset ();
    yregex_sets_reset  ();
    yregex_pats_reset  ();
    yregex_rule_init   ();
    myREGEX.ready = '-';
+   myREGEX.style = YREGEX_HERDING;
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
    return 0;
@@ -713,7 +714,7 @@ yregex_comp__unit       (char *a_question, int a_num)
       t [45] = 0;
       snprintf (unit_answer, LEN_TEXT, "COMP jump        : %2d [%-45.45s]", myREGEX.clen, t);
    } else if (strncmp (a_question, "groups"    , 20)  == 0) {
-      snprintf (unit_answer, LEN_TEXT, "COMP groups      : [%-11.11s]", myREGEX.g_mrk);
+      snprintf (unit_answer, LEN_TEXT, "COMP groups      : [%-10.10s]", myREGEX.g_mrk);
    }
    /*---(complete)-----------------------*/
    return unit_answer;

@@ -15,7 +15,7 @@ static const tPATS       s_pats [MAX_PATS] = {
    { BASE_ENTRY, 'f', "float"          , 0 , "(+|-)?(0|[1-9][0-9]*)([.][0-9]+)?"                                                                                                                           , 0, NULL, NULL },
    { BASE_ENTRY, 'b', "byte"           , 0 , "25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9]"                                                                                                            , 0, NULL, NULL },
    { BASE_ENTRY, 'i', "int"            , 0 , "(+|-)?(0|[1-9][0-9]*)"                                                                                                                                       , 0, NULL, NULL },
-   { BASE_ENTRY, 'w', "word"           , 0 , "<\\w*>"                                                                                                                                                      , 0, NULL, NULL },
+   { BASE_ENTRY, 'w', "word"           , 0 , "<\\w+>"                                                                                                                                                      , 0, NULL, NULL },
    { BASE_ENTRY, 'F', "field"          , 0 , "\\F*\\f"                                                                                                                                                     , 0, NULL, NULL },
    { BASE_ENTRY, '-', "path"           , 0 , "[/]?[A-Za-z][/A-Za-z0-9_.-]*"                                                                                                                                , 0, NULL, NULL },
    { BASE_ENTRY, '-', "mypath"         , 0 , "[/]?[A-Za-z][/a-zA-Z0-9_.]*"                                                                                                                                 , 0, NULL, NULL },
@@ -39,43 +39,12 @@ static      tPATS      *s_tail      = NULL;        /* tail of list              
 static      tPATS      *s_curr      = NULL;        /* curent cursor                */
 static      int         s_count     =    0;        /* count of sets                */
 
-static      char        s_print     [LEN_RECD] = "";
-
 
 
 /*====================------------------------------------====================*/
 /*===----                       allocation/memory                      ----===*/
 /*====================------------------------------------====================*/
 static void  o___SUPPORT_________o () { return; }
-
-char*
-yregex_pats__memory     (void *a_cur)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   int         n           =    0;
-   tPATS      *x_cur       = NULL;
-   /*---(cast)---------------------------*/
-   x_cur = (tPATS *) a_cur;
-   /*---(defense)------------------------*/
-   if (x_cur == NULL) {
-      strlcpy (s_print, "n/a", LEN_RECD);
-      return s_print;
-   }
-   /*---(defense)------------------------*/
-   strlcpy (s_print, "å_.___.__.__æ", LEN_RECD);
-   ++n;  if (x_cur->source      != '-')         s_print [n] = 'X';
-   ++n;
-   ++n;  if (x_cur->abbr        != '-')         s_print [n] = 'X';
-   ++n;  if (x_cur->name        != NULL)        s_print [n] = 'X';
-   ++n;  if (x_cur->nlen        != 0)           s_print [n] = 'X';
-   ++n;
-   ++n;  if (x_cur->pat         != NULL)        s_print [n] = 'X';
-   ++n;  if (x_cur->plen        != 0)           s_print [n] = 'X';
-   ++n;
-   ++n;  if (x_cur->m_prev      != NULL)        s_print [n] = 'X';
-   ++n;  if (x_cur->m_next      != NULL)        s_print [n] = 'X';
-   return s_print;
-}
 
 char
 yregex_pats__wipe       (void *a_cur)
@@ -474,6 +443,7 @@ yregex_pats__replace    (char *a_src, char a_run)
    int         j           =    0;
    int         l           =    0;
    uchar       x_char      =  ' ';          /* curr character                 */
+   uchar       x_near      =  ' ';          /* prev character                 */
    uchar       x_prev      =  ' ';          /* prev character                 */
    uchar       x_next      =  ' ';          /* prev-prev character            */
    uchar       x_far       =  ' ';          /* prev-prev character            */
@@ -483,6 +453,7 @@ yregex_pats__replace    (char *a_src, char a_run)
    char        x_name      [LEN_LABEL] = "";
    tPATS      *x_pat       = NULL;
    char        x_dst       [LEN_REGEX] = "";
+   char        s           [LEN_LABEL] = "";
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    /*---(defense)------------------------*/
@@ -501,6 +472,7 @@ yregex_pats__replace    (char *a_src, char a_run)
    /*---(walk regex)---------------------*/
    --rce;  for (i = 0; i < l; ++i) {
       /*---(prepare)---------------------*/
+      if (i > 1)  x_near = a_src [i - 2];
       if (i > 0)  x_prev = a_src [i - 1];
       x_char = a_src [i];
       x_next = a_src [i + 1];
@@ -508,8 +480,10 @@ yregex_pats__replace    (char *a_src, char a_run)
       DEBUG_YREGEX  yLOG_complex ("LOOP"      , "%3d, %c, %c, %c", i, x_prev, x_char, x_next);
       sprintf (t, "%c", x_char);
       /*---(filter)----------------------*/
-      if (x_prev != '(')  { strlcat (x_dst, t, LEN_REGEX);  continue; }
-      if (x_char != '&')  { strlcat (x_dst, t, LEN_REGEX);  continue; }
+      if (x_char != '&')                  { strlcat (x_dst, t, LEN_REGEX);  continue; }
+      if (x_prev == '(')  ;
+      else if (x_prev == '#' && x_near == '(')  ;
+      else  { strlcat (x_dst, t, LEN_REGEX);  continue; }
       /*---(abbr)------------------------*/
       if (x_far == ')') {
          DEBUG_YREGEX  yLOG_note    ("finding an abbreviation-based pattern");
@@ -795,6 +769,35 @@ yregex_pats_comp        (void)
 /*====================------------------------------------====================*/
 static void      o___UNITTEST________________o (void) {;}
 
+char*
+yregex_pats__memory     (void *a_cur)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   int         n           =    0;
+   tPATS      *x_cur       = NULL;
+   /*---(cast)---------------------------*/
+   x_cur = (tPATS *) a_cur;
+   /*---(defense)------------------------*/
+   if (x_cur == NULL) {
+      strlcpy (g_print, "n/a", LEN_RECD);
+      return g_print;
+   }
+   /*---(defense)------------------------*/
+   strlcpy (g_print, "å_.___.__.__æ", LEN_RECD);
+   ++n;  if (x_cur->source      != '-')         g_print [n] = 'X';
+   ++n;
+   ++n;  if (x_cur->abbr        != '-')         g_print [n] = 'X';
+   ++n;  if (x_cur->name        != NULL)        g_print [n] = 'X';
+   ++n;  if (x_cur->nlen        != 0)           g_print [n] = 'X';
+   ++n;
+   ++n;  if (x_cur->pat         != NULL)        g_print [n] = 'X';
+   ++n;  if (x_cur->plen        != 0)           g_print [n] = 'X';
+   ++n;
+   ++n;  if (x_cur->m_prev      != NULL)        g_print [n] = 'X';
+   ++n;  if (x_cur->m_next      != NULL)        g_print [n] = 'X';
+   return g_print;
+}
+
 char*        /*-> unit test accessor -----------------[ light  [us.D90.241.L0]*/ /*-[03.0000.00#.#]-*/ /*-[--.---.---.--]-*/
 yregex_pats__unit       (char *a_question, int a_num)
 {
@@ -804,19 +807,15 @@ yregex_pats__unit       (char *a_question, int a_num)
    char        s           [LEN_TERSE] = "";
    char        t           [LEN_HUND]  = "";
    int         c           = 0;
-   int         x_fore      = 0;
-   int         x_back      = 0;
    tPATS      *x_curr      = NULL;
    /*---(initialize)---------------------*/
    strlcpy (unit_answer, "PATS unit, unknown request", 100);
    /*---(mapping)------------------------*/
    if      (strcmp (a_question, "count"    )      == 0) {
-      x_curr = s_head; while (x_curr != NULL) { ++x_fore; x_curr = x_curr->m_next; }
-      x_curr = s_tail; while (x_curr != NULL) { ++x_back; x_curr = x_curr->m_prev; }
-      snprintf (unit_answer, LEN_RECD, "PATS count       : num=%4d, fore=%4d, back=%4d", s_count, x_fore, x_back);
+      yregex_share__unit (TYPE_PATS, s_head, s_tail, s_count, "count", 0);
    }
    else if (strcmp (a_question, "list"        )   == 0) {
-      snprintf (unit_answer, LEN_RECD, "PATS list        : num=%4d, head=%-10p, tail=%p", s_count, s_head, s_tail);
+      yregex_share__unit (TYPE_PATS, s_head, s_tail, s_count, "list" , 0);
    }
    else if (strcmp (a_question, "entry"    )      == 0) {
       yregex_pats__by_index (a_num, &x_curr);

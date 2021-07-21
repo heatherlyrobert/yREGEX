@@ -44,7 +44,7 @@
 
 
 
-static      int         s_begin     = 0;                /* current search begin    */
+/*> static      int         s_begin     = 0;                /+ current search begin    +/   <*/
 
 
 
@@ -130,17 +130,7 @@ static void      o___HANDLE__________________o (void) {;}
 /*====================------------------------------------====================*/
 static void      o___RUNNER__________________o (void) {;}
 
-char  g_found   [LEN_TEXT];
-char  g_quans   [LEN_TEXT];
 
-short g_subb    = -1;
-char  g_subf    [LEN_TEXT];
-char  g_subq    [LEN_TEXT];
-
-#define       S_SUB_BEFORE       0
-#define       S_SUB_INSIDE       1
-#define       S_SUB_AFTER        2
-#define       S_SUB_DONE         3
 
 /*> char                                                                                                        <* 
  *> yregex_exec_found_NEW   (int a_index)                                                                       <* 

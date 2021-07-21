@@ -24,42 +24,10 @@ static      int         s_count     =    0;
 
 
 
-static      char        s_print     [LEN_RECD] = "";
-
-
-
 /*====================------------------------------------====================*/
 /*===----                       allocation/memory                      ----===*/
 /*====================------------------------------------====================*/
 static void  o___SUPPORT_________o () { return; }
-
-char*
-yregex_find__memory     (tFIND *a_cur)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   int         n           =    0;
-   int         i           =    0;
-   /*---(defense)------------------------*/
-   if (a_cur == NULL) {
-      strlcpy (s_print, "n/a", LEN_RECD);
-      return s_print;
-   }
-   /*---(defense)------------------------*/
-   strlcpy (s_print, "å_____.__________.__æ", LEN_RECD);
-   ++n;  if (a_cur->beg         >= 0)           s_print [n] = 'X';
-   ++n;  if (a_cur->end         >= 0)           s_print [n] = 'X';
-   ++n;  if (a_cur->len         >= 0)           s_print [n] = 'X';
-   ++n;  if (a_cur->text        != NULL)        s_print [n] = 'X';
-   ++n;  if (a_cur->quan        != NULL)        s_print [n] = 'X';
-   ++n;
-   for (i = 0; i < MAX_SUB; ++i) {
-      ++n;  if (a_cur->s_off [i]     >= 0)        s_print [n] = 'X';
-   }
-   ++n;
-   ++n;  if (a_cur->m_prev      != NULL)        s_print [n] = 'X';
-   ++n;  if (a_cur->m_next      != NULL)        s_print [n] = 'X';
-   return s_print;
-}
 
 char
 yregex_find__wipe       (tFIND *a_cur)
@@ -355,19 +323,20 @@ static char  s_text  [LEN_TEXT] = "";
 static char  s_quan  [LEN_TEXT] = "";
 static short s_gbeg  [LEN_LABEL];
 static short s_gend  [LEN_LABEL];
+static char  s_sub   [LEN_TEXT] = "";
 
 char
 yregex_find__reset      (void)
 {
    int         i           =    0;
    s_beg = 0;
-   for (i = 0; i < LEN_TEXT; ++i)   s_text [i] = s_quan [i] = '\0';
+   for (i = 0; i < LEN_TEXT; ++i)   s_text [i] = s_quan [i] = s_sub  [i] = '\0';
    for (i = 0; i < 10      ; ++i)   s_gbeg [i] = s_gend [i] = -1;
    return 0;
 }
 
 char
-yregex_find__trail      (tSTATE *a_focus)
+yregex_find__trail      (tSTATE *a_focus, char a_mark)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -380,21 +349,22 @@ yregex_find__trail      (tSTATE *a_focus)
    uchar       x_mods      =  ' ';
    int         n           =    0;
    /*---(header)-------------------------*/
-   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
+   DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
+   DEBUG_YREGEX  yLOG_schar   (a_mark);
    /*---(defense)------------------------*/
    DEBUG_YREGEX  yLOG_point   ("a_focus"   , a_focus);
    --rce;  if (a_focus == NULL) {
-      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
+      DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
       return rce;
    }
    /*---(prepare)------------------------*/
-   a_focus->ready = '¼';
+   if (a_mark == 'y')  a_focus->ready = '¼';
    s_beg  = a_focus->beg;
    x_curr = a_focus->parent;
    /*---(walk solution)------------------*/
    while (x_curr != NULL) {
       /*---(mark)------------------------*/
-      x_curr->ready = '´';
+      if (a_mark == 'y')  x_curr->ready = '´';
       /*---(positions)-------------------*/
       x_rpos = x_curr->rpos;
       x_tpos = x_curr->tpos;
@@ -407,7 +377,9 @@ yregex_find__trail      (tSTATE *a_focus)
       n      = x_tpos - s_beg;
       switch (x_comp) {
       case '(' :
-         if (x_indx < 10)  s_gbeg [x_indx] = n;
+         if (x_indx < 10) {
+            if (s_gend [x_indx] >= 0)  s_gbeg [x_indx] = n;
+         }
          break;
       case ')' : case '|' :
          if (x_indx < 10)  s_gend [x_indx] = n;
@@ -422,12 +394,12 @@ yregex_find__trail      (tSTATE *a_focus)
       /*---(done)------------------------*/
    }
    /*---(complete)-----------------------*/
-   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+   DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
    return 0;
 }
 
 char
-yregex_find__parse      (void)
+yregex_find__save       (void)
 {
    int         i           =    0;
    int         x_len       =    0;
@@ -449,10 +421,40 @@ yregex_find_add         (tSTATE *a_focus)
 {
    char        rc          =    0;
    if (rc >= 0)  rc = yregex_find__reset ();
-   if (rc >= 0)  rc = yregex_find__trail (a_focus);
-   if (rc >= 0)  rc = yregex_find__parse ();
+   if (rc >= 0)  rc = yregex_find__trail (a_focus, 'y');
+   if (rc >= 0)  rc = yregex_find__save  ();
    return rc;
 }
+
+char*
+yregex_find_group       (tSTATE *a_focus, char a_group)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   char        rc          =    0;
+   int         i           =    0;
+   int         x_len       =    0;
+   /*---(defense)------------------------*/
+   --rce;  if (a_group < 0 || a_group > 9)  return rce;
+   /*---(setup)--------------------------*/
+   rc = yregex_find__reset ();
+   rc = yregex_find__trail (a_focus, '-');
+   --rce;  if (rc < 0)  return rce;
+   --rce;  if (s_gbeg [i] <  0)   return rce;
+   /*---(parse out)----------------------*/
+   x_len = s_gend [i] - s_gbeg [i] + 1;
+   sprintf (s_sub, "%*.*s", x_len, x_len, s_text + s_gbeg [a_group]);
+   /*---(complete)-----------------------*/
+   return s_sub;
+}
+
+
+
+/*====================------------------------------------====================*/
+/*===----                    execution support                         ----===*/
+/*====================------------------------------------====================*/
+static void      o___EXECUTE_________________o (void) {;}
+
 
 
 
@@ -460,6 +462,34 @@ yregex_find_add         (tSTATE *a_focus)
 /*===----                    unit testing accessor                     ----===*/
 /*====================------------------------------------====================*/
 static void      o___UNITTEST________________o (void) {;}
+
+char*
+yregex_find__memory     (tFIND *a_cur)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   int         n           =    0;
+   int         i           =    0;
+   /*---(defense)------------------------*/
+   if (a_cur == NULL) {
+      strlcpy (g_print, "n/a", LEN_RECD);
+      return g_print;
+   }
+   /*---(defense)------------------------*/
+   strlcpy (g_print, "å_____.__________.__æ", LEN_RECD);
+   ++n;  if (a_cur->beg         >= 0)           g_print [n] = 'X';
+   ++n;  if (a_cur->end         >= 0)           g_print [n] = 'X';
+   ++n;  if (a_cur->len         >= 0)           g_print [n] = 'X';
+   ++n;  if (a_cur->text        != NULL)        g_print [n] = 'X';
+   ++n;  if (a_cur->quan        != NULL)        g_print [n] = 'X';
+   ++n;
+   for (i = 0; i < MAX_SUB; ++i) {
+      ++n;  if (a_cur->s_off [i]     >= 0)        g_print [n] = 'X';
+   }
+   ++n;
+   ++n;  if (a_cur->m_prev      != NULL)        g_print [n] = 'X';
+   ++n;  if (a_cur->m_next      != NULL)        g_print [n] = 'X';
+   return g_print;
+}
 
 char*
 yregex_find__unit    (char *a_question, int a_num)
@@ -477,12 +507,10 @@ yregex_find__unit    (char *a_question, int a_num)
    strlcpy (unit_answer, "FIND__unit, unknown request", 100);
    /*---(mapping)------------------------*/
    if      (strcmp (a_question, "count"    )      == 0) {
-      x_curr = s_head; while (x_curr != NULL) { ++x_fore; x_curr = x_curr->m_next; }
-      x_curr = s_tail; while (x_curr != NULL) { ++x_back; x_curr = x_curr->m_prev; }
-      snprintf (unit_answer, LEN_RECD, "FIND count       : num=%4d, fore=%4d, back=%4d", s_count, x_fore, x_back);
+      yregex_share__unit (TYPE_FIND, s_head, s_tail, s_count, "count", 0);
    }
    else if (strcmp (a_question, "list"        )   == 0) {
-      snprintf (unit_answer, LEN_RECD, "FIND list        : num=%4d, head=%-10p, tail=%p", s_count, s_head, s_tail);
+      yregex_share__unit (TYPE_FIND, s_head, s_tail, s_count, "list" , 0);
    }
    else if (strcmp (a_question, "text"        )   == 0) {
       snprintf (unit_answer, LEN_RECD, "FIND text        : %2då%sæ", strlen (s_text), s_text);

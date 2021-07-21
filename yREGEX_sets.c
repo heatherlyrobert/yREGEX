@@ -72,43 +72,11 @@ static tSETS      *s_curr     = NULL;        /* curent cursor                */
 static int         s_count    =    0;        /* count of sets                */
 
 
-static      char       *s_full      = "································ !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~½€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ";
-
-static      char        s_print     [LEN_RECD] = "";
-
-
 
 /*====================------------------------------------====================*/
 /*===----                       allocation/memory                      ----===*/
 /*====================------------------------------------====================*/
 static void  o___SUPPORT_________o () { return; }
-
-char*
-yregex_sets__memory     (void *a_cur)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   int         n           =    0;
-   tSETS      *x_cur       = NULL;
-   /*---(cast)---------------------------*/
-   x_cur = (tSETS *) a_cur;
-   /*---(defense)------------------------*/
-   if (x_cur == NULL) {
-      strlcpy (s_print, "n/a", LEN_RECD);
-      return s_print;
-   }
-   /*---(defense)------------------------*/
-   strlcpy (s_print, "å__.___.__æ", LEN_RECD);
-   ++n;  if (x_cur->type        != '-')         s_print [n] = 'X';
-   ++n;  if (x_cur->abbr        != '-')         s_print [n] = 'X';
-   ++n;
-   ++n;  if (x_cur->name        != NULL)        s_print [n] = 'X';
-   ++n;  if (x_cur->map         != NULL)        s_print [n] = 'X';
-   ++n;  if (x_cur->count       != 0)           s_print [n] = 'X';
-   ++n;
-   ++n;  if (x_cur->m_prev      != NULL)        s_print [n] = 'X';
-   ++n;  if (x_cur->m_next      != NULL)        s_print [n] = 'X';
-   return s_print;
-}
 
 char
 yregex_sets__wipe       (void *a_cur)
@@ -805,24 +773,29 @@ yregex_sets_exec     (int a_level, int a_rpos, int a_tpos)
    uchar       x_txt       =    0;
    tSETS      *x_curr      = NULL;
    /*---(header)-------------------------*/
-   DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
+   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    /*---(prepare)------------------------*/
    x_reg       = myREGEX.comp [a_rpos];
-   DEBUG_YREGEX  yLOG_schar   (x_reg);
+   DEBUG_YREGEX  yLOG_char    ("x_reg"     , x_reg);
    x_indx      = myREGEX.indx [a_rpos];
-   DEBUG_YREGEX  yLOG_sint    (x_indx);
+   DEBUG_YREGEX  yLOG_value   ("x_indx"    , x_indx);
    x_txt       = myREGEX.text [a_tpos];
-   DEBUG_YREGEX  yLOG_schar   (x_txt);
+   DEBUG_YREGEX  yLOG_char    ("x_txt"     , x_txt);
    /*---(execute)------------------------*/
    rc = yregex_sets__by_index (x_indx, &x_curr);
    if (x_curr->map [x_txt] == '.')  rc = 1;
-   DEBUG_YREGEX  yLOG_sint    (rc);
-   if (rc > 0)  DEBUG_YREGEX  yLOG_snote   ("pass");
-   else         DEBUG_YREGEX  yLOG_snote   ("FAIL");
-   DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
+   DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
+   if (rc > 0) {
+      DEBUG_YREGEX  yLOG_note    ("pass");
+      rc = yregex_exec__passed (HAND_SET);
+   } else {
+      DEBUG_YREGEX  yLOG_note    ("FAIL");
+      rc = yregex_exec__failed (HAND_SET);
+   }
    /*---(prepare next)-------------------*/
-   yregex_exec_launcher (a_level, a_rpos, a_tpos, rc);
+   yregex_exec_launcher (a_level + 1, a_rpos, a_tpos, rc);
    /*---(complete)-----------------------*/
+   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
    return rc;
 }
 
@@ -870,6 +843,33 @@ yregex_sets_rule        (char a_mod, char *a_text, int a_set)
 /*====================------------------------------------====================*/
 static void      o___UNITTEST________________o (void) {;}
 
+char*
+yregex_sets__memory     (void *a_cur)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   int         n           =    0;
+   tSETS      *x_cur       = NULL;
+   /*---(cast)---------------------------*/
+   x_cur = (tSETS *) a_cur;
+   /*---(defense)------------------------*/
+   if (x_cur == NULL) {
+      strlcpy (g_print, "n/a", LEN_RECD);
+      return g_print;
+   }
+   /*---(defense)------------------------*/
+   strlcpy (g_print, "å__.___.__æ", LEN_RECD);
+   ++n;  if (x_cur->type        != '-')         g_print [n] = 'X';
+   ++n;  if (x_cur->abbr        != '-')         g_print [n] = 'X';
+   ++n;
+   ++n;  if (x_cur->name        != NULL)        g_print [n] = 'X';
+   ++n;  if (x_cur->map         != NULL)        g_print [n] = 'X';
+   ++n;  if (x_cur->count       != 0)           g_print [n] = 'X';
+   ++n;
+   ++n;  if (x_cur->m_prev      != NULL)        g_print [n] = 'X';
+   ++n;  if (x_cur->m_next      != NULL)        g_print [n] = 'X';
+   return g_print;
+}
+
 char
 yregex_sets__setmap     (char *a_map)
 {
@@ -886,20 +886,15 @@ yregex_sets__unit       (char *a_question, int a_num)
    char        s           [LEN_TERSE] = "";
    char        t           [LEN_HUND]  = "";
    int         c           = 0;
-   int         x_fore      = 0;
-   int         x_back      = 0;
-   tSETS      *x_curr      = NULL;
    int         n           =    0;
    /*---(initialize)---------------------*/
    strlcpy (unit_answer, "SETS unit, unknown request", 100);
    /*---(mapping)------------------------*/
    if      (strcmp (a_question, "count"    )      == 0) {
-      x_curr = s_head; while (x_curr != NULL) { ++x_fore; x_curr = x_curr->m_next; }
-      x_curr = s_tail; while (x_curr != NULL) { ++x_back; x_curr = x_curr->m_prev; }
-      snprintf (unit_answer, LEN_RECD, "SETS count       : num=%4d, fore=%4d, back=%4d", s_count, x_fore, x_back);
+      yregex_share__unit (TYPE_SETS, s_head, s_tail, s_count, "count", 0);
    }
    else if (strcmp (a_question, "list"        )   == 0) {
-      snprintf (unit_answer, LEN_RECD, "SETS list        : num=%4d, head=%-10p, tail=%p", s_count, s_head, s_tail);
+      yregex_share__unit (TYPE_SETS, s_head, s_tail, s_count, "list" , 0);
    }
    else if (strncmp (a_question, "map"       , 20)  == 0) {
       if (a_num < 0 || a_num > 3)
@@ -911,7 +906,7 @@ yregex_sets__unit       (char *a_question, int a_num)
                switch (n) {
                case 127 : t [i] = '´';  break;
                case 160 : t [i] = ' ';  break;
-               default :  t [i] = s_full [n];  break;
+               default :  t [i] = YSTR_FULL [n];  break;
                }
                ++c;
             } else {

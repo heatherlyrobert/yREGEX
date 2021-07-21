@@ -60,7 +60,7 @@ yREGEX_clear            (void)
    }
    myREGEX.clen = 0;
    /*---(initialize grouping)------------*/
-   strlcpy (myREGEX.g_mrk, "               ", LEN_LABEL);
+   strlcpy (myREGEX.g_mrk, "···········", LEN_LABEL);
    /*---(initialize sets)----------------*/
    yregex_sets_reset ();
    yregex_rule_init ();
@@ -86,7 +86,7 @@ yREGEX__testloc      (cchar *a_regex, cchar *a_source)
    rc = yREGEX_comp (a_regex);
    if (rc <  0)   return "yREGEX_tester    : compilation failed";
    /*---(execute)------------------------*/
-   rc = yREGEX_full (a_source);
+   rc = yREGEX_exec (a_source);
    if (rc <  0)   return "yREGEX_tester    : execution failed";
    /*---(question)-----------------------*/
    return yregex_find__unit ("match", 0);
@@ -110,6 +110,7 @@ yregex__unit_quiet      (void)
    yregex_sets_init   ();
    yregex_pats_init   ();
    yregex_find_init   ();
+   yregex_rule_init   ();
    return 0;
 }
 
@@ -125,6 +126,7 @@ yregex__unit_loud       (void)
    yregex_sets_init   ();
    yregex_pats_init   ();
    yregex_find_init   ();
+   yregex_rule_init   ();
    return 0;
 }
 
@@ -136,6 +138,7 @@ yregex__unit_end        (void)
    yregex_pats_wrap   ();
    yregex_exec_wrap   ();
    yregex_find_wrap   ();
+   yregex_rule_wrap   ();
    yLOGS_end          ();
    return 0;
 }
