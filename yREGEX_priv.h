@@ -33,8 +33,8 @@
 
 #define     P_VERMAJOR  "0.--, preparing for serious use"
 #define     P_VERMINOR  "0.6-, keep advancing"
-#define     P_VERNUM    "0.6n"
-#define     P_VERTXT    "exec now handles waterfall, herding, and shotgun behavior !!!"
+#define     P_VERNUM    "0.6o"
+#define     P_VERTXT    "solved some crazy find issues in set unit (devil in details;)"
 
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -180,6 +180,7 @@ struct      cERROR {
 typedef     struct      cFIND       tFIND;
 struct      cFIND {
    /*---(basics)-----------------*/
+   tSTATE     *source;                      /* debugging use                  */
    short       beg;                         /* starting point                 */
    short       end;                         /* ending point                   */
    short       len;                         /* length                         */
@@ -516,7 +517,7 @@ char        yregex_find_init        (void);
 char        yregex_find__purge      (void);
 char        yregex_find_wrap        (void);
 /*---(create)---------------*/
-char        yregex_find__full       (short a_beg, char *a_text, char *a_quan);
+char        yregex_find__full       (tSTATE *a_source, short a_beg, char *a_text, char *a_quan);
 char        yregex_find__sub        (char a_num, short a_beg, short a_len);
 /*---(search)---------------*/
 char        yregex_find__by_cursor  (char a_move, tFIND  **r_back);
@@ -524,7 +525,7 @@ char        yregex_find__by_index   (int a_index, tFIND  **r_back);
 /*---(structure)------------*/
 char        yregex_find__reset      (void);
 char        yregex_find__trail      (tSTATE *a_focus, char a_mark);
-char        yregex_find__save       (void);
+char        yregex_find__save       (tSTATE *a_focus);
 char        yregex_find__group      (char a_group);
 char        yregex_find_add         (tSTATE *a_focus);
 char        yregex_find_text        (cint a_ref, char *a_text);

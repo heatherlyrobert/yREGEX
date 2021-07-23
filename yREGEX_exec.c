@@ -593,9 +593,9 @@ yregex_exec__single     (void)
    t  = s_focus->tpos;
    c  = myREGEX.comp [r];
    i  = myREGEX.indx [r];
-   DEBUG_YREGEX  yLOG_complex ("header"    , "level %-3d, rpos %-3d, tpos %-3d, tmax %-3d", l, r, t, myREGEX.tlen);
+   DEBUG_YREGEX  yLOG_complex ("header"    , "begin %-3d, level %-3d, rpos %-3d, rmax %-3d, comp %-3d/%c, tpos %-3d, tmax %-3d", s_focus->beg, l, r, myREGEX.clen, c, c, t, myREGEX.tlen);
    /*---(check for null)-----------------*/
-   if (c == 0 || r == myREGEX.rlen) {
+   if (c == 0 || r == myREGEX.clen) {
       DEBUG_YREGEX  yLOG_note    ("success, found end of regex and/or null");
       yregex_exec__found ();
       yregex_find_add (s_focus);
@@ -842,7 +842,8 @@ yREGEX_detail           (char a_style, char a_finds, cchar *a_source)
    /*---(shotgun)------------------------*/
    else if (a_style == YREGEX_SHOTGUN) {
       yregex_exec__preshotgun ();
-      for (i = 0; i <= myREGEX.rlen + 10; ++i) {
+      for (i = 0; i <= myREGEX.tlen + 10; ++i) {
+         if (s_ready <= 0)  break;
          rc = yregex_exec__shotgun   (a_finds, i, &c);
          x_total += c;
       }
@@ -855,7 +856,7 @@ yREGEX_detail           (char a_style, char a_finds, cchar *a_source)
    return rc;
 }
 
-SIMPLIFIER char yREGEX_first         (cchar *a_source) { return yREGEX_detail (YREGEX_SHOTGUN, YREGEX_FIRST, a_source); }
+SIMPLIFIER char yREGEX_quick         (cchar *a_source) { return yREGEX_detail (YREGEX_SHOTGUN, YREGEX_FIRST, a_source); }
 SIMPLIFIER char yREGEX_count         (cchar *a_source) { return yREGEX_detail (YREGEX_SHOTGUN, YREGEX_COUNT, a_source); }
 SIMPLIFIER char yREGEX_exec          (cchar *a_source) { return yREGEX_detail (YREGEX_SHOTGUN, YREGEX_FINDS, a_source); }
 SIMPLIFIER char yREGEX_debug         (cchar *a_source) { return yREGEX_detail (YREGEX_SHOTGUN, YREGEX_DEBUG, a_source); }

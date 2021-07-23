@@ -32,7 +32,7 @@ char        yREGEX_clear         (void);
 char        yREGEX_comp          (cchar *a_regex);
 char        yREGEX_fancy         (char *r_fancy);
 
-char        yREGEX_first         (cchar *a_source);  /* quit on first find  */
+char        yREGEX_quick         (cchar *a_source);  /* quit on first find  */
 char        yREGEX_count         (cchar *a_source);  /* only count finds    */
 char        yREGEX_exec          (cchar *a_source);  /* save all finds      */
 char        yREGEX_debug         (cchar *a_source);  /* save all states     */

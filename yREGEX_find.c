@@ -35,6 +35,7 @@ yregex_find__wipe       (tFIND *a_cur)
    /*---(locals)-----------+-----+-----+-*/
    int         i           =    0;
    /*---(wipe)---------------------------*/
+   a_cur->source   = NULL;
    a_cur->beg      = -1;
    a_cur->end      = -1;
    a_cur->len      = -1;
@@ -79,16 +80,16 @@ char yregex_find_wrap    (void) { return yregex_share_wrap  (TYPE_FIND, &s_head,
 static void      o___CREATE__________________o (void) {;}
 
 char
-yregex_find__full       (short a_beg, char *a_text, char *a_quan)
+yregex_find__full       (tSTATE *a_source, short a_beg, char *a_text, char *a_quan)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
    char        rc          =    0;
    tFIND      *x_new       = NULL;
    /*---(defense)------------------------*/
-   --rce;  if (a_beg < 0 || a_beg >= myREGEX.tlen)  return rce;
-   --rce;  if (a_text == NULL)  return rce;
-   --rce;  if (a_quan == NULL)  return rce;
+   --rce;  if (a_beg    < 0 || a_beg >= myREGEX.tlen)  return rce;
+   --rce;  if (a_text   == NULL)  return rce;
+   --rce;  if (a_quan   == NULL)  return rce;
    --rce;  if (strlen (a_text) != strlen (a_quan))  return rce;
    /*---(create a find)------------------*/
    rc = yregex_find__new (&x_new);
@@ -96,12 +97,20 @@ yregex_find__full       (short a_beg, char *a_text, char *a_quan)
       return rce;
    }
    /*---(check dups)---------------------*/
-   x_new->beg   = a_beg;
-   x_new->len   = strlen (a_text);
-   x_new->end   = a_beg + x_new->len - 1;
-   x_new->text  = strdup (a_text);
-   x_new->quan  = strdup (a_quan);
+   DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
+   DEBUG_YREGEX  yLOG_spoint  (a_source);
+   DEBUG_YREGEX  yLOG_snote   (a_text);
+   x_new->source = a_source;
+   x_new->beg    = a_beg;
+   x_new->len    = strlen (a_text);
+   x_new->end    = a_beg + x_new->len - 1;
+   x_new->text   = strdup (a_text);
+   x_new->quan   = strdup (a_quan);
+   DEBUG_YREGEX  yLOG_sint    (a_beg);
+   DEBUG_YREGEX  yLOG_sint    (x_new->len);
+   DEBUG_YREGEX  yLOG_sint    (x_new->end);
    /*---(complete)-----------------------*/
+   DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
    return 0;
 }
 
@@ -329,9 +338,11 @@ char
 yregex_find__reset      (void)
 {
    int         i           =    0;
+   DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
    s_beg = 0;
    for (i = 0; i < LEN_TEXT; ++i)   s_text [i] = s_quan [i] = s_sub  [i] = '\0';
    for (i = 0; i < 10      ; ++i)   s_gbeg [i] = s_gend [i] = -1;
+   DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
    return 0;
 }
 
@@ -352,19 +363,25 @@ yregex_find__trail      (tSTATE *a_focus, char a_mark)
    DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
    DEBUG_YREGEX  yLOG_schar   (a_mark);
    /*---(defense)------------------------*/
-   DEBUG_YREGEX  yLOG_point   ("a_focus"   , a_focus);
+   DEBUG_YREGEX  yLOG_spoint  (a_focus);
    --rce;  if (a_focus == NULL) {
       DEBUG_YREGEX  yLOG_sexitr  (__FUNCTION__, rce);
       return rce;
    }
    /*---(prepare)------------------------*/
-   if (a_mark == 'y')  a_focus->ready = '¼';
+   if (a_mark == 'y') {
+      a_focus->ready = '¼';
+      DEBUG_YREGEX  yLOG_schar   (a_focus->ready);
+   }
    s_beg  = a_focus->beg;
    x_curr = a_focus->parent;
    /*---(walk solution)------------------*/
    while (x_curr != NULL) {
       /*---(mark)------------------------*/
-      if (a_mark == 'y')  x_curr->ready = '´';
+      if (a_mark == 'y') {
+         x_curr->ready = '´';
+         DEBUG_YREGEX  yLOG_schar   (x_curr->ready);
+      }
       /*---(positions)-------------------*/
       x_rpos = x_curr->rpos;
       x_tpos = x_curr->tpos;
@@ -384,35 +401,44 @@ yregex_find__trail      (tSTATE *a_focus, char a_mark)
       case ')' : case '|' :
          if (x_indx < 10)  s_gend [x_indx] = n;
          break;
+      case '<' : case '>' :
+         break;
       default  :
          s_text [n] = x_char;
-         s_quan [n] = x_mods;
+         if (x_char != '\0')  s_quan [n] = x_mods;
          break;
       }
       /*---(prev)------------------------*/
       x_curr = x_curr->parent;
       /*---(done)------------------------*/
    }
+   DEBUG_YREGEX  yLOG_snote   (s_text);
+   DEBUG_YREGEX  yLOG_snote   (s_quan);
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
    return 0;
 }
 
 char
-yregex_find__save       (void)
+yregex_find__save       (tSTATE *a_focus)
 {
+   char        rc          =    0;
    int         i           =    0;
    int         x_len       =    0;
    char        t           [LEN_RECD]  = "";
    char        q           [LEN_RECD]  = "";
    char        c           =    0;
-   yregex_find__full (s_beg, s_text, s_quan);
+   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
+   rc = yregex_find__full (a_focus, s_beg, s_text, s_quan);
+   DEBUG_YREGEX  yLOG_value   ("full"      , rc);
    for (i = 0; i < 10; ++i) {
       if (s_gbeg [i] <  0)  continue;
       x_len = s_gend [i] - s_gbeg [i] + 1;
       yregex_find__sub (i, s_gbeg [i], x_len);
+      DEBUG_YREGEX  yLOG_complex ("sub"       , "%d, %d", i, rc);
       ++c;
    }
+   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
    return c;
 }
 
@@ -420,9 +446,14 @@ char
 yregex_find_add         (tSTATE *a_focus)
 {
    char        rc          =    0;
+   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    if (rc >= 0)  rc = yregex_find__reset ();
+   DEBUG_YREGEX  yLOG_value   ("reset"     , rc);
    if (rc >= 0)  rc = yregex_find__trail (a_focus, 'y');
-   if (rc >= 0)  rc = yregex_find__save  ();
+   DEBUG_YREGEX  yLOG_value   ("trail"     , rc);
+   if (rc >= 0)  rc = yregex_find__save  (a_focus);
+   DEBUG_YREGEX  yLOG_value   ("save"      , rc);
+   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
    return rc;
 }
 
@@ -475,7 +506,8 @@ yregex_find__memory     (tFIND *a_cur)
       return g_print;
    }
    /*---(defense)------------------------*/
-   strlcpy (g_print, "å_____.__________.__æ", LEN_RECD);
+   strlcpy (g_print, "å______.__________.__æ", LEN_RECD);
+   ++n;  if (a_cur->source      != NULL)        g_print [n] = 'X';
    ++n;  if (a_cur->beg         >= 0)           g_print [n] = 'X';
    ++n;  if (a_cur->end         >= 0)           g_print [n] = 'X';
    ++n;  if (a_cur->len         >= 0)           g_print [n] = 'X';
