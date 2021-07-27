@@ -564,8 +564,8 @@ yregex_share__by_name   (char a_type, void **a_head, void **r_back, char *a_name
 /*====================------------------------------------====================*/
 static void      o___UNITTEST________________o (void) {;}
 
-#define  COUNT_FORE(a,b)  { a = (b *) a_head; while (a != NULL) { ++x_fore; a = a->m_next; } }
-#define  COUNT_BACK(a,b)  { a = (b *) a_tail; while (a != NULL) { ++x_back; a = a->m_prev; } }
+#define  COUNT_FORE(a,b)  { if (a_head != NULL)  { a = (b *) a_head; while (a != NULL) { ++x_fore; a = a->m_next; } } }
+#define  COUNT_BACK(a,b)  { if (a_tail != NULL)  { a = (b *) a_tail; while (a != NULL) { ++x_back; a = a->m_prev; } } }
 
 char*
 yregex_share__unit      (char a_type, void *a_head, void *a_tail, int a_count, char *a_question, int a_num)
@@ -581,6 +581,7 @@ yregex_share__unit      (char a_type, void *a_head, void *a_tail, int a_count, c
    tFIND      *x_find      = NULL;
    char        x_title     [LEN_LABEL] = "";
    /*---(mapping)------------------------*/
+   DEBUG_YREGEX  yLOG_complex ("unit"      , "%c, %-10p, %-10p, %4d", a_type, a_head, a_tail, a_count);
    IF_SETS { COUNT_FORE(x_sets,tSETS ); COUNT_BACK(x_sets,tSETS ); strcpy (x_title,"SETS" ); }
    EL_RULE { COUNT_FORE(x_rule,tRULE ); COUNT_BACK(x_rule,tRULE ); strcpy (x_title,"RULE" ); }
    EL_PATS { COUNT_FORE(x_pats,tPATS ); COUNT_BACK(x_pats,tPATS ); strcpy (x_title,"PATS" ); }

@@ -85,12 +85,17 @@ yregex_find__full       (tSTATE *a_source, short a_beg, char *a_text, char *a_qu
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
    char        rc          =    0;
+   int         l           =    0;
    tFIND      *x_new       = NULL;
    /*---(defense)------------------------*/
    --rce;  if (a_beg    < 0 || a_beg >= myREGEX.tlen)  return rce;
-   --rce;  if (a_text   == NULL)  return rce;
-   --rce;  if (a_quan   == NULL)  return rce;
-   --rce;  if (strlen (a_text) != strlen (a_quan))  return rce;
+   --rce;  if (a_text   == NULL)                       return rce;
+   --rce;  if (a_quan   == NULL)                       return rce;
+   l = strlen (a_text);
+   --rce;  if (l != strlen (a_quan))                   return rce;
+   /*---(find existing)------------------*/
+   rc = yregex_find__by_loc (a_beg, l);
+   --rce;  if (rc == 1)                                return rce;
    /*---(create a find)------------------*/
    rc = yregex_find__new (&x_new);
    --rce;  if (x_new == NULL) {
@@ -133,7 +138,7 @@ yregex_find__sub        (char a_num, short a_off, short a_len)
    return 0;
 }
 
-int yregex_find_count       (void) { return s_count; }
+int yregex_find_count       (void)  { return s_count; }
 
 char
 yregex_find__listall    (char a_detail)
@@ -276,39 +281,39 @@ yregex_find__solution   (char a_scorer, int a_pos, int  *a_beg, int *a_len, int 
                               *> return x_best;                                                                                        <*/
 }
 
-char
-yREGEX_best          (cchar a_type, cchar a_dir, int  *a_beg, int *a_len, int *a_fbeg, int *a_flen)
-{
-   /*> int         rc          =   0;                                                 <* 
-    *> char        x_scorer    = '-';                                                 <* 
-    *> switch (a_type) {                                                              <* 
-    *> case  YREGEX_BEST   :                                                          <* 
-    *>    x_scorer = '$';                                                             <* 
-    *>    break;                                                                      <* 
-    *> case  YREGEX_GREEDY :                                                          <* 
-    *>    switch (a_dir) {                                                            <* 
-    *>    case YREGEX_MOST  : x_scorer = '*'; break;                                  <* 
-    *>    case YREGEX_LEFT  : x_scorer = '?'; break;                                  <* 
-    *>    case YREGEX_RIGHT : x_scorer = '+'; break;                                  <* 
-    *>    default           : return -1;      break;                                  <* 
-    *>    }                                                                           <* 
-    *>    break;                                                                      <* 
-    *> case  YREGEX_LAZY   :                                                          <* 
-    *>    switch (a_dir) {                                                            <* 
-    *>    case YREGEX_MOST  : x_scorer = '@'; break;                                  <* 
-    *>    case YREGEX_LEFT  : x_scorer = '!'; break;                                  <* 
-    *>    case YREGEX_RIGHT : x_scorer = '~'; break;                                  <* 
-    *>    default           : return -1;      break;                                  <* 
-    *>    }                                                                           <* 
-    *>    break;                                                                      <* 
-    *> default :                                                                      <* 
-    *>    return -1;                                                                  <* 
-    *>    break;                                                                      <* 
-    *> }                                                                              <* 
-    *> rc = yregex_find__solution (x_scorer, -1, a_beg, a_len, a_fbeg, a_flen);       <* 
-    *> if (rc < 0)  return -1;                                                        <* 
-    *> return 0;                                                                      <*/
-}
+/*> char                                                                                                  <* 
+ *> yREGEX_best          (cchar a_type, cchar a_dir, int  *a_beg, int *a_len, int *a_fbeg, int *a_flen)   <* 
+ *> {                                                                                                     <*/
+/*> int         rc          =   0;                                                 <* 
+ *> char        x_scorer    = '-';                                                 <* 
+ *> switch (a_type) {                                                              <* 
+ *> case  YREGEX_BEST   :                                                          <* 
+ *>    x_scorer = '$';                                                             <* 
+ *>    break;                                                                      <* 
+ *> case  YREGEX_GREEDY :                                                          <* 
+ *>    switch (a_dir) {                                                            <* 
+ *>    case YREGEX_MOST  : x_scorer = '*'; break;                                  <* 
+ *>    case YREGEX_LEFT  : x_scorer = '?'; break;                                  <* 
+ *>    case YREGEX_RIGHT : x_scorer = '+'; break;                                  <* 
+ *>    default           : return -1;      break;                                  <* 
+ *>    }                                                                           <* 
+ *>    break;                                                                      <* 
+ *> case  YREGEX_LAZY   :                                                          <* 
+ *>    switch (a_dir) {                                                            <* 
+ *>    case YREGEX_MOST  : x_scorer = '@'; break;                                  <* 
+ *>    case YREGEX_LEFT  : x_scorer = '!'; break;                                  <* 
+ *>    case YREGEX_RIGHT : x_scorer = '~'; break;                                  <* 
+ *>    default           : return -1;      break;                                  <* 
+ *>    }                                                                           <* 
+ *>    break;                                                                      <* 
+ *> default :                                                                      <* 
+ *>    return -1;                                                                  <* 
+ *>    break;                                                                      <* 
+ *> }                                                                              <* 
+ *> rc = yregex_find__solution (x_scorer, -1, a_beg, a_len, a_fbeg, a_flen);       <* 
+ *> if (rc < 0)  return -1;                                                        <* 
+ *> return 0;                                                                      <*/
+/*> }                                                                                 <*/
 
 
 
@@ -319,6 +324,135 @@ static void  o___SEARCH__________o () { return; }
 
 char yregex_find__by_cursor  (char a_move, tFIND  **r_back) { return yregex_share__by_cursor (TYPE_FIND, &s_head, &s_tail, &s_curr, r_back, a_move); }
 char yregex_find__by_index   (int a_index, tFIND  **r_back) { return yregex_share__by_index  (TYPE_FIND, &s_head, &s_curr, r_back, a_index); }
+
+char
+yregex_find__by_loc     (short a_beg, short a_len)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   tFIND      *x_curr      = NULL;
+   /*---(prepare)------------------------*/
+   x_curr = s_tail;
+   while (x_curr != NULL) {
+      if (x_curr->beg == a_beg) {
+         if (x_curr->len == a_len) {
+            return 1;
+         }
+      }
+      x_curr = x_curr->m_prev;
+   }
+   return 0;
+}
+
+int
+yREGEX_find             (char a_move, int  *r_beg, int *r_len, int *r_fbeg, int *r_flen)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   char        rc          =    0;
+   tFIND      *x_curr      = NULL;
+   rc = yregex_find__by_cursor (a_move, &x_curr);
+   --rce;  if (rc < 0 || x_curr == NULL)  return rce;
+   if (r_beg  != NULL)  *r_beg  = x_curr->beg;
+   if (r_len  != NULL)  *r_len  = x_curr->len;
+   if (r_fbeg != NULL) {
+      if (x_curr->s_off [0] >= 0)  *r_fbeg = x_curr->s_off [0];
+      else                         *r_fbeg = x_curr->beg;
+   }
+   if (r_flen != NULL) {
+      if (x_curr->s_len [0] >= 0)  *r_flen = x_curr->s_len [0];
+      else                         *r_flen = x_curr->len;
+   }
+   return s_count;
+}
+
+int
+yREGEX_best             (char a_best, int  *r_beg, int *r_len, int *r_fbeg, int *r_flen)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   tFIND      *x_curr      = NULL;
+   int         b           =    0;
+   int         l           =    0;
+   int         c           =    0;
+   int         x_beg       =    0;
+   int         x_len       =    0;
+   tFIND      *x_found     = NULL;
+   /*---(header)-------------------------*/
+   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
+   /*---(defaults)-----------------------*/
+   if (r_beg  != NULL)  *r_beg  = -1;
+   if (r_len  != NULL)  *r_len  = -1;
+   if (r_fbeg != NULL)  *r_fbeg = -1;
+   if (r_flen != NULL)  *r_flen = -1;
+   /*---(set boundaries)-----------------*/
+   switch (a_best) {
+   case YREGEX_LLONG  : b = 10000; l = 0;       break;
+   case YREGEX_LSHORT : b = 10000; l = 10000;   break;
+   case YREGEX_RSHORT : b = 0;     l = 10000;   break;
+   case YREGEX_RLONG  : b = 0;     l = 0;       break;
+   case YREGEX_ALONG  : b = 0;     l = 0;       break;
+   case YREGEX_ASHORT : b = 0;     l = 10000;   break;
+   }
+   DEBUG_YREGEX  yLOG_complex ("bounds"    , "b=%5d, l=%5d", b, l);
+   /*---(walk finds)---------------------*/
+   x_curr = s_head;
+   while (x_curr != NULL) {
+      /*---(prepare values)--------------*/
+      x_beg = x_curr->beg;
+      if (x_curr->s_off [0] >= 0)  x_beg += x_curr->s_off [0];
+      x_len = x_curr->len;
+      if (x_curr->s_len [0] >= 0)  x_len  = x_curr->s_len [0];
+      DEBUG_YREGEX  yLOG_complex ("curr"      , "c=%5d, %-10p, b=%5d, l=%5d", c, x_curr, x_beg, x_len);
+      /*---(check position)--------------*/
+      switch (a_best) {
+      case YREGEX_LLONG  : case YREGEX_LSHORT :
+         if (x_beg < b)  { x_found = x_curr;  b = x_beg;  l = x_len; }
+         break;
+      case YREGEX_RSHORT : case YREGEX_RLONG  : 
+         if (x_beg > b)  { x_found = x_curr;  b = x_beg;  l = x_len; }
+         break;
+      }
+      /*---(check length)----------------*/
+      switch (a_best) {
+      case YREGEX_LSHORT : case YREGEX_RSHORT :
+         if (x_len < l && x_beg == b)  { x_found = x_curr;  l = x_len; }
+         break;
+      case YREGEX_ASHORT :
+         if (x_len < l)  { x_found = x_curr;  b = x_beg;  l = x_len; }
+         break;
+      case YREGEX_LLONG  : case YREGEX_RLONG  : 
+         if (x_len > l && x_beg == b)  { x_found = x_curr;  l = x_len; }
+         break;
+      case YREGEX_ALONG  :
+         if (x_len > l)  { x_found = x_curr;  b = x_beg;  l = x_len; }
+         break;
+      }
+      /*---(next)------------------------*/
+      DEBUG_YREGEX  yLOG_complex ("found"     , "%-10p, b=%5d, l=%5d", x_found, b, l);
+      ++c;
+      x_curr = x_curr->m_next;
+      /*---(done)------------------------*/
+   }
+   /*---(never found)--------------------*/
+   --rce;  if (x_found == NULL) {
+      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(saveback)-----------------------*/
+   if (r_beg  != NULL)  *r_beg  = x_found->beg;
+   if (r_len  != NULL)  *r_len  = x_found->len;
+   if (r_fbeg != NULL) {
+      if (x_found->s_off [0] >= 0)  *r_fbeg = x_found->beg + x_found->s_off [0];
+      else                          *r_fbeg = x_found->beg;
+   }
+   if (r_flen != NULL) {
+      if (x_found->s_len [0] >= 0)  *r_flen = x_found->s_len [0];
+      else                          *r_flen = x_found->len;
+   }
+   /*---(complete)-----------------------*/
+   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+   return s_count;
+}
 
 
 
@@ -332,7 +466,6 @@ static char  s_text  [LEN_TEXT] = "";
 static char  s_quan  [LEN_TEXT] = "";
 static short s_gbeg  [LEN_LABEL];
 static short s_gend  [LEN_LABEL];
-static char  s_sub   [LEN_TEXT] = "";
 
 char
 yregex_find__reset      (void)
@@ -340,7 +473,7 @@ yregex_find__reset      (void)
    int         i           =    0;
    DEBUG_YREGEX  yLOG_senter  (__FUNCTION__);
    s_beg = 0;
-   for (i = 0; i < LEN_TEXT; ++i)   s_text [i] = s_quan [i] = s_sub  [i] = '\0';
+   for (i = 0; i < LEN_TEXT; ++i)   s_text [i] = s_quan [i] = '\0';
    for (i = 0; i < 10      ; ++i)   s_gbeg [i] = s_gend [i] = -1;
    DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
    return 0;
@@ -399,7 +532,7 @@ yregex_find__trail      (tSTATE *a_focus, char a_mark)
          }
          break;
       case ')' : case '|' :
-         if (x_indx < 10)  s_gend [x_indx] = n;
+         if (x_indx < 10)  s_gend [x_indx] = n - 1;
          break;
       case '<' : case '>' :
          break;
@@ -414,6 +547,7 @@ yregex_find__trail      (tSTATE *a_focus, char a_mark)
    }
    DEBUG_YREGEX  yLOG_snote   (s_text);
    DEBUG_YREGEX  yLOG_snote   (s_quan);
+   DEBUG_YREGEX  yLOG_sint    (strlen (s_text));
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
    return 0;
@@ -431,6 +565,10 @@ yregex_find__save       (tSTATE *a_focus)
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    rc = yregex_find__full (a_focus, s_beg, s_text, s_quan);
    DEBUG_YREGEX  yLOG_value   ("full"      , rc);
+   if (rc < 0) {
+      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rc);
+      return rc;
+   }
    for (i = 0; i < 10; ++i) {
       if (s_gbeg [i] <  0)  continue;
       x_len = s_gend [i] - s_gbeg [i] + 1;
@@ -457,26 +595,59 @@ yregex_find_add         (tSTATE *a_focus)
    return rc;
 }
 
-char*
-yregex_find_group       (tSTATE *a_focus, char a_group)
+char
+yregex_find_group       (tSTATE *a_focus, char a_group, char *r_text)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
    char        rc          =    0;
    int         i           =    0;
    int         x_len       =    0;
+   /*---(header)-------------------------*/
+   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    /*---(defense)------------------------*/
-   --rce;  if (a_group < 0 || a_group > 9)  return rce;
+   DEBUG_YREGEX  yLOG_point   ("a_focus"   , a_focus);
+   --rce;  if (a_focus == NULL) {
+      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   DEBUG_YREGEX  yLOG_value   ("a_group"   , a_group);
+   --rce;  if (a_group < 0 || a_group > 9) {
+      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   DEBUG_YREGEX  yLOG_point   ("r_text"    , r_text);
+   --rce;  if (r_text == NULL) {
+      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   strlcpy (r_text, "", LEN_TEXT);
    /*---(setup)--------------------------*/
    rc = yregex_find__reset ();
+   DEBUG_YREGEX  yLOG_value   ("reset"     , rc);
    rc = yregex_find__trail (a_focus, '-');
-   --rce;  if (rc < 0)  return rce;
-   --rce;  if (s_gbeg [i] <  0)   return rce;
+   DEBUG_YREGEX  yLOG_value   ("trail"     , rc);
+   --rce;  if (rc < 0) {
+      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   DEBUG_YREGEX  yLOG_complex ("s_text"    , "%2då%sæ", strlen (s_text), s_text);
+   for (i = 0; i < 10; ++i) {
+      DEBUG_YREGEX  yLOG_complex ("sub"       , "%d, %d, %d", i, s_gbeg [i], s_gend [i]);
+   }
+   DEBUG_YREGEX  yLOG_value   ("s_gbeg"    , s_gbeg [a_group]);
+   --rce;  if (s_gbeg [a_group] <  0) {
+      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   DEBUG_YREGEX  yLOG_value   ("s_gend"    , s_gend [a_group]);
    /*---(parse out)----------------------*/
-   x_len = s_gend [i] - s_gbeg [i] + 1;
-   sprintf (s_sub, "%*.*s", x_len, x_len, s_text + s_gbeg [a_group]);
+   x_len = s_gend [a_group] - s_gbeg [a_group] + 1;
+   sprintf (r_text, "%*.*s", x_len, x_len, s_text + s_gbeg [a_group]);
+   DEBUG_YREGEX  yLOG_complex ("r_text"    , "%2då%sæ", x_len, r_text);
    /*---(complete)-----------------------*/
-   return s_sub;
+   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+   return 0;
 }
 
 

@@ -86,7 +86,7 @@ yREGEX__testloc      (cchar *a_regex, cchar *a_source)
    rc = yREGEX_comp (a_regex);
    if (rc <  0)   return "yREGEX_tester    : compilation failed";
    /*---(execute)------------------------*/
-   rc = yREGEX_exec (a_source);
+   rc = yREGEX_exec (a_source, NULL, NULL, NULL);
    if (rc <  0)   return "yREGEX_tester    : execution failed";
    /*---(question)-----------------------*/
    return yregex_find__unit ("match", 0);

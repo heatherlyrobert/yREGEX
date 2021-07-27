@@ -116,7 +116,8 @@ yregex_comp__prep    (cchar *a_regex)
    yregex_pats_reset  ();
    yregex_rule_init   ();
    myREGEX.ready = '-';
-   myREGEX.style = YREGEX_HERDING;
+   myREGEX.style = YREGEX_SHOTGUN;
+   myREGEX.finds = YREGEX_FIRST;
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
    return 0;

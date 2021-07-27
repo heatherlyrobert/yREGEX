@@ -32,9 +32,9 @@
 #define     P_CREATED   "2014-10"
 
 #define     P_VERMAJOR  "0.--, preparing for serious use"
-#define     P_VERMINOR  "0.6-, keep advancing"
-#define     P_VERNUM    "0.6o"
-#define     P_VERTXT    "solved some crazy find issues in set unit (devil in details;)"
+#define     P_VERMINOR  "0.7-, more advanced abilities"
+#define     P_VERNUM    "0.7a"
+#define     P_VERTXT    "added pruning states and finds to keep footprint configurably small"
 
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -236,7 +236,9 @@ struct cRULE {
 typedef     struct      cREGEX      tREGEX;
 struct      cREGEX {
    /*---(overall)-----------*/
-   char        style;                      /* heading vs waterfall            */
+   char        style;                      /* heading vs waterfall vs shotgun */
+   char        finds;                      /* count vs first vs full          */
+   char        best;                       /* left, right, long, short        */
    /*---(source text)-------*/
    uchar       text        [LEN_TEXT ];    /* text source                     */
    int         tlen;                       /* length of source text           */
@@ -393,6 +395,7 @@ char        yregex_exec__passed     (char a_who);
 char        yregex_exec__failed     (char a_who);
 char        yregex_exec__found      (void);
 char        yregex_exec__bombed     (void);
+char        yregex_exec__prune      (tSTATE *a_focus);
 /*---(handlers)-------------*/
 char        yregex_exec_launcher    (short a_lvl, short a_rpos, short a_tpos, char a_rc);
 char        yregex_exec__literal    (short a_lvl, short a_rpos, short a_tpos);
@@ -405,9 +408,9 @@ char        yregex_exec__waterfall  (char a_type, int a_begin, int *c);
 char        yregex_exec__herding    (char a_type, int a_begin, int *c);
 char        yregex_exec__preshotgun (void);
 char        yregex_exec__shotgun    (char a_finds, int a_begin, int *c);
-char        yREGEX_detail           (char a_style, char a_finds, cchar *a_source);
-char        yREGEX_full             (cchar *a_source);
-char        yREGEX_filter           (cchar *a_source);
+char        yREGEX_detail           (char a_style, char a_finds, char *a_source, char a_best, int *r_count, int *r_beg, int *r_len);
+char        yREGEX_full             (char *a_source);
+char        yREGEX_filter           (char *a_source);
 /*---(unittest)-------------*/
 char        yregex_exec__setfocus   (short a_seq);
 char        yregex_exec__setbegin   (short a_beg);
@@ -457,7 +460,7 @@ int         yregex_sets__standard   (int *a_rpos);
 /*---(create)---------------*/
 char        yregex_sets__base       (void);
 char        yregex_sets__clear      (char a_unmark);
-char        yregex_sets__save       (void);
+char        yregex_sets__save       (char *a_name);
 char        yregex_sets__mapper     (char *a_regex, int *a_rpos);
 /*---(compile)--------------*/
 char        yregex_sets_backslash   (int *a_rpos);
@@ -522,12 +525,16 @@ char        yregex_find__sub        (char a_num, short a_beg, short a_len);
 /*---(search)---------------*/
 char        yregex_find__by_cursor  (char a_move, tFIND  **r_back);
 char        yregex_find__by_index   (int a_index, tFIND  **r_back);
+char        yregex_find__by_loc     (short a_beg, short a_len);
+int         yREGEX_find             (char a_move, int  *r_beg, int *r_len, int *r_fbeg, int *r_flen);
+int         yREGEX_best             (char a_best, int  *r_beg, int *r_len, int *r_fbeg, int *r_flen);
 /*---(structure)------------*/
 char        yregex_find__reset      (void);
 char        yregex_find__trail      (tSTATE *a_focus, char a_mark);
 char        yregex_find__save       (tSTATE *a_focus);
 char        yregex_find__group      (char a_group);
 char        yregex_find_add         (tSTATE *a_focus);
+char        yregex_find_group       (tSTATE *a_focus, char a_group, char *r_text);
 char        yregex_find_text        (cint a_ref, char *a_text);
 int         yregex_find_count       (void);
 char*       yregex_find__unit       (char *a_question, int a_num);
@@ -558,8 +565,7 @@ short       yregex_rule__operator   (int *a_rpos);
 char        yregex_rule__group      (int *a_rpos);
 char        yregex_rule_comp        (int *a_rpos);
 /*---(driver)---------------*/
-char        yregex_rule_exec        (short a_level, short a_rpos, short a_tpos, short a_index);
-char        RULE_regex              (short a_level, short a_rpos, short a_tpos, short a_index);
+char        yregex_rule_exec        (short a_level, short a_rpos, short a_tpos, tSTATE *a_focus);
 /*---(unittest)-------------*/
 char*       yregex_rule__memory     (tRULE *a_cur);
 char*       yregex_rule__detail     (tRULE *a_cur);

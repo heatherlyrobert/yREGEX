@@ -181,7 +181,7 @@ yregex_sets__base       (void)
 }
 
 char         /*-> tbd --------------------------------[ leaf   [fe.943.034.30]*/ /*-[01.0000.01#.!]-*/ /*-[--.---.---.--]-*/
-yregex_sets__save       (void)
+yregex_sets__save       (char *a_name)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -219,6 +219,7 @@ yregex_sets__save       (void)
    }
    /*---(populate)-----------------------*/
    x_new->map      = strdup (s_map);
+   x_new->name     = strdup (a_name);
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_sexit   (__FUNCTION__);
    return s_count - 1;
@@ -624,6 +625,9 @@ yregex_sets_comp        (int *a_rpos)
    int         x_set       =    0;
    char        t           [LEN_NAME] = "";
    char        x_ch        =  ' ';
+   char        x_beg       =    0;
+   char        x_end       =    0;
+   char        x_len       =    0;
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
@@ -641,6 +645,7 @@ yregex_sets_comp        (int *a_rpos)
    }
    /*---(advance)------------------------*/
    DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
+   x_beg  = *a_rpos;
    x_ch   = myREGEX.regex [*a_rpos + 1];
    DEBUG_YREGEX  yLOG_value   ("x_ch"      , x_ch);
    /*---(check standard sets)------------*/
@@ -661,6 +666,7 @@ yregex_sets_comp        (int *a_rpos)
       return rce;
    }
    DEBUG_YREGEX  yLOG_value   ("*a_rpos"   , *a_rpos);
+   x_end  = *a_rpos;
    /*---(try to find existing)-----------*/
    x_set = yregex_sets__by_map  (NULL);
    DEBUG_YREGEX  yLOG_value   ("x_set"     , x_set);
@@ -670,7 +676,9 @@ yregex_sets_comp        (int *a_rpos)
       return 1;
    }
    /*---(add a new one)------------------*/
-   x_set = yregex_sets__save  ();
+   x_len = x_end - x_beg + 1;
+   sprintf (t, "%*.*s", x_len, x_len, myREGEX.regex + x_beg);
+   x_set = yregex_sets__save  (t);
    DEBUG_YREGEX  yLOG_value   ("x_set"     , x_set);
    if (x_set > 0) {
       yregex_comp_add ('[', x_set);
@@ -820,19 +828,32 @@ yregex_sets_rule        (char a_mod, char *a_text, int a_set)
    uchar       x_mark      =    0;
    int         i           =    0;
    tSETS      *x_curr      = NULL;
+   /*---(header)-------------------------*/
+   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    /*---(prepare)------------------------*/
    --rce;  if (a_text == NULL    )  return rce;
    x_len = strllen (a_text, LEN_TEXT);
+   DEBUG_YREGEX  yLOG_complex ("a_text"    , "%2då%sæ", x_len, a_text);
    yregex_sets__by_index (a_set, &x_curr);
-   if (a_mod == '[')  rc = 0;
-   else               rc = 1;
+   DEBUG_YREGEX  yLOG_complex ("set"       , "%2d, %-10p, %s", a_set, x_curr, x_curr->name);
+   DEBUG_YREGEX  yLOG_info    ("map"       , x_curr->map);
+   if (a_mod == '[')  {
+      DEBUG_YREGEX  yLOG_note    ("normal has-a match");
+      rc = 0;
+   } else {
+      DEBUG_YREGEX  yLOG_note    ("inverse does-not-have-a match");
+      rc = 1;
+   }
+   DEBUG_YREGEX  yLOG_complex ("mod"       , "%c, %d", a_mod, rc);
    for (i = 0; i < x_len; ++i) {
       x_txt  = a_text [i];
       x_mark = x_curr->map [x_txt];
       if (a_mod == '[' && x_mark == '.')   rc = 1;
-      if (a_mod == ']' && x_mark == '.')   rc = 0;
+      if (a_mod == ']' && x_mark == ' ')   rc = 0;
    }
+   DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
    /*---(complete)-----------------------*/
+   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
    return rc;
 }
 
