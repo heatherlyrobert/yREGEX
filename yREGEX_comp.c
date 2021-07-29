@@ -116,8 +116,6 @@ yregex_comp__prep    (cchar *a_regex)
    yregex_pats_reset  ();
    yregex_rule_init   ();
    myREGEX.ready = '-';
-   myREGEX.style = YREGEX_SHOTGUN;
-   myREGEX.finds = YREGEX_FIRST;
    /*---(complete)-----------------------*/
    DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
    return 0;
@@ -647,7 +645,7 @@ yregex_comp__unit_map   (char a_type, int a_value)
 {
    char        x_ch        = ' ';
    char       *x_range     = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ***********************************************************************";
-   char       *x_range2    = " 123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ***********************************************************************";
+   char       *x_range2    = " 0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ***********************************************************************";
    char       *x_range3    = " .123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ**********************************************************************";
    char       *x_range4    = " 0123456789.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ**********************************************************************";
    switch (a_type) {
@@ -657,7 +655,7 @@ yregex_comp__unit_map   (char a_type, int a_value)
       break;
    case 'i' :
       if      (a_value >= 65 )           x_ch = '*';
-      else                               x_ch = x_range2 [a_value];
+      else                               x_ch = x_range [a_value];
       break;
    case 'm' : case 'x' : case 'j' :
       if      (a_value ==  0)            x_ch = ' ';
@@ -674,9 +672,6 @@ yregex_comp__unit       (char *a_question, int a_num)
    /*---(locals)-----------+-----+-----+-*/
    int         i           = 0;
    char        t           [100] = "";
-   char       *x_range     = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ***********************************************************************";
-   char       *x_range2    = " 123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ***********************************************************************";
-   char       *x_range3    = " .123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ**********************************************************************";
    int         c           = 0;
    /*---(initialize)---------------------*/
    strlcpy (unit_answer, "COMP__unit, unknown request", 100);
@@ -703,15 +698,19 @@ yregex_comp__unit       (char *a_question, int a_num)
       snprintf (unit_answer, LEN_TEXT, "COMP base        : %2d [%-45.45s]", myREGEX.clen, myREGEX.comp);
    } else if (strncmp (a_question, "indx"      , 20)  == 0) {
       for (i = 0; i < 45; ++i) {
-         if (strchr ("(|&)", myREGEX.comp [i]) != NULL)  t [i] = yregex_comp__unit_map ('(', myREGEX.indx [i]);
-         else                                        t [i] = yregex_comp__unit_map ('i', myREGEX.indx [i]);
+         if      (strchr ("(|&)"   , myREGEX.comp [i]) != NULL)  t [i] = yregex_comp__unit_map ('(', myREGEX.indx [i]);
+         else if (strchr ("[]^$<>;", myREGEX.comp [i]) != NULL)  t [i] = yregex_comp__unit_map ('i', myREGEX.indx [i]);
+         else                                                    t [i] = ' ';
       }
       t [45] = 0;
       snprintf (unit_answer, LEN_TEXT, "COMP indx        : %2d [%-45.45s]", myREGEX.clen, t);
    } else if (strncmp (a_question, "mods"      , 20)  == 0) {
       snprintf (unit_answer, LEN_TEXT, "COMP mods        : %2d [%-45.45s]", myREGEX.clen, myREGEX.mods);
    } else if (strncmp (a_question, "jump"      , 20)  == 0) {
-      for (i = 0; i < 45; ++i)   t [i] = yregex_comp__unit_map ('j', myREGEX.jump [i]);
+      for (i = 0; i < 45; ++i) {
+         if      (myREGEX.comp [i] == ';')  t [i] = yregex_comp__unit_map ('i', myREGEX.jump [i]);
+         else                               t [i] = yregex_comp__unit_map ('j', myREGEX.jump [i]);
+      }
       t [45] = 0;
       snprintf (unit_answer, LEN_TEXT, "COMP jump        : %2d [%-45.45s]", myREGEX.clen, t);
    } else if (strncmp (a_question, "groups"    , 20)  == 0) {

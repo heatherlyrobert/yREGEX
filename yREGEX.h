@@ -16,7 +16,7 @@ typedef   const int      cint;
 
 #define   YREGEX_FIRST       '1'  /* stop after first find                 */
 #define   YREGEX_COUNT       '#'  /* count of finds, no finds or states    */
-#define   YREGEX_FINDS       'f'  /* all finds but no states               */
+#define   YREGEX_FIND        'f'  /* all finds but no states               */
 #define   YREGEX_STATE       'F'  /* all finds and only their states       */
 #define   YREGEX_DEBUG       'A'  /* all finds and all states              */
 #define   YREGEX_FINDS       "1#fFA"

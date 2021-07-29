@@ -111,6 +111,7 @@ yregex__unit_quiet      (void)
    yregex_pats_init   ();
    yregex_find_init   ();
    yregex_rule_init   ();
+   yregex_exec__setstyle   (YREGEX_SHOTGUN, YREGEX_DEBUG, YREGEX_LSHORT);
    return 0;
 }
 
@@ -127,6 +128,7 @@ yregex__unit_loud       (void)
    yregex_pats_init   ();
    yregex_find_init   ();
    yregex_rule_init   ();
+   yregex_exec__setstyle   (YREGEX_SHOTGUN, YREGEX_DEBUG, YREGEX_LSHORT);
    return 0;
 }
 

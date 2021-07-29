@@ -110,6 +110,35 @@ yregex_exec_prep        (char *a_source)
 }
 
 char
+yregex_exec__setstyle   (char a_style, char a_finds, char a_best)
+{
+   char        rce         =  -10;
+   /*---(globals)------------------------*/
+   DEBUG_YREGEX  yLOG_char    ("a_style"   , a_style);
+   DEBUG_YREGEX  yLOG_info    ("STYLES"    , YREGEX_STYLES);
+   --rce;  if (strchr (YREGEX_STYLES, a_style) == NULL) {
+      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   myREGEX.style = a_style;
+   DEBUG_YREGEX  yLOG_char    ("a_finds"   , a_finds);
+   DEBUG_YREGEX  yLOG_info    ("FINDS"     , YREGEX_FINDS);
+   --rce;  if (strchr (YREGEX_FINDS , a_finds ) == NULL) {
+      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   myREGEX.finds = a_finds;
+   DEBUG_YREGEX  yLOG_char    ("a_best"    , a_best);
+   DEBUG_YREGEX  yLOG_info    ("BESTS"     , YREGEX_BESTS);
+   --rce;  if (strchr (YREGEX_BESTS , a_best  ) == NULL) {
+      DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   myREGEX.best  = a_best;
+   return 0;
+}
+
+char
 yregex_exec__setfocus   (short a_seq)
 {
    tSTATE     *x_focus     = NULL;
@@ -652,6 +681,7 @@ yregex_exec__single     (void)
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
+   DEBUG_YREGEX  yLOG_complex ("behavior"  , "style %c, finds %c, best %c", myREGEX.style, myREGEX.finds, myREGEX.best);
    /*---(prepare)------------------------*/
    l  = s_focus->lvl;
    r  = s_focus->rpos;
@@ -993,7 +1023,7 @@ yREGEX_detail           (char a_style, char a_finds, char *a_source, char a_best
 SIMPLIFIER char yREGEX_filter        (char *a_source)                                       { return yREGEX_detail (YREGEX_SHOTGUN, YREGEX_FIRST, a_source, YREGEX_LSHORT, NULL, NULL, NULL); }
 SIMPLIFIER char yREGEX_first         (char *a_source, int *r_beg, int *r_len)               { return yREGEX_detail (YREGEX_SHOTGUN, YREGEX_FIRST, a_source, YREGEX_LSHORT, NULL, r_beg, r_len); }
 SIMPLIFIER char yREGEX_count         (char *a_source, int *r_count)                         { return yREGEX_detail (YREGEX_SHOTGUN, YREGEX_COUNT, a_source, YREGEX_LSHORT, r_count, NULL, NULL); }
-SIMPLIFIER char yREGEX_exec          (char *a_source, int *r_count, int *r_beg, int *r_len) { return yREGEX_detail (YREGEX_SHOTGUN, YREGEX_FINDS, a_source, YREGEX_LLONG , r_count, r_beg, r_len); }
+SIMPLIFIER char yREGEX_exec          (char *a_source, int *r_count, int *r_beg, int *r_len) { return yREGEX_detail (YREGEX_SHOTGUN, YREGEX_FIND , a_source, YREGEX_LLONG , r_count, r_beg, r_len); }
 SIMPLIFIER char yREGEX_debug         (char *a_source)                                       { return yREGEX_detail (YREGEX_SHOTGUN, YREGEX_DEBUG, a_source, YREGEX_LLONG , NULL, NULL, NULL); }
 
 

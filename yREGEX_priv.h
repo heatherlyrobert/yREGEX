@@ -33,8 +33,8 @@
 
 #define     P_VERMAJOR  "0.--, preparing for serious use"
 #define     P_VERMINOR  "0.7-, more advanced abilities"
-#define     P_VERNUM    "0.7a"
-#define     P_VERTXT    "added pruning states and finds to keep footprint configurably small"
+#define     P_VERNUM    "0.7b"
+#define     P_VERTXT    "all existing unit tests pass again, time to start closing"
 
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -414,6 +414,7 @@ char        yREGEX_filter           (char *a_source);
 /*---(unittest)-------------*/
 char        yregex_exec__setfocus   (short a_seq);
 char        yregex_exec__setbegin   (short a_beg);
+char        yregex_exec__setstyle   (char a_style, char a_finds, char a_best);
 char*       yregex_exec__unit       (char *a_question, int n);
 /*---(done)-----------------*/
 

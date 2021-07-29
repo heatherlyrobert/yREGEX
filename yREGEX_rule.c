@@ -320,7 +320,7 @@ yregex_rule__group      (int *a_rpos)
    }
    /*---(adjust)-------------------------*/
    DEBUG_YREGEX  yLOG_snote   ("good");
-   x_grp  = x_ch  - '0' + 1;
+   x_grp  = x_ch  - '0';
    DEBUG_YREGEX  yLOG_sint    (x_grp);
    /*---(move)---------------------------*/
    ++(*a_rpos);
@@ -422,7 +422,7 @@ yregex_rule_comp        (int *a_rpos)
       x_set = yregex_rule__add (*a_rpos, x_len - 1);
       yregex_comp_add (';', x_one);
       yregex_comp_mod (x_ch);
-      myREGEX.jump [myREGEX.clen - 1] = x_set + 1;
+      myREGEX.jump [myREGEX.clen - 1] = x_set;
       *a_rpos += x_len - 2;
       rc = 0;
    }
@@ -480,12 +480,12 @@ yregex_rule_exec        (short a_level, short a_rpos, short a_tpos, tSTATE *a_fo
    x_mod       = myREGEX.mods [a_rpos];
    DEBUG_YREGEX  yLOG_char    ("x_mod"     , x_mod);
    /*> rc = yregex_exec_sub (a_index, x_one);                                         <*/
-   yregex_find_group (a_focus, x_one - 1, s1);
+   yregex_find_group (a_focus, x_one, s1);
    DEBUG_YREGEX  yLOG_info    ("s1"        , s1);
    /*---(capture group match-------------*/
    --rce;  if (strchr ("=о<>мн", x_mod) != NULL) {
       DEBUG_YREGEX  yLOG_note    ("executing a capture group match");
-      yregex_find_group (a_focus, x_two - 1, s2);
+      yregex_find_group (a_focus, x_two, s2);
       DEBUG_YREGEX  yLOG_info    ("s2"        , s2);
       x_cmp = strcmp  (s1, s2);
       rc = 0;
@@ -506,7 +506,7 @@ yregex_rule_exec        (short a_level, short a_rpos, short a_tpos, tSTATE *a_fo
    /*---(substring)----------------------*/
    --rce;  if (strchr ("+-", x_mod) != NULL) {
       DEBUG_YREGEX  yLOG_note    ("executing a substring match");
-      yregex_rule__by_index (x_two - 1, &x_curr);
+      yregex_rule__by_index (x_two, &x_curr);
       if (x_curr == NULL) {
          DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
          return rce;

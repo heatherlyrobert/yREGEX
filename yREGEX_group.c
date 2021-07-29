@@ -267,7 +267,7 @@ yregex_group__close     (int *a_rpos)
    }
    /*---(primary group)------------------*/
    else if (x_char == '<') {
-      DEBUG_YREGEX  yLOG_note    ("close focus group (>´´´<>");
+      DEBUG_YREGEX  yLOG_note    ("close focus group (>´´´<)");
       if (myREGEX.g_foc != 'y') {
          DEBUG_YREGEX  yLOG_note    ("closing unopenned focus group");
          yregex_error_add ('F', CAT_GRP, *a_rpos, 2, "focus group never openned");
