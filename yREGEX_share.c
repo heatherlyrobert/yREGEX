@@ -230,8 +230,8 @@ yregex_share_purge      (char a_type, void **a_head, void **a_tail, void **a_cur
       EL_FIND  yregex_find__free  (&x_curr);
       EL_EXEC  yregex_exec__free  (&x_curr);
       ELSE {
-         DEBUG_NORM    yLOG_note    ("unknown type in next");
-         DEBUG_NORM    yLOG_exitr   (__FUNCTION__, rce);
+         DEBUG_YREGEX    yLOG_note    ("unknown type in next");
+         DEBUG_YREGEX    yLOG_exitr   (__FUNCTION__, rce);
          return rce;
       }
       x_curr = *a_head;
@@ -277,14 +277,14 @@ yregex_share__by_cursor (char a_type, void **a_head, void **a_tail, void **r_cur
    tSTATE     *x_exec      = NULL;
    void       *x_curr      = NULL;
    /*---(header)-------------------------*/
-   DEBUG_NORM   yLOG_senter  (__FUNCTION__);
-   DEBUG_NORM   yLOG_schar   (a_move);
+   DEBUG_YREGEX   yLOG_senter  (__FUNCTION__);
+   DEBUG_YREGEX   yLOG_schar   (a_move);
    /*---(defaults)-----------------------*/
    if (r_back != NULL)  *r_back = NULL;
    /*---(starting point)-----------------*/
    x_curr  = *r_curr;
    /*---(defense)------------------------*/
-   DEBUG_NORM   yLOG_spoint  (x_curr);
+   DEBUG_YREGEX   yLOG_spoint  (x_curr);
    --rce;  if (x_curr == NULL) {
       /*---(bounce-types)----------------*/
       switch (a_move) {
@@ -296,9 +296,9 @@ yregex_share__by_cursor (char a_type, void **a_head, void **a_tail, void **r_cur
          break;
       }
       /*---(bounce types)----------------*/
-      DEBUG_NORM    yLOG_spoint  (x_curr);
+      DEBUG_YREGEX    yLOG_spoint  (x_curr);
       if (x_curr == NULL) {
-         DEBUG_NORM    yLOG_sexitr  (__FUNCTION__, rce);
+         DEBUG_YREGEX    yLOG_sexitr  (__FUNCTION__, rce);
          return rce;
       }
    }
@@ -315,8 +315,8 @@ yregex_share__by_cursor (char a_type, void **a_head, void **a_tail, void **r_cur
       EL_EXEC  { x_exec = (tSTATE *) x_curr;  x_curr = x_exec->m_prev; }
       EL_RULE  { x_rule = (tRULE  *) x_curr;  x_curr = x_rule->m_prev; }
       ELSE {
-         DEBUG_NORM    yLOG_snote   ("unknown type in prev");
-         DEBUG_NORM    yLOG_sexitr  (__FUNCTION__, rce);
+         DEBUG_YREGEX    yLOG_snote   ("unknown type in prev");
+         DEBUG_YREGEX    yLOG_sexitr  (__FUNCTION__, rce);
          return rce;
       }
       break;
@@ -330,8 +330,8 @@ yregex_share__by_cursor (char a_type, void **a_head, void **a_tail, void **r_cur
       EL_EXEC  { x_exec = (tSTATE *) x_curr;  x_curr = x_exec->m_next; }
       EL_RULE  { x_rule = (tRULE  *) x_curr;  x_curr = x_rule->m_next; }
       ELSE {
-         DEBUG_NORM    yLOG_snote   ("unknown type in next");
-         DEBUG_NORM    yLOG_sexitr  (__FUNCTION__, rce);
+         DEBUG_YREGEX    yLOG_snote   ("unknown type in next");
+         DEBUG_YREGEX    yLOG_sexitr  (__FUNCTION__, rce);
          return rce;
       }
       break;
@@ -339,10 +339,10 @@ yregex_share__by_cursor (char a_type, void **a_head, void **a_tail, void **r_cur
       x_curr = *a_tail;
       break;
    default         :
-      DEBUG_NORM   yLOG_sexitr  (__FUNCTION__, rce);
+      DEBUG_YREGEX   yLOG_sexitr  (__FUNCTION__, rce);
       return rce;
    }
-   DEBUG_NORM   yLOG_spoint  (x_curr);
+   DEBUG_YREGEX   yLOG_spoint  (x_curr);
    /*---(check end)----------------------*/
    --rce;  if (x_curr == NULL) {
       /*---(bounce off ends)-------------*/
@@ -351,11 +351,11 @@ yregex_share__by_cursor (char a_type, void **a_head, void **a_tail, void **r_cur
       /*---(no bounce)-------------------*/
       if (x_curr == NULL) {
          *r_curr = x_curr;
-         DEBUG_NORM    yLOG_sexitr  (__FUNCTION__, rce);
+         DEBUG_YREGEX    yLOG_sexitr  (__FUNCTION__, rce);
          return rce;
       }
       /*---(mark trouble)----------------*/
-      DEBUG_NORM    yLOG_snote   ("BOUNCE");
+      DEBUG_YREGEX    yLOG_snote   ("BOUNCE");
       rc = rce;
       /*---(done)------------------------*/
    }
@@ -363,7 +363,7 @@ yregex_share__by_cursor (char a_type, void **a_head, void **a_tail, void **r_cur
    *r_curr = x_curr;
    if (r_back != NULL)  *r_back = x_curr;
    /*---(complete)-----------------------*/
-   DEBUG_NORM   yLOG_sexit   (__FUNCTION__);
+   DEBUG_YREGEX   yLOG_sexit   (__FUNCTION__);
    return rc;
 }
 
@@ -422,8 +422,8 @@ yregex_share__by_index  (char a_type, void **a_head, void **r_curr, void **r_bac
       EL_EXEC  { x_exec = (tSTATE *) x_curr;  x_curr = x_exec->m_next; }
       EL_RULE  { x_rule = (tRULE  *) x_curr;  x_curr = x_rule->m_next; }
       ELSE {
-         DEBUG_NORM    yLOG_snote   ("unknown type in next");
-         DEBUG_NORM    yLOG_sexitr  (__FUNCTION__, rce);
+         DEBUG_YREGEX    yLOG_snote   ("unknown type in next");
+         DEBUG_YREGEX    yLOG_sexitr  (__FUNCTION__, rce);
          return rce;
       }
    }

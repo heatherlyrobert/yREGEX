@@ -48,8 +48,8 @@ yregex_exec__wipe       (tSTATE *a_cur)
 /*====================------------------------------------====================*/
 static void  o___MEMORY__________o () { return; }
 
-SIMPLIFIER char yregex_exec__new   (tSTATE **r_new) { return yregex_share_new  (TYPE_EXEC, r_new, &s_head, &s_tail, &s_count); }
-SIMPLIFIER char yregex_exec__free  (tSTATE **r_old) { return yregex_share_free (TYPE_EXEC, r_old, &s_head, &s_tail, &s_count); }
+char yregex_exec__new   (tSTATE **r_new) { return yregex_share_new  (TYPE_EXEC, r_new, &s_head, &s_tail, &s_count); }
+char yregex_exec__free  (tSTATE **r_old) { return yregex_share_free (TYPE_EXEC, r_old, &s_head, &s_tail, &s_count); }
 
 
 
@@ -58,9 +58,9 @@ SIMPLIFIER char yregex_exec__free  (tSTATE **r_old) { return yregex_share_free (
 /*====================------------------------------------====================*/
 static void  o___PROGRAM_________o () { return; }
 
-SIMPLIFIER char yregex_exec_init   (void) { return yregex_share_init  (TYPE_EXEC, &s_head, &s_tail, &s_curr, &s_count); }
-SIMPLIFIER char yregex_exec__purge (void) { return yregex_share_purge (TYPE_EXEC, &s_head, &s_tail, &s_curr, &s_count); }
-SIMPLIFIER char yregex_exec_wrap   (void) { return yregex_share_wrap  (TYPE_EXEC, &s_head, &s_tail, &s_curr, &s_count); }
+char yregex_exec_init   (void) { return yregex_share_init  (TYPE_EXEC, &s_head, &s_tail, &s_curr, &s_count); }
+char yregex_exec__purge (void) { return yregex_share_purge (TYPE_EXEC, &s_head, &s_tail, &s_curr, &s_count); }
+char yregex_exec_wrap   (void) { return yregex_share_wrap  (TYPE_EXEC, &s_head, &s_tail, &s_curr, &s_count); }
 
 
 
@@ -769,8 +769,8 @@ yregex_exec__single     (void)
 /*====================------------------------------------====================*/
 static void  o___SEARCH__________o () { return; }
 
-SIMPLIFIER char yregex_exec__by_cursor  (char a_move, tSTATE **r_back) { return yregex_share__by_cursor (TYPE_EXEC, &s_head, &s_tail, &s_curr, r_back, a_move); }
-SIMPLIFIER char yregex_exec__by_index   (int a_index, tSTATE **r_back) { return yregex_share__by_index  (TYPE_EXEC, &s_head, &s_curr, r_back, a_index); }
+char yregex_exec__by_cursor  (char a_move, tSTATE **r_back) { return yregex_share__by_cursor (TYPE_EXEC, &s_head, &s_tail, &s_curr, r_back, a_move); }
+char yregex_exec__by_index   (int a_index, tSTATE **r_back) { return yregex_share__by_index  (TYPE_EXEC, &s_head, &s_curr, r_back, a_index); }
 
 
 
@@ -871,9 +871,14 @@ yregex_exec__herding    (char a_finds, int a_begin, int *c)
 char
 yregex_exec__preshotgun (void)
 {
+   /*---(header)-------------------------*/
+   DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
+   /*---(push initial level)-------------*/
    for (s_begin = 0; s_begin < myREGEX.tlen; ++s_begin) {
       yregex_exec__push  (0, 0, s_begin);
    }
+   /*---(complete)-----------------------*/
+   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
    return 0;
 }
 
@@ -998,7 +1003,7 @@ yREGEX_detail           (char a_style, char a_finds, char *a_source, char a_best
             DEBUG_YREGEX  yLOG_note    ("FIRST behavior, stopped after single find");
             DEBUG_YREGEX  yLOG_complex ("prepurge"  , "%-10p, %-10p, %4d", s_head, s_tail, s_count);
             yregex_exec__purge ();
-            c = yREGEX_find (YDLST_DHEAD, NULL, NULL, r_beg, r_len);
+            c = yREGEX_find (YDLST_DHEAD, NULL, NULL, NULL, r_beg, r_len);
             if (r_count != NULL)  *r_count = c;
             DEBUG_YREGEX  yLOG_complex ("list"      , "%-10p, %-10p, %4d", s_head, s_tail, s_count);
             DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
@@ -1020,11 +1025,11 @@ yREGEX_detail           (char a_style, char a_finds, char *a_source, char a_best
    return rc;
 }
 
-SIMPLIFIER char yREGEX_filter        (char *a_source)                                       { return yREGEX_detail (YREGEX_SHOTGUN, YREGEX_FIRST, a_source, YREGEX_LSHORT, NULL, NULL, NULL); }
-SIMPLIFIER char yREGEX_first         (char *a_source, int *r_beg, int *r_len)               { return yREGEX_detail (YREGEX_SHOTGUN, YREGEX_FIRST, a_source, YREGEX_LSHORT, NULL, r_beg, r_len); }
-SIMPLIFIER char yREGEX_count         (char *a_source, int *r_count)                         { return yREGEX_detail (YREGEX_SHOTGUN, YREGEX_COUNT, a_source, YREGEX_LSHORT, r_count, NULL, NULL); }
-SIMPLIFIER char yREGEX_exec          (char *a_source, int *r_count, int *r_beg, int *r_len) { return yREGEX_detail (YREGEX_SHOTGUN, YREGEX_FIND , a_source, YREGEX_LLONG , r_count, r_beg, r_len); }
-SIMPLIFIER char yREGEX_debug         (char *a_source)                                       { return yREGEX_detail (YREGEX_SHOTGUN, YREGEX_DEBUG, a_source, YREGEX_LLONG , NULL, NULL, NULL); }
+char yREGEX_filter        (char *a_source)                                       { return yREGEX_detail (YREGEX_SHOTGUN, YREGEX_FIRST, a_source, YREGEX_LSHORT, NULL, NULL, NULL); }
+char yREGEX_first         (char *a_source, int *r_beg, int *r_len)               { return yREGEX_detail (YREGEX_SHOTGUN, YREGEX_FIRST, a_source, YREGEX_LSHORT, NULL, r_beg, r_len); }
+char yREGEX_count         (char *a_source, int *r_count)                         { return yREGEX_detail (YREGEX_SHOTGUN, YREGEX_COUNT, a_source, YREGEX_LSHORT, r_count, NULL, NULL); }
+char yREGEX_exec          (char *a_source, int *r_count, int *r_beg, int *r_len) { return yREGEX_detail (YREGEX_SHOTGUN, YREGEX_FIND , a_source, YREGEX_LLONG , r_count, r_beg, r_len); }
+char yREGEX_debug         (char *a_source)                                       { return yREGEX_detail (YREGEX_SHOTGUN, YREGEX_DEBUG, a_source, YREGEX_LLONG , NULL, NULL, NULL); }
 
 
 

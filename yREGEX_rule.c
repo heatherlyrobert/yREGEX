@@ -528,15 +528,27 @@ yregex_rule_exec        (short a_level, short a_rpos, short a_tpos, tSTATE *a_fo
     *>    /+> DEBUG_YREGEX  yLOG_complex ("tpos"      , "indx %-3d, beg %-3d, end %-3d", x_indx, x_beg, x_end);   <+/   <* 
     *> }                                                                                                                <*/
    /*---(report)-------------------------*/
-   if (rc == 1)  DEBUG_YREGEX  yLOG_note    ("pass");
-   else          DEBUG_YREGEX  yLOG_note    ("FAIL");
    DEBUG_YREGEX  yLOG_value   ("rc"        , rc);
-   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
+   if (rc > 0) {
+      DEBUG_YREGEX  yLOG_note    ("pass");
+      rc = yregex_exec__passed (HAND_RUL);
+   } else {
+      DEBUG_YREGEX  yLOG_note    ("FAIL");
+      rc = yregex_exec__failed (HAND_RUL);
+   }
+   /*---(prepare next)-------------------*/
+   /*> yregex_exec_launcher (a_level + 1, a_rpos, a_tpos, rc);                        <*/
+   /*> if (rc == 1) {                                                                 <* 
+    *>    DEBUG_YREGEX  yLOG_note    ("pass");                                        <* 
+    *> } else {                                                                       <* 
+    *>    DEBUG_YREGEX  yLOG_note    ("FAIL");                                        <* 
+    *> }                                                                              <*/
    /*---(prepare next)-------------------*/
    /*> if (x_mod == '&')  yregex_exec_push     (a_level, a_rpos + 1, x_beg, x_end + 1);   <* 
     *> else               yregex_exec_launcher (a_level, a_rpos, a_tpos, rc);             <*/
    yregex_exec_launcher (a_level + 1, a_rpos, a_tpos - 1, rc);
    /*---(complete)-----------------------*/
+   DEBUG_YREGEX  yLOG_exit    (__FUNCTION__);
    return rc;
 }
 

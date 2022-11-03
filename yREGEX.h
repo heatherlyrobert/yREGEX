@@ -64,7 +64,7 @@ char        yREGEX_debug            (char *a_source);
 char        yREGEX_detail           (char a_style, char a_finds, char *a_source, char a_best, int *r_count, int *r_beg, int *r_len);
 
 /*345678901-12345678901-12345678901-12345678901-12345678901-12345678901-123456*/
-int         yREGEX_find             (char a_move, int  *r_beg, int *r_len, int *r_fbeg, int *r_flen);
+int         yREGEX_find             (char a_move, int  *r_beg, int *r_len, char *r_text, int *r_fbeg, int *r_flen);
 int         yREGEX_best             (char a_best, int  *r_beg, int *r_len, int *r_fbeg, int *r_flen);
 
 /*345678901-12345678901-12345678901-12345678901-12345678901-12345678901-123456*/

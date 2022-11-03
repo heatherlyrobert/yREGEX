@@ -344,7 +344,7 @@ yregex_find__by_loc     (short a_beg, short a_len)
 }
 
 int
-yREGEX_find             (char a_move, int  *r_beg, int *r_len, int *r_fbeg, int *r_flen)
+yREGEX_find             (char a_move, int  *r_beg, int *r_len, char *r_text, int *r_fbeg, int *r_flen)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -354,9 +354,11 @@ yREGEX_find             (char a_move, int  *r_beg, int *r_len, int *r_fbeg, int 
    --rce;  if (rc < 0 || x_curr == NULL)  return rce;
    if (r_beg  != NULL)  *r_beg  = x_curr->beg;
    if (r_len  != NULL)  *r_len  = x_curr->len;
+   if (r_text != NULL)  strcpy (r_text, x_curr->text);
    if (r_fbeg != NULL) {
       if (x_curr->s_off [0] >= 0)  *r_fbeg = x_curr->s_off [0];
-      else                         *r_fbeg = x_curr->beg;
+      /*> else                         *r_fbeg = x_curr->beg;                         <*/
+      else                         *r_fbeg = 0;
    }
    if (r_flen != NULL) {
       if (x_curr->s_len [0] >= 0)  *r_flen = x_curr->s_len [0];

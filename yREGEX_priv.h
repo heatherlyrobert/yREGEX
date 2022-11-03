@@ -20,8 +20,8 @@
 
 #define     P_BASENAME  ""
 #define     P_FULLPATH  ""
-#define     P_SUFFIX    ""
-#define     P_CONTENT   ""
+#define     P_SUFFIX    "n/a"
+#define     P_CONTENT   "n/a"
 
 #define     P_SYSTEM    "gnu/linux   (powerful, ubiquitous, technical, and hackable)"
 #define     P_LANGUAGE  "ansi-c      (wicked, limitless, universal, and everlasting)"
@@ -33,8 +33,8 @@
 
 #define     P_VERMAJOR  "0.--, preparing for serious use"
 #define     P_VERMINOR  "0.7-, more advanced abilities"
-#define     P_VERNUM    "0.7b"
-#define     P_VERTXT    "all existing unit tests pass again, time to start closing"
+#define     P_VERNUM    "0.7c"
+#define     P_VERTXT    "small tuning for use on squarespace"
 
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -86,7 +86,6 @@
 #include    <yDLST_solo.h>              /* heatherly linked-list constants     */
 #include    <yCOLOR_solo.h>             /* heatherly color constants           */
 
-#define     SIMPLIFIER     /**/
 
 typedef   unsigned char  uchar;
 
@@ -137,6 +136,7 @@ typedef   unsigned char  uchar;
 #define     HAND_PAS    '+'
 #define     HAND_BAD    'x'
 #define     HAND_SET    'S'
+#define     HAND_RUL    'R'
 
 
 
@@ -245,6 +245,7 @@ struct      cREGEX {
    /*---(solution scorer)---*/
    char        scorer;                     /* solution scoring algorithm      */
    /*---(original regex)----*/
+   uchar       input       [LEN_REGEX];    /* source regex                    */
    uchar       orig        [LEN_REGEX];    /* original regex                  */
    int         olen;                       /* length of original regex        */
    /*---(original regex)----*/
@@ -527,7 +528,7 @@ char        yregex_find__sub        (char a_num, short a_beg, short a_len);
 char        yregex_find__by_cursor  (char a_move, tFIND  **r_back);
 char        yregex_find__by_index   (int a_index, tFIND  **r_back);
 char        yregex_find__by_loc     (short a_beg, short a_len);
-int         yREGEX_find             (char a_move, int  *r_beg, int *r_len, int *r_fbeg, int *r_flen);
+int         yREGEX_find             (char a_move, int  *r_beg, int *r_len, char *r_text, int *r_fbeg, int *r_flen);
 int         yREGEX_best             (char a_best, int  *r_beg, int *r_len, int *r_fbeg, int *r_flen);
 /*---(structure)------------*/
 char        yregex_find__reset      (void);

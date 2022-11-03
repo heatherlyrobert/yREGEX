@@ -17,7 +17,7 @@ matching based on ken thompsons finite automata algorithm (not recursion),
 plus added back-references and sub-match rules.
 
 .SH CRAZY, NIAVE, DOG-FOODING, BOOT-STRAPPING ANIMAL
-i am not competing to be the best.  i created this to understand, learn,
+i am not competing to be the best.  i created this to learn, experiment,
 and own every byte.  it's optimized for transparency and debugging.  if i
 wanted awesome, fast, and cutting-edge, i'd use yours ;)
 
@@ -40,7 +40,7 @@ h) tbd             to be defined and handled
 
 .SH A) META-CHARACTERS
 meta-characters are reserved and have special meaning.  to match them
-specifically, they must be escaped individually with a backslash (\\).
+specifically, they must be escaped individually with a backslash (µ).
 
 .SS posix-defined (14 extended)
 yREGEX uses the 14 posix-standard regular-expression meta-characters as
@@ -48,7 +48,8 @@ its base.  this way, no matter which system or character-set, it will work as
 advertised.  i do not like differentiating globbing-only, normal, and extended
 regular expressions.  i always use extended.
 
-.B   .   * ? +   { }   ( | )   [ ]   ^ $  \\
+        .   * ? +   { }   ( | )   [ ]   ^ $  µ
+
    .           any single character
    a*          zero or more of preceeding character
    a?          zero or one of preceeding character
@@ -58,48 +59,53 @@ regular expressions.  i always use extended.
    [a-p]       any one of the characters in the range
    ^any        achor at start of line
    who$        achor at end of line
-   \\[         to escape a meta-character
+   µ´          to escape a meta-character
 
-.SS heatherly (12 short-hand)
+.SS heatherly (15 short-hand)
 i have an extended ascii character-set (shrike) that allows more ease of use,
 spacing, and better visual confirmation.
 
-.B   · ¬   ¸ ¹   º »   ¼ ½   < >   À Å
-   ·         a space (\\s) helps for counting/visual confirmation
+        · ¬ °   ¸ ¹   º »   ¼ ½   < >   À Å   ® ¯
+
+   ·         a space (µs) helps for counting/visual confirmation
    ¬         any single character (.), my mask character
+   °         any number of any characters (.*)
    ¸´´´¹     capturing group, and in text (#´´´)
    º´´´»     rules, and in text (;´´´)
    ¼´´´½     focus group, and in text (>´´´<)
-   <         \\W, beginning of word (too useful to be ugly)
-   >         \\W, end of word (too useful to be ugly)
+   <         µW, beginning of word (too useful to be ugly)
+   >         µW, end of word (too useful to be ugly)
    ´À        suggest laziest match
    ´Å        suggest greediest match
+   ®´´´;     match for start of section to check
+   ¯´´´;     match for end of section to check
 
 .SS search-combining (6 custom)
 also in my extended ascii character-set (shrike) are additional logical
 symbols which i will use to combine multiple regex searches.
 
-.B   Ð Ô Ñ Õ Ò Ó
+        Ð Ñ   Ô Õ   Ò Ó
+
    Ð         and, both must be true
-   Ô         nand, only one true or neither true
    Ñ         or, either one or both true
+   Ô         nand, only one true or neither true
    Õ         nor, both false
    Ò         xor, one and only one true
    Ó         nxor, both true or both false
 
 .SH B) SETS/CLASSES
 posix has a number of standard character-sets, all are supported
-   .    any             \\w   :word:          \\s   :space:
-   \\d   :digit:         \\p   :punct:         \\q   :rpunc:
-   \\a   :alpha:         \\l   :lower:         \\u   :upper:
-   \\g   :greek:         \\x   :xdigi:
+   .    any             µw   :word:          µs   :space:
+   µd   :digit:         µp   :punct:         µq   :rpunc:
+   µa   :alpha:         µl   :lower:         µu   :upper:
+   µg   :greek:         µx   :xdigi:
 
 also, some special or hidden characters need matching
-   \\.   period          \\f   field           \\t   tab
-   \\e   escape          \\n   return          \\c   control
+   µ.   period          µf   field           µt   tab
+   µe   escape          µn   return          µc   control
 
 and, some character sets are reverse of lower-case
-   \\W     \\D     \\S     \\F     \\G
+   µW     µD     µS     µF     µG
 
 character classes are exactly as in posix.
    [...]     any one of the characters included
@@ -145,16 +151,18 @@ yREGEX has a number of saved patterns, and easily extended.
    (&w)  (&word)    ... word plus word boundaries
 
 also, the pattern in a capturing group can be resused
-   (&1)      pattern saved from 1st capture group
+   (&1)       pattern saved from 1st capture group
 
 .SH G) RULES
 capture groups can then be used to apply additional filters
    ºn+...»    contains the substring                   (;n+...)
    ºn-...»    does not contain substring               (;n-...)
-   ºn\\u»      has a char in standard set               (;n\\u)
+   ºnµu»      has a char in standard set               (;nµu)
    ºn[...]»   has a char in custom set                 (;n[...])
    ºn[^...]»  does not have any char in set            (;n[^...])
    ºn...»     freeform regex sequence for matching     (;n...)
+   ®´´´;      match for start of section to check
+   ¯´´´;      match for end of section to check
 
 and two capture groups can also be comparied
    ºnàm»      two capture groups must match            (;n==m)

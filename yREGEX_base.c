@@ -41,15 +41,16 @@ yREGEX_clear            (void)
    /*---(header)-------------------------*/
    DEBUG_YREGEX  yLOG_enter   (__FUNCTION__);
    /*---(comparison text)----------------*/
-   strlcpy (myREGEX.text , ""       , LEN_TEXT);
+   strlcpy (myREGEX.text  , ""       , LEN_TEXT);
    myREGEX.tlen = 0;
    /*---(scorer)-------------------------*/
    myREGEX.scorer = '?';
    /*---(original)-----------------------*/
-   strlcpy (myREGEX.orig , ""       , LEN_REGEX);
+   strlcpy (myREGEX.input , ""       , LEN_REGEX);
+   strlcpy (myREGEX.orig  , ""       , LEN_REGEX);
    myREGEX.olen = 0;
    /*---(regex)--------------------------*/
-   strlcpy (myREGEX.regex, ""       , LEN_REGEX);
+   strlcpy (myREGEX.regex , ""       , LEN_REGEX);
    myREGEX.rlen = 0;
    /*---(initialize compiled)------------*/
    for (i = 0; i < LEN_REGEX; ++i) {

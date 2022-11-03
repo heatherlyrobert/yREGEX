@@ -69,6 +69,7 @@ yregex_comp__prep    (cchar *a_regex)
       DEBUG_YREGEX  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
+   strlcpy (myREGEX.input, a_regex, LEN_REGEX);
    /*---(check scorer)-------------------*/
    if (strchr (G_PREFIX, a_regex [0]) != NULL) {
       myREGEX.scorer = a_regex [0];
@@ -432,8 +433,8 @@ yregex_comp__extended   (void)
    for (i = 0; i <= myREGEX.olen; ++i) {
       x_ch = myREGEX.orig [i];
       switch (x_ch) {
-      case G_CHAR_STORAGE : case G_CHAR_BIGDOT  :
-      case G_CHAR_HALT    : case G_CHAR_MASK    :  /* just a spacer, not used  */
+      case G_CHAR_STORAGE : case G_CHAR_BIGDOT  : case G_CHAR_HALT    :
+         /* just a spacer, not used  */
          break;
       case G_CHAR_DBSLASH :  /* delayed backslash      */
          t [x_len++] = '\\';
@@ -465,6 +466,15 @@ yregex_comp__extended   (void)
          break;
       case G_CHAR_SPACE :  /* space                  */
          t [x_len++] = ' ';
+         t [x_len  ] =  0 ;
+         break;
+      case G_CHAR_MASK  :  /* mask */
+         t [x_len++] = '.';
+         t [x_len  ] =  0 ;
+         break;
+      case G_CHAR_REDACT : /* redacted */
+         t [x_len++] = '.';
+         t [x_len++] = '*';
          t [x_len  ] =  0 ;
          break;
       case G_CHAR_SLPAREN :  /* begin capture group    */
